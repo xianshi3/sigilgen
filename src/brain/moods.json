@@ -1,0 +1,880 @@
+{
+  "moods": [
+    {
+      "id": "neutral",
+      "keywords": [],
+      "paletteIds": ["ink-monolith", "graphite-signal", "paper-ledger", "charcoal-luxe"],
+      "fontIds": ["orbit-grotesk", "flow-humanist", "baseline-humanist"],
+      "iconKeys": ["hexagon-node", "diamond-shape", "asterisk-spark"],
+      "engineWeights": { "monogram": 2, "wordmark": 3, "lettermark": 2, "abstract": 1, "emblem": 1 }
+    },
+    {
+      "id": "minimal",
+      "keywords": [
+        "minimal",
+        "minimalist",
+        "simple",
+        "clean",
+        "restrained",
+        "understated",
+        "quiet",
+        "subtle",
+        "uncluttered",
+        "plain",
+        "spare",
+        "sparse"
+      ],
+      "paletteIds": ["ink-monolith", "graphite-signal", "charcoal-luxe", "paper-ledger"],
+      "fontIds": ["prism-grotesk", "nexus-grotesk", "signal-humanist", "flow-humanist"],
+      "iconKeys": ["hexagon-node", "ring-orbit", "chevron-double"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 2,
+        "lettermark": 4,
+        "abstract": 2,
+        "emblem": 0.5
+      }
+    },
+    {
+      "id": "swiss-editorial",
+      "keywords": [
+        "swiss",
+        "editorial",
+        "print",
+        "layout",
+        "grid",
+        "typographic",
+        "broadsheet",
+        "poster",
+        "publication",
+        "magazine",
+        "type"
+      ],
+      "paletteIds": ["ink-monolith", "paper-ledger", "crimson-pulse", "plum-editorial"],
+      "fontIds": ["stipple-display", "nexus-grotesk", "classic-serif", "axis-grotesk"],
+      "iconKeys": ["plus-cross", "diamond-shape", "plus-cross"],
+      "engineWeights": {
+        "monogram": 1,
+        "wordmark": 4,
+        "lettermark": 3,
+        "abstract": 2,
+        "emblem": 0.5
+      }
+    },
+    {
+      "id": "software",
+      "keywords": [
+        "software",
+        "saas",
+        "platform",
+        "app",
+        "application",
+        "tool",
+        "web",
+        "cloud",
+        "dashboard",
+        "productivity",
+        "workspace",
+        "startup"
+      ],
+      "paletteIds": ["electric-signal", "azure-current", "graphite-signal", "ink-monolith"],
+      "fontIds": ["orbit-grotesk", "baseline-humanist", "vector-grotesk", "stipple-display"],
+      "iconKeys": [
+        "circuit-node",
+        "network-nodes",
+        "terminal-window",
+        "cloud-server",
+        "cloud",
+        "cpu-chip"
+      ],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 4,
+        "lettermark": 3,
+        "abstract": 2,
+        "emblem": 0.5
+      }
+    },
+    {
+      "id": "developer-tools",
+      "keywords": [
+        "developer",
+        "devtools",
+        "cli",
+        "terminal",
+        "open-source",
+        "opensource",
+        "sdk",
+        "api",
+        "compiler",
+        "library",
+        "framework",
+        "repository",
+        "git",
+        "hacker"
+      ],
+      "paletteIds": ["terminal-green", "graphite-signal", "ink-monolith", "neon-synth"],
+      "fontIds": ["vector-grotesk", "axis-grotesk", "orbit-grotesk", "monolith-grotesk"],
+      "iconKeys": ["terminal-window", "brackets-code", "circuit-node", "cube-iso"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 3,
+        "lettermark": 4,
+        "abstract": 3,
+        "emblem": 0.5
+      }
+    },
+    {
+      "id": "infrastructure",
+      "keywords": [
+        "infrastructure",
+        "infra",
+        "devops",
+        "kubernetes",
+        "server",
+        "data",
+        "database",
+        "storage",
+        "network",
+        "mesh",
+        "proxy",
+        "gateway",
+        "telemetry"
+      ],
+      "paletteIds": ["azure-current", "carbon-transit", "cobalt-forge", "graphite-signal"],
+      "fontIds": ["vector-grotesk", "baseline-humanist", "axis-grotesk"],
+      "iconKeys": ["network-nodes", "database", "cloud-server", "satellite"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 3,
+        "lettermark": 3,
+        "abstract": 3,
+        "emblem": 1
+      }
+    },
+    {
+      "id": "ai-ml",
+      "keywords": [
+        "ai",
+        "ml",
+        "machine-learning",
+        "neural",
+        "model",
+        "llm",
+        "inference",
+        "training",
+        "agent",
+        "automation",
+        "copilot"
+      ],
+      "paletteIds": ["neon-synth", "cobalt-forge", "ink-monolith", "violet-studio"],
+      "fontIds": ["monolith-grotesk", "orbit-grotesk", "anchor-display", "stipple-display"],
+      "iconKeys": ["network-nodes", "cpu-chip", "hexagon-node", "spiral-vortex"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 3,
+        "lettermark": 3,
+        "abstract": 4,
+        "emblem": 0.5
+      }
+    },
+    {
+      "id": "cyber-security",
+      "keywords": [
+        "security",
+        "infosec",
+        "privacy",
+        "encryption",
+        "audit",
+        "compliance",
+        "identity",
+        "auth",
+        "firewall",
+        "threat"
+      ],
+      "paletteIds": ["graphite-signal", "ink-monolith", "cobalt-forge", "charcoal-luxe"],
+      "fontIds": ["axis-grotesk", "monolith-grotesk", "vector-grotesk"],
+      "iconKeys": ["shield-lock", "cpu-chip", "circuit-node", "cube-iso"],
+      "engineWeights": {
+        "monogram": 2.5,
+        "wordmark": 2,
+        "lettermark": 3,
+        "abstract": 2,
+        "emblem": 2
+      }
+    },
+    {
+      "id": "fintech",
+      "keywords": [
+        "fintech",
+        "finance",
+        "financial",
+        "bank",
+        "banking",
+        "payments",
+        "payment",
+        "wallet",
+        "trading",
+        "invest",
+        "investment",
+        "money",
+        "lending",
+        "accounting",
+        "crypto",
+        "token"
+      ],
+      "paletteIds": ["ledger-green", "blue-chip", "ink-monolith", "cobalt-forge"],
+      "fontIds": ["classic-serif", "baseline-humanist", "orbit-grotesk", "slab-serif"],
+      "iconKeys": ["coin-stack", "bank-columns", "chart-up", "diamond-gem", "wallet", "receipt"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 3,
+        "lettermark": 2.5,
+        "abstract": 1.5,
+        "emblem": 3
+      }
+    },
+    {
+      "id": "enterprise-saas",
+      "keywords": [
+        "enterprise",
+        "b2b",
+        "consulting",
+        "agency",
+        "professional",
+        "services",
+        "solutions",
+        "erp",
+        "crm",
+        "management",
+        "workflow"
+      ],
+      "paletteIds": ["graphite-signal", "electric-signal", "carbon-transit", "ink-monolith"],
+      "fontIds": ["baseline-humanist", "flow-humanist", "orbit-grotesk", "classic-serif"],
+      "iconKeys": ["network-nodes", "cube-iso", "chart-up", "hexagon-node"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 4,
+        "lettermark": 2,
+        "abstract": 1.5,
+        "emblem": 1.5
+      }
+    },
+    {
+      "id": "coffee",
+      "keywords": [
+        "coffee",
+        "cafe",
+        "café",
+        "espresso",
+        "barista",
+        "roastery",
+        "brew",
+        "latte",
+        "beans",
+        "kitchen",
+        "brunch",
+        "bakery"
+      ],
+      "paletteIds": ["ember-roast", "cocoa-roast", "signal-amber", "paper-ledger"],
+      "fontIds": ["garamond-serif", "cascade-humanist", "classic-serif", "nova-display"],
+      "iconKeys": ["coffee-cup", "wheat", "leaf-tea", "flame-kitchen"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 3,
+        "lettermark": 1.5,
+        "abstract": 1,
+        "emblem": 4
+      }
+    },
+    {
+      "id": "food",
+      "keywords": [
+        "food",
+        "restaurant",
+        "dining",
+        "menu",
+        "kitchen",
+        "chef",
+        "recipe",
+        "deli",
+        "pizzeria",
+        "sushi",
+        "grill"
+      ],
+      "paletteIds": ["terracotta-kiln", "ember-roast", "citrus-pop", "cocoa-roast"],
+      "fontIds": ["nova-display", "garamond-serif", "cascade-humanist", "slab-serif"],
+      "iconKeys": ["flame-kitchen", "bread-loaf", "apple-fruit", "wheat"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 3,
+        "lettermark": 1.5,
+        "abstract": 1,
+        "emblem": 4
+      }
+    },
+    {
+      "id": "beverage",
+      "keywords": [
+        "beverage",
+        "beer",
+        "brewery",
+        "cocktail",
+        "bar",
+        "juice",
+        "tea",
+        "coffeehouse",
+        "distillery",
+        "wine",
+        "cider"
+      ],
+      "paletteIds": ["signal-amber", "ember-roast", "terracotta-kiln", "gold-atelier"],
+      "fontIds": ["garamond-serif", "slab-serif", "nova-display"],
+      "iconKeys": ["hexagon-beer", "leaf-tea", "coffee-cup", "apple-fruit"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 3,
+        "lettermark": 1.5,
+        "abstract": 1,
+        "emblem": 4
+      }
+    },
+    {
+      "id": "artisan",
+      "keywords": [
+        "artisan",
+        "craft",
+        "handmade",
+        "maker",
+        "workshop",
+        "pottery",
+        "ceramic",
+        "studio",
+        "atelier",
+        "furniture",
+        "woodwork"
+      ],
+      "paletteIds": ["terracotta-kiln", "cocoa-roast", "ink-monolith", "signal-amber"],
+      "fontIds": ["garamond-serif", "classic-serif", "cascade-humanist", "slab-serif"],
+      "iconKeys": ["compass-draft", "hammer", "blueprint-draft", "hexagon-node"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 2.5,
+        "lettermark": 2,
+        "abstract": 1,
+        "emblem": 4
+      }
+    },
+    {
+      "id": "nature",
+      "keywords": [
+        "nature",
+        "natural",
+        "outdoors",
+        "outdoor",
+        "hiking",
+        "forest",
+        "woodland",
+        "conservation",
+        "climate",
+        "ecology",
+        "sustainability",
+        "green",
+        "wilderness"
+      ],
+      "paletteIds": ["forest-canopy", "sage-herbarium", "deep-ocean", "kiwi-sport"],
+      "fontIds": ["cascade-humanist", "flow-humanist", "signal-humanist", "classic-serif"],
+      "iconKeys": ["mountain-peak", "pine-tree", "leaf", "sprout", "feather", "snowflake", "moon"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 3,
+        "lettermark": 2,
+        "abstract": 1.5,
+        "emblem": 3
+      }
+    },
+    {
+      "id": "agriculture",
+      "keywords": [
+        "farm",
+        "agriculture",
+        "agtech",
+        "agritech",
+        "crop",
+        "harvest",
+        "organic",
+        "vegan",
+        "plant-based",
+        "brewery",
+        "permaculture"
+      ],
+      "paletteIds": ["sage-herbarium", "forest-canopy", "kiwi-sport", "cocoa-roast"],
+      "fontIds": ["baseline-humanist", "cascade-humanist", "flow-humanist"],
+      "iconKeys": ["sprout", "wheat", "leaf", "sun"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 3,
+        "lettermark": 2,
+        "abstract": 1.5,
+        "emblem": 3.5
+      }
+    },
+    {
+      "id": "marine",
+      "keywords": [
+        "ocean",
+        "marine",
+        "sea",
+        "sailing",
+        "nautical",
+        "diving",
+        "surf",
+        "coastal",
+        "beach",
+        "boat",
+        "yacht",
+        "fishing"
+      ],
+      "paletteIds": ["deep-ocean", "glacier-ice", "turquoise-tide", "azure-current"],
+      "fontIds": ["nexus-grotesk", "flow-humanist", "halo-display"],
+      "iconKeys": ["wave", "ship-wheel", "anchor", "hot-air-balloon"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 3,
+        "lettermark": 2,
+        "abstract": 2,
+        "emblem": 3
+      }
+    },
+    {
+      "id": "travel",
+      "keywords": [
+        "travel",
+        "tourism",
+        "holiday",
+        "vacation",
+        "adventure",
+        "trip",
+        "explore",
+        "hostel",
+        "hotel",
+        "destination",
+        "globe"
+      ],
+      "paletteIds": ["turquoise-tide", "citrus-pop", "signal-amber", "azure-current"],
+      "fontIds": ["halo-display", "nexus-grotesk", "nova-display", "cascade-humanist"],
+      "iconKeys": ["hot-air-balloon", "ship-wheel", "mountain-peak", "compass-draft"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 3.5,
+        "lettermark": 2,
+        "abstract": 2,
+        "emblem": 2.5
+      }
+    },
+    {
+      "id": "healthcare",
+      "keywords": [
+        "health",
+        "healthcare",
+        "medical",
+        "medicine",
+        "clinic",
+        "hospital",
+        "care",
+        "wellness",
+        "dental",
+        "therapy",
+        "patient",
+        "pharma"
+      ],
+      "paletteIds": ["clinic-mint", "glacier-ice", "forest-canopy", "azure-current"],
+      "fontIds": ["flow-humanist", "cascade-humanist", "signal-humanist", "orbit-grotesk"],
+      "iconKeys": ["heart-pulse", "pill-cross", "tooth", "bandage-cross"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 3,
+        "lettermark": 2.5,
+        "abstract": 1,
+        "emblem": 3
+      }
+    },
+    {
+      "id": "fitness",
+      "keywords": [
+        "fitness",
+        "gym",
+        "workout",
+        "training",
+        "sport",
+        "sports",
+        "athletic",
+        "running",
+        "yoga",
+        "wellness",
+        "strength",
+        "coach"
+      ],
+      "paletteIds": ["crimson-pulse", "kiwi-sport", "ink-monolith", "signal-amber"],
+      "fontIds": ["monolith-grotesk", "anchor-display", "axis-grotesk", "nova-display"],
+      "iconKeys": ["dumbbell", "target-bullseye", "mountain-flag", "trophy"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 3,
+        "lettermark": 3,
+        "abstract": 2.5,
+        "emblem": 3
+      }
+    },
+    {
+      "id": "logistics",
+      "keywords": [
+        "logistics",
+        "shipping",
+        "delivery",
+        "freight",
+        "fleet",
+        "supply",
+        "warehouse",
+        "courier",
+        "distribution",
+        "transport",
+        "cargo"
+      ],
+      "paletteIds": ["carbon-transit", "signal-amber", "cobalt-forge", "graphite-signal"],
+      "fontIds": ["vector-grotesk", "axis-grotesk", "baseline-humanist"],
+      "iconKeys": ["truck-box", "road-arrow", "cube-iso", "ship-wheel"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 3,
+        "lettermark": 2,
+        "abstract": 2,
+        "emblem": 3
+      }
+    },
+    {
+      "id": "aerospace",
+      "keywords": [
+        "aerospace",
+        "aviation",
+        "space",
+        "satellite",
+        "rocket",
+        "flight",
+        "drone",
+        "orbit",
+        "launch",
+        "telemetry",
+        "gnc"
+      ],
+      "paletteIds": ["cobalt-forge", "ink-monolith", "azure-current", "glacier-ice"],
+      "fontIds": ["stipple-display", "vector-grotesk", "axis-grotesk", "monolith-grotesk"],
+      "iconKeys": ["rocket", "satellite", "ring-orbit", "chevron-double"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 2.5,
+        "lettermark": 3,
+        "abstract": 3.5,
+        "emblem": 1.5
+      }
+    },
+    {
+      "id": "construction",
+      "keywords": [
+        "construction",
+        "building",
+        "contractor",
+        "engineering",
+        "manufacturing",
+        "factory",
+        "industrial",
+        "hardware",
+        "fabrication",
+        "civil",
+        "structural"
+      ],
+      "paletteIds": ["steel-forge", "cobalt-forge", "signal-amber", "carbon-transit"],
+      "fontIds": ["vector-grotesk", "axis-grotesk", "monolith-grotesk", "slab-serif"],
+      "iconKeys": ["hard-hat", "hammer", "wrench", "blueprint-draft"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 2.5,
+        "lettermark": 2.5,
+        "abstract": 2,
+        "emblem": 4
+      }
+    },
+    {
+      "id": "automotive",
+      "keywords": [
+        "automotive",
+        "auto",
+        "car",
+        "vehicle",
+        "motor",
+        "engine",
+        "garage",
+        "mobility",
+        "ev",
+        "electric-vehicle"
+      ],
+      "paletteIds": ["carbon-transit", "crimson-pulse", "ink-monolith", "steel-forge"],
+      "fontIds": ["axis-grotesk", "monolith-grotesk", "vector-grotesk"],
+      "iconKeys": ["road-arrow", "gear-cog", "wrench", "truck-box"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 2.5,
+        "lettermark": 3,
+        "abstract": 2.5,
+        "emblem": 2.5
+      }
+    },
+    {
+      "id": "media",
+      "keywords": [
+        "media",
+        "entertainment",
+        "streaming",
+        "podcast",
+        "video",
+        "content",
+        "broadcast",
+        "music",
+        "film",
+        "creator"
+      ],
+      "paletteIds": ["neon-synth", "plum-editorial", "cobalt-arcade", "ink-monolith"],
+      "fontIds": ["nova-display", "anchor-display", "halo-display", "orbit-grotesk"],
+      "iconKeys": ["play-triangle", "music-note", "film-strip", "camera-lens", "headphones"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 3,
+        "lettermark": 3,
+        "abstract": 3,
+        "emblem": 1.5
+      }
+    },
+    {
+      "id": "gaming",
+      "keywords": [
+        "gaming",
+        "game",
+        "games",
+        "esports",
+        "arcade",
+        "console",
+        "rpg",
+        "simulator",
+        "multiplayer",
+        "speedrun"
+      ],
+      "paletteIds": ["cobalt-arcade", "neon-synth", "crimson-pulse", "ink-monolith"],
+      "fontIds": ["anchor-display", "monolith-grotesk", "nova-display", "axis-grotesk"],
+      "iconKeys": ["cube-iso", "play-triangle", "star-burst", "target-bullseye"],
+      "engineWeights": {
+        "monogram": 2.5,
+        "wordmark": 2,
+        "lettermark": 3.5,
+        "abstract": 3,
+        "emblem": 1
+      }
+    },
+    {
+      "id": "creative-studio",
+      "keywords": [
+        "creative",
+        "design",
+        "designer",
+        "portfolio",
+        "branding",
+        "illustration",
+        "art",
+        "visual",
+        "studio",
+        "motion",
+        "animation",
+        "graphics"
+      ],
+      "paletteIds": ["violet-studio", "plum-editorial", "bubble-pop", "ink-monolith"],
+      "fontIds": ["halo-display", "nexus-grotesk", "garamond-serif", "nova-display"],
+      "iconKeys": ["asterisk-spark", "star-burst", "spiral-vortex", "camera-lens"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 3,
+        "lettermark": 2.5,
+        "abstract": 4,
+        "emblem": 1
+      }
+    },
+    {
+      "id": "playful",
+      "keywords": [
+        "playful",
+        "fun",
+        "kids",
+        "children",
+        "toy",
+        "cute",
+        "joyful",
+        "whimsical",
+        "bright",
+        "cheerful",
+        "party"
+      ],
+      "paletteIds": ["bubble-pop", "citrus-pop", "cobalt-arcade", "pastel-soft"],
+      "fontIds": ["nova-display", "cascade-humanist", "anchor-display", "halo-display"],
+      "iconKeys": ["star-burst", "plus-cross", "apple-fruit", "target-bullseye"],
+      "engineWeights": {
+        "monogram": 2.5,
+        "wordmark": 2.5,
+        "lettermark": 3,
+        "abstract": 3,
+        "emblem": 2
+      }
+    },
+    {
+      "id": "luxury",
+      "keywords": [
+        "luxury",
+        "premium",
+        "elegant",
+        "boutique",
+        "jewellery",
+        "jewelry",
+        "fashion",
+        "couture",
+        "lifestyle",
+        "high-end",
+        "refined"
+      ],
+      "paletteIds": ["gold-atelier", "charcoal-luxe", "plum-editorial", "ink-monolith"],
+      "fontIds": ["didone-serif", "garamond-serif", "halo-display", "stipple-display"],
+      "iconKeys": ["diamond-gem", "hexagon-node", "star-burst", "link-chain"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 3,
+        "lettermark": 2.5,
+        "abstract": 2,
+        "emblem": 2
+      }
+    },
+    {
+      "id": "beauty",
+      "keywords": [
+        "beauty",
+        "cosmetics",
+        "skincare",
+        "makeup",
+        "salon",
+        "spa",
+        "floral",
+        "wedding",
+        "fragrance",
+        "organic-cosmetics"
+      ],
+      "paletteIds": ["bloom-floral", "pastel-soft", "bubble-pop", "gold-atelier"],
+      "fontIds": ["garamond-serif", "halo-display", "cascade-humanist", "didone-serif"],
+      "iconKeys": ["leaf", "leaf-herb", "star-burst", "ring-orbit"],
+      "engineWeights": { "monogram": 2, "wordmark": 3, "lettermark": 2, "abstract": 2, "emblem": 3 }
+    },
+    {
+      "id": "education",
+      "keywords": [
+        "education",
+        "learning",
+        "school",
+        "academy",
+        "course",
+        "teaching",
+        "tutor",
+        "university",
+        "training-centre",
+        "library"
+      ],
+      "paletteIds": ["plum-editorial", "paper-ledger", "electric-signal", "ink-monolith"],
+      "fontIds": ["classic-serif", "flow-humanist", "signal-humanist", "nexus-grotesk"],
+      "iconKeys": ["blueprint-draft", "compass-draft", "star-burst"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 3.5,
+        "lettermark": 2.5,
+        "abstract": 1.5,
+        "emblem": 2.5
+      }
+    },
+    {
+      "id": "nonprofit",
+      "keywords": [
+        "nonprofit",
+        "charity",
+        "ngo",
+        "foundation",
+        "social-good",
+        "community",
+        "advocacy",
+        "fundraising",
+        "volunteer"
+      ],
+      "paletteIds": ["forest-canopy", "ledger-green", "ink-monolith", "azure-current"],
+      "fontIds": ["flow-humanist", "cascade-humanist", "classic-serif", "orbit-grotesk"],
+      "iconKeys": ["heart-pulse", "sprout", "mountain-peak", "link-chain"],
+      "engineWeights": {
+        "monogram": 1.5,
+        "wordmark": 3,
+        "lettermark": 2,
+        "abstract": 1.5,
+        "emblem": 3.5
+      }
+    },
+    {
+      "id": "food-tech",
+      "keywords": [
+        "foodtech",
+        "alt-protein",
+        "synthetic-biology",
+        "precision-fermentation",
+        "cultivated",
+        "biotech",
+        "biotechnology",
+        "cell-culture"
+      ],
+      "paletteIds": ["sage-herbarium", "clinic-mint", "neon-synth", "cocoa-roast"],
+      "fontIds": ["nexus-grotesk", "orbit-grotesk", "monolith-grotesk"],
+      "iconKeys": ["sprout", "cpu-chip", "droplet", "hexagon-node"],
+      "engineWeights": {
+        "monogram": 2,
+        "wordmark": 2.5,
+        "lettermark": 3,
+        "abstract": 4,
+        "emblem": 1
+      }
+    },
+    {
+      "id": "abstract",
+      "keywords": [
+        "abstract",
+        "geometric",
+        "generative",
+        "algorithmic",
+        "procedural",
+        "code",
+        "pattern",
+        "texture",
+        "shape",
+        "form",
+        "data-viz",
+        "dataviz"
+      ],
+      "paletteIds": ["ink-monolith", "neon-synth", "cobalt-forge", "violet-studio"],
+      "fontIds": ["monolith-grotesk", "anchor-display", "stipple-display", "axis-grotesk"],
+      "iconKeys": ["hexagon-node", "spiral-vortex", "star-burst", "infinity-loop"],
+      "engineWeights": {
+        "monogram": 1,
+        "wordmark": 1.5,
+        "lettermark": 2,
+        "abstract": 5,
+        "emblem": 1
+      }
+    }
+  ]
+}

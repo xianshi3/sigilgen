@@ -1,0 +1,336 @@
+{
+  "palettes": [
+    {
+      "id": "ink-monolith",
+      "primary": "#14161a",
+      "secondary": "#2b2f38",
+      "accent": "#f5f5f0",
+      "highlight": "#8f96a3",
+      "background": "#f5f5f0",
+      "tags": ["monochrome", "minimal", "serious", "editorial", "swiss", "neutral", "black", "ink"]
+    },
+    {
+      "id": "graphite-signal",
+      "primary": "#1f2933",
+      "secondary": "#3e4c59",
+      "accent": "#f0f4f8",
+      "highlight": "#7b8794",
+      "background": null,
+      "tags": ["monochrome", "minimal", "technical", "b2b", "saas", "infrastructure", "graphite"]
+    },
+    {
+      "id": "paper-ledger",
+      "primary": "#1b1a17",
+      "secondary": "#57534e",
+      "accent": "#faf7f0",
+      "highlight": "#a8a29e",
+      "background": "#faf7f0",
+      "tags": ["editorial", "print", "paper", "book", "writing", "warm", "quiet", "minimal"]
+    },
+    {
+      "id": "electric-signal",
+      "primary": "#1d4ed8",
+      "secondary": "#0f172a",
+      "accent": "#f8fafc",
+      "highlight": "#60a5fa",
+      "background": null,
+      "tags": ["tech", "saas", "startup", "software", "electric", "blue", "modern", "cloud"]
+    },
+    {
+      "id": "azure-current",
+      "primary": "#0369a1",
+      "secondary": "#0c4a6e",
+      "accent": "#f0f9ff",
+      "highlight": "#38bdf8",
+      "background": "#f0f9ff",
+      "tags": ["tech", "network", "cloud", "azure", "data", "water", "infrastructure"]
+    },
+    {
+      "id": "cobalt-forge",
+      "primary": "#1e3a8a",
+      "secondary": "#111827",
+      "accent": "#e2e8f0",
+      "highlight": "#3b82f6",
+      "background": "#0b1220",
+      "tags": [
+        "industrial",
+        "manufacturing",
+        "metal",
+        "blueprint",
+        "engineering",
+        "dark",
+        "hardware"
+      ]
+    },
+    {
+      "id": "terminal-green",
+      "primary": "#22c55e",
+      "secondary": "#14532d",
+      "accent": "#f0fdf4",
+      "highlight": "#4ade80",
+      "background": "#052e16",
+      "tags": [
+        "terminal",
+        "cli",
+        "developer",
+        "growth",
+        "success",
+        "open-source",
+        "hacker",
+        "green"
+      ]
+    },
+    {
+      "id": "neon-synth",
+      "primary": "#a855f7",
+      "secondary": "#2e1065",
+      "accent": "#faf5ff",
+      "highlight": "#e879f9",
+      "background": "#13001f",
+      "tags": ["cyber", "neon", "gaming", "music", "night", "vibrant", "synth", "developer"]
+    },
+    {
+      "id": "crimson-pulse",
+      "primary": "#dc2626",
+      "secondary": "#450a0a",
+      "accent": "#fef2f2",
+      "highlight": "#f87171",
+      "background": null,
+      "tags": ["energy", "sport", "fast", "alert", "bold", "red", "power", "fitness"]
+    },
+    {
+      "id": "ember-roast",
+      "primary": "#2b1b12",
+      "secondary": "#4a2c1d",
+      "accent": "#f3e6d8",
+      "highlight": "#a4552b",
+      "background": "#f3e6d8",
+      "tags": ["coffee", "cafe", "roast", "barista", "warm", "artisan", "brown", "espresso"]
+    },
+    {
+      "id": "terracotta-kiln",
+      "primary": "#9a3412",
+      "secondary": "#431407",
+      "accent": "#fff7ed",
+      "highlight": "#ea580c",
+      "background": "#fff7ed",
+      "tags": ["pottery", "craft", "artisan", "earthy", "orange", "handmade", "ceramic", "studio"]
+    },
+    {
+      "id": "sage-herbarium",
+      "primary": "#3f6212",
+      "secondary": "#1a2e05",
+      "accent": "#f7fee7",
+      "highlight": "#84cc16",
+      "background": "#f7fee7",
+      "tags": ["organic", "farm", "herb", "natural", "green", "sustainable", "garden", "vegan"]
+    },
+    {
+      "id": "forest-canopy",
+      "primary": "#14532d",
+      "secondary": "#052e16",
+      "accent": "#ecfdf5",
+      "highlight": "#10b981",
+      "background": "#022c22",
+      "tags": ["forest", "conservation", "nature", "climate", "woodland", "green", "ecology"]
+    },
+    {
+      "id": "deep-ocean",
+      "primary": "#0c4a6e",
+      "secondary": "#082f49",
+      "accent": "#e0f2fe",
+      "highlight": "#0ea5e9",
+      "background": "#0c4a6e",
+      "tags": ["ocean", "marine", "diving", "sailing", "blue", "depth", "wave", "nautical"]
+    },
+    {
+      "id": "glacier-ice",
+      "primary": "#1e3a8a",
+      "secondary": "#1e40af",
+      "accent": "#eff6ff",
+      "highlight": "#93c5fd",
+      "background": "#eff6ff",
+      "tags": ["cold", "arctic", "clean", "fresh", "ice", "medical", "crisp", "blue"]
+    },
+    {
+      "id": "clinic-mint",
+      "primary": "#0f766e",
+      "secondary": "#134e4a",
+      "accent": "#f0fdfa",
+      "highlight": "#2dd4bf",
+      "background": "#f0fdfa",
+      "tags": ["health", "clinic", "dental", "care", "wellness", "teal", "clean", "medical"]
+    },
+    {
+      "id": "ledger-green",
+      "primary": "#064e3b",
+      "secondary": "#022c22",
+      "accent": "#ecfdf5",
+      "highlight": "#34d399",
+      "background": "#f8fafc",
+      "tags": ["fintech", "bank", "money", "finance", "trust", "growth", "accounting", "green"]
+    },
+    {
+      "id": "blue-chip",
+      "primary": "#1e40af",
+      "secondary": "#1e3a8a",
+      "accent": "#eff6ff",
+      "highlight": "#60a5fa",
+      "background": "#f8fafc",
+      "tags": ["fintech", "saas", "crypto", "trading", "institution", "blue", "ledger"]
+    },
+    {
+      "id": "plum-editorial",
+      "primary": "#4c1d95",
+      "secondary": "#2e1065",
+      "accent": "#faf5ff",
+      "highlight": "#a78bfa",
+      "background": "#faf5ff",
+      "tags": ["publishing", "media", "magazine", "culture", "purple", "elegant", "editorial"]
+    },
+    {
+      "id": "gold-atelier",
+      "primary": "#1c1917",
+      "secondary": "#44403c",
+      "accent": "#fef3c7",
+      "highlight": "#d4a017",
+      "background": "#1c1917",
+      "tags": ["luxury", "premium", "jewellery", "fashion", "gold", "dark", "elegant", "boutique"]
+    },
+    {
+      "id": "charcoal-luxe",
+      "primary": "#111111",
+      "secondary": "#3f3f46",
+      "accent": "#fafafa",
+      "highlight": "#a1a1aa",
+      "background": "#fafafa",
+      "tags": ["minimal", "luxury", "fashion", "monochrome", "editorial", "quiet", "premium"]
+    },
+    {
+      "id": "bubble-pop",
+      "primary": "#ec4899",
+      "secondary": "#831843",
+      "accent": "#fdf2f8",
+      "highlight": "#f9a8d4",
+      "background": "#fdf2f8",
+      "tags": ["playful", "kids", "fun", "bright", "pink", "candy", "consumer", "joyful"]
+    },
+    {
+      "id": "citrus-pop",
+      "primary": "#ea580c",
+      "secondary": "#7c2d12",
+      "accent": "#fff7ed",
+      "highlight": "#facc15",
+      "background": "#fffbeb",
+      "tags": ["playful", "juice", "energetic", "orange", "food", "fun", "startup", "bright"]
+    },
+    {
+      "id": "cobalt-arcade",
+      "primary": "#2563eb",
+      "secondary": "#1e1b4b",
+      "accent": "#dbeafe",
+      "highlight": "#facc15",
+      "background": "#1e1b4b",
+      "tags": ["gaming", "arcade", "esports", "retro", "blue", "night", "playful", "console"]
+    },
+    {
+      "id": "kiwi-sport",
+      "primary": "#15803d",
+      "secondary": "#14532d",
+      "accent": "#f7fee7",
+      "highlight": "#65a30d",
+      "background": "#f7fee7",
+      "tags": ["sport", "fitness", "outdoor", "run", "training", "green", "energy", "athletic"]
+    },
+    {
+      "id": "carbon-transit",
+      "primary": "#334155",
+      "secondary": "#0f172a",
+      "accent": "#e2e8f0",
+      "highlight": "#38bdf8",
+      "background": "#f8fafc",
+      "tags": [
+        "transit",
+        "logistics",
+        "fleet",
+        "shipping",
+        "mobility",
+        "slate",
+        "infrastructure",
+        "rail"
+      ]
+    },
+    {
+      "id": "signal-amber",
+      "primary": "#b45309",
+      "secondary": "#451a03",
+      "accent": "#fffbeb",
+      "highlight": "#f59e0b",
+      "background": "#fffbeb",
+      "tags": ["logistics", "delivery", "safety", "amber", "warning", "warm", "utility"]
+    },
+    {
+      "id": "violet-studio",
+      "primary": "#7c3aed",
+      "secondary": "#4c1d95",
+      "accent": "#f5f3ff",
+      "highlight": "#c4b5fd",
+      "background": "#faf5ff",
+      "tags": ["creative", "design", "studio", "agency", "purple", "art", "portfolio"]
+    },
+    {
+      "id": "turquoise-tide",
+      "primary": "#0d9488",
+      "secondary": "#134e4a",
+      "accent": "#f0fdfa",
+      "highlight": "#2dd4bf",
+      "background": "#ccfbf1",
+      "tags": ["surf", "travel", "summer", "tropical", "teal", "fresh", "beach", "wave"]
+    },
+    {
+      "id": "cocoa-roast",
+      "primary": "#3f2a1e",
+      "secondary": "#1c1210",
+      "accent": "#f5ebe0",
+      "highlight": "#c08552",
+      "background": "#f5ebe0",
+      "tags": ["bakery", "chocolate", "dessert", "coffee", "warm", "brown", "craft", "artisan"]
+    },
+    {
+      "id": "pastel-soft",
+      "primary": "#f472b6",
+      "secondary": "#a5b4fc",
+      "accent": "#ffffff",
+      "highlight": "#fcd34d",
+      "background": "#fffbff",
+      "tags": ["soft", "pastel", "gentle", "baby", "beauty", "wellness", "pastel", "light"]
+    },
+    {
+      "id": "steel-forge",
+      "primary": "#334155",
+      "secondary": "#1e293b",
+      "accent": "#f1f5f9",
+      "highlight": "#f59e0b",
+      "background": "#0f172a",
+      "tags": [
+        "industrial",
+        "steel",
+        "manufacturing",
+        "hardware",
+        "dark",
+        "metal",
+        "factory",
+        "workshop"
+      ]
+    },
+    {
+      "id": "bloom-floral",
+      "primary": "#9d174d",
+      "secondary": "#500724",
+      "accent": "#fdf2f8",
+      "highlight": "#f9a8d4",
+      "background": "#fff1f2",
+      "tags": ["floral", "wedding", "beauty", "boutique", "romantic", "pink", "elegant", "bloom"]
+    }
+  ]
+}
