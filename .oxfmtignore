@@ -10,3 +10,7 @@ CLAUDE.md
 .cursorrules
 .windsurfrules
 .github/copilot-instructions.md
+
+# Build output of the browser app. Its own package ignores its dist; this covers the root-level sweep.
+apps/web/dist
+apps/web/node_modules

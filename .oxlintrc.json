@@ -131,6 +131,7 @@
     "coverage/**",
     "out/**",
     "src/brain/*.json",
-    "docs/**"
+    "docs/**",
+    "apps/**"
   ]
 }
