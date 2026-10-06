@@ -203,6 +203,34 @@ eventually offer a choice that silently does nothing.
 Each engine is a pure function from `EngineInput` to `SVGElement[]`: no I/O, no randomness beyond the
 supplied stream, no dependency on the router or the resolvers.
 
+### Centring is measured, not eyeballed
+
+A mark is aligned when its **ink** is centred, not when the box the engine laid out in is centred, and
+the two are not the same thing. Three rules follow, and each exists because ignoring it produced a
+visible defect:
+
+1. **Advance and ink are different widths.** `measureText` returns the advance box; `textPath` draws
+   ink. The compiler gives every glyph equal side bearings so the outer bearings cancel, but the last
+   letter's advance is counted while its glyph stops at the bearing. `fitText` therefore shifts the run
+   by half a tracking unit, and the ink lands where it was asked to land.
+2. **Measuring and drawing must resolve an advance the same way.** Both go through `letterAdvance`.
+   When they disagreed — measurement counting a character the drawer skipped — the run was laid out
+   wider than it was drawn, which put the ink off centre _and_ removed the gap. An undrawable
+   character therefore still advances the cursor, which is the only reason a word space exists at all:
+   the brain carries no space glyph.
+3. **A composed lockup is centred as a whole, after it is measured.** The horizontal wordmark cannot
+   know its left edge until the name has been fitted, because the name's width is what the lockup's
+   width is. Anything that pins one element to the margin and centres the rest in the leftover space
+   collects all its slack on one side.
+
+`tests/text.test.ts` asserts the first two directly against all 18 typefaces: it measures the ink of a
+fitted run and requires it to sit within 0.25% of the canvas of where `fitText` was told to centre it.
+That guard is worth more than the fixes that prompted it — it fails at 2.6% against the previous code.
+
+The abstract engine is the deliberate exception. Its marks are built from arcs, orbits and lobes
+placed by angle, so their ink bounding box is not symmetric by construction. Forcing it square would
+mean not orbiting; the composition is centred on a circle, and the drawing is judged against that.
+
 ### Monogram
 
 Containers: `circle`, `squircle`, `hexagon`, `shield`, `seal`. Letter layouts: side by side, stacked,

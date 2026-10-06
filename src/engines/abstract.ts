@@ -95,7 +95,10 @@ export const abstractEngine: Engine = (input: EngineInput): SVGElement[] => {
   switch (mode) {
     case 'orbit': {
       const inner = radius * seed.range(0.3, 0.46)
-      const count = seed.int(2, 4)
+      // Three or more, evenly spread. Two satellites on opposite sides of a centred ring is the same
+      // shape as one satellite and its shadow, and left the mark reading as lopsided whenever the two
+      // were not the same distance out.
+      const count = seed.int(3, 5)
       const tilt = seed.range(0, 180)
       elements.push(path(discPath(centre, centre, inner), lead))
       for (let index = 0; index < count; index++) {
@@ -133,7 +136,11 @@ export const abstractEngine: Engine = (input: EngineInput): SVGElement[] => {
         const t = bands === 1 ? 0 : index / (bands - 1)
         const r = radius * (0.42 + t * 0.58)
         const weight = radius * (0.2 - t * 0.09)
-        const start = rotation + index * seed.range(18, 42)
+        // The bands start a third of a circle apart, not a few degrees apart. Clustered starts made
+        // every arc leave from the same part of the ring, so the mark read as one lopsided fan and
+        // left up to a fifth of the canvas empty on one side. Spread around the circle they read as
+        // the concentric arcs they are meant to be, and the composition sits centred.
+        const start = rotation + (360 / bands) * index + seed.range(-14, 14)
         const d = arcBandPath(centre, centre, r, r, weight, start, start + seed.range(150, 260))
         const role = ARC_ROLES[index % ARC_ROLES.length] ?? 'lead'
         elements.push(path(d, resolveRole(role, { lead, second, third })))

@@ -93,26 +93,34 @@ export const wordmark: Engine = (input: EngineInput): SVGElement[] => {
     const margin = size * MARGIN
     const gap = size * GAP
     const iconBox = size * HORIZONTAL_ICON_RATIO * (treatment === 'rule' ? 1.3 : 1)
-    const textLeft = margin + iconBox + gap
-    const textWidth = size - textLeft - margin
+
+    // Fit first, place second. The lockup is centred as a whole, which means its left edge depends on
+    // how wide the name turned out to be — and the name's width is only known once it has been fitted.
+    // Anchoring the pictogram at the margin and centring the name in whatever was left over instead
+    // pinned the left edge to `MARGIN` and let the slack collect on the right, so a short name left a
+    // gap of up to 11% of the canvas between the lockup and the right edge.
+    const available = size - margin * 2
     const fitted = fitText(
       font,
       letters,
-      textLeft + textWidth / 2,
+      size / 2,
       0,
-      textWidth,
+      available - iconBox - gap,
       size * 0.34,
       tracking
     )
+    const lockupWidth = iconBox + gap + fitted.width
+    const startX = (size - lockupWidth) / 2
+    const textLeft = startX + iconBox + gap
     const capTop = size / 2 - fitted.height / 2
 
     elements.push(
-      ...decorate(icon, treatment, margin, size / 2 - iconBox / 2, iconBox, glyphFill, badgeTile)
+      ...decorate(icon, treatment, startX, size / 2 - iconBox / 2, iconBox, glyphFill, badgeTile)
     )
     if (treatment === 'rule') {
       elements.push(
         accentRule(
-          margin + iconBox + gap * 0.45,
+          startX + iconBox + gap * 0.45,
           size / 2,
           size * RULE_THICKNESS,
           fitted.height * 1.15,
@@ -121,7 +129,7 @@ export const wordmark: Engine = (input: EngineInput): SVGElement[] => {
       )
     }
     elements.push(
-      path(textPath(font, letters, fitted.left, capTop, fitted.scale, tracking), lockupFill)
+      path(textPath(font, letters, textLeft, capTop, fitted.scale, tracking), lockupFill)
     )
   } else {
     const margin = size * MARGIN

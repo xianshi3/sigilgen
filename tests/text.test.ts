@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { measureText, textPath } from '../src/text'
-import { findFont } from '../src/brain/index'
+import { findFont, FONTS } from '../src/brain/index'
 import { fitText, naturalWidth } from '../src/engines/metrics'
+import { pathBounds } from '../src/path'
 import { polar } from '../src/geometry'
 import type { FontEntry } from '../src/types'
 
@@ -52,10 +53,39 @@ describe('textPath', () => {
     expect(textPath(font, '', 0, 0, 1)).toBe('')
   })
 
-  it('skips glyphs the font does not define rather than substituting', () => {
-    // Silently substituting a wrong letter would be worse than a visible gap. Digits are not in the
-    // brain, so `A1B` must render exactly as `AB`.
-    expect(textPath(font, 'A1B', 0, 0, 1)).toBe(textPath(font, 'AB', 0, 0, 1))
+  it('draws no letter the font does not define, rather than substituting one', () => {
+    // Silently substituting a wrong letter would be worse than a gap. Digits are not in the brain, so
+    // `A1B` must contribute exactly the sub-paths of `A` and `B` and nothing else.
+    const drawn = (letters: string): number =>
+      (textPath(font, letters, 0, 0, 1).match(/M/g) ?? []).length
+    expect(drawn('A1B')).toBe(drawn('AB'))
+  })
+
+  it('advances past a letter it cannot draw, so measuring and drawing agree', () => {
+    // The two functions have to agree or the run is laid out wider than it is drawn and the ink ends
+    // up off centre by half the difference. Measuring the gap and then not leaving it was exactly that
+    // bug: a wordmark's name was measured with a space and drawn without one, which both ran the two
+    // words together and pushed the mark off centre.
+    const gap = measureText(font, '1', 1).width
+    expect(gap).toBeGreaterThan(0)
+    expect(measureText(font, 'A1B', 1).width - measureText(font, 'AB', 1).width).toBeCloseTo(gap)
+
+    // The ink must actually move: `B` sits one advance further right in `A1B` than in `AB`.
+    const inkOf = (letters: string) => pathBounds(textPath(font, letters, 0, 0, 1))!
+    expect(inkOf('A1B').maxX - inkOf('AB').maxX).toBeCloseTo(gap)
+    expect(inkOf('A1B').minX).toBeCloseTo(inkOf('AB').minX)
+  })
+
+  it('leaves a word space between the words of a multi-word name', () => {
+    // The brain carries no space glyph, so this is the whole reason an undrawable letter has to leave
+    // its measured gap. Without it a two-word name was set as one: `NORTHWINDCOFFEE`.
+    const inkOf = (letters: string) => pathBounds(textPath(font, letters, 0, 0, 1))!
+    const tight = inkOf('AC').maxX - inkOf('AC').minX
+    const spaced = inkOf('A C').maxX - inkOf('A C').minX
+    expect(spaced).toBeGreaterThan(tight)
+    // A word space is a fraction of an em, not the full capital it would fall back to.
+    expect(measureText(font, ' ', 1).width).toBeLessThan(font.metrics.capHeight)
+    expect(measureText(font, ' ', 1).width).toBeGreaterThan(font.metrics.capHeight * 0.15)
   })
 
   it('emits only safe absolute commands', () => {
@@ -101,6 +131,46 @@ describe('normalWidth', () => {
 
   it('adds tracking per gap between glyphs', () => {
     expect(naturalWidth(font, 'ABC', 10)).toBe(naturalWidth(font, 'ABC') + 30)
+  })
+})
+
+describe('horizontal centring', () => {
+  /**
+   * How far the ink of a fitted run sits from where it was asked to be centred, as a fraction of the
+   * canvas. This is the invariant behind "the logo looks aligned", and it is measurable rather than a
+   * matter of taste: the ink is the only thing a reader sees, so the ink is what has to be centred.
+   */
+  const drift = (entry: FontEntry, letters: string, tracking: number): number => {
+    const centre = 256
+    const fitted = fitText(entry, letters, centre, 0, 400, 200, tracking)
+    const bounds = pathBounds(textPath(entry, letters, fitted.left, 0, fitted.scale, tracking))
+    if (bounds === null) {
+      throw new Error(`no ink for ${entry.id} / ${letters}`)
+    }
+    return Math.abs((bounds.minX + bounds.maxX) / 2 - centre) / 512
+  }
+
+  it('centres the ink, not just the advance box, for every typeface', () => {
+    // Tracking is the interesting case: the last letter's advance is counted but its glyph stops at
+    // the bearing, so centring the advance box leaves the ink half a tracking unit off. Untracked runs
+    // are checked too, because equal bearings should already make those exact.
+    const worst = Math.max(
+      ...FONTS.flatMap(entry => [drift(entry, 'ACME', 0), drift(entry, 'NORTHWIND COFFEE', 0)])
+    )
+    // A quarter of a percent of the canvas is about a pixel on a 512px mark.
+    expect(worst).toBeLessThan(0.0025)
+  })
+
+  it('centres the ink under tight and loose tracking alike', () => {
+    const worst = Math.max(
+      ...FONTS.flatMap(entry => [
+        drift(entry, 'ACME', -120),
+        drift(entry, 'ACME', 120),
+        drift(entry, 'NORTHWIND COFFEE', -90),
+        drift(entry, 'NORTHWIND COFFEE', 90),
+      ])
+    )
+    expect(worst).toBeLessThan(0.0025)
   })
 })
 

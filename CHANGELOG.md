@@ -17,6 +17,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `CONTAINERS` and `LETTER_LAYOUTS` as module exports, so a consumer can offer the same choices the
   engines accept instead of keeping a second copy that will drift.
 
+### Fixed
+
+Four alignment defects, all found by measuring the ink bounding box of real output against the canvas
+rather than by eye. The worst case was 18.5% of the canvas off centre.
+
+- **A wordmark's two words were set as one.** `measureText` counted a space at the missing-glyph
+  fallback advance while `textPath` skipped it entirely, so `Northwind Coffee` was measured with a gap
+  and drawn without one: `NORTHWINDCOFFEE`. Measurement and drawing now resolve every advance through
+  one function, and an undrawable character leaves the gap it was measured as. A word space is 0.26 em
+  rather than the full capital it fell back to.
+- **The horizontal wordmark lockup was flush left.** The pictogram was pinned to the canvas margin and
+  the name centred in whatever was left over, so all the slack collected on the right and the mark
+  drifted up to 11% of the canvas off centre. The lockup is now centred as a whole, which means fitting
+  the name before placing anything — its width is what the left edge depends on.
+- **Centring an advance box does not centre the run.** The compiler gives every glyph equal side
+  bearings, so the bearings cancel, but the last letter's advance is counted while its glyph stops at
+  the bearing. The ink therefore sat half a tracking unit left of where the run was asked to be
+  centred — up to 4.1% of the canvas on a tight-tracked lettermark. `fitText` now shifts by that half
+  unit. Measured worst-case drift across all 18 typefaces is now under 0.25% of the canvas.
+- **Arc bands all left from the same part of the ring.** Starting angles were staggered by 18–42°
+  instead of around the circle, so three or four concentric arcs overlapped into one lopsided fan and
+  left up to 18.5% of the canvas empty on one side. They now start a third of a circle apart, which is
+  what they were meant to read as. The orbit mode's satellite count also starts at three: two dots on
+  opposite sides of a centred ring is the same shape as one dot and its shadow.
+
 ## [1.0.0] — 2026-10-04
 
 First stable release.
