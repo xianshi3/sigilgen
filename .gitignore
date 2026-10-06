@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+out/
+apps/web/dist/
+.openchamber/
+*.log
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+.env
+.env.*
+*.tsbuildinfo

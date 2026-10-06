@@ -1,0 +1,11 @@
+# Line endings are normalised on check-in.
+#
+# `pnpm run fmt:check` runs in CI on Linux, macOS and Windows. Without this, a file committed from a
+# Windows checkout arrives with CRLF and every other clone then sees a diff that no formatter made —
+# which is a confusing way to learn that a repository has no opinion about line endings.
+* text=auto eol=lf
+
+# `src/brain/fonts.json` is compiled by scripts/build-brain.mjs, not hand-written. GitHub hides it
+# from language statistics and collapses it in review diffs so a regeneration does not bury the change
+# that actually prompted it.
+src/brain/fonts.json linguist-generated=true
