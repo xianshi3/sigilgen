@@ -6,14 +6,26 @@
     "brand",
     "cli",
     "deterministic",
+    "emblem",
+    "flat",
     "generator",
     "lettermark",
     "logo",
     "monogram",
+    "parametric",
     "svg",
+    "typography",
     "wordmark"
   ],
+  "homepage": "https://github.com/xianshi3/sigilgen#readme",
+  "bugs": {
+    "url": "https://github.com/xianshi3/sigilgen/issues"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xianshi3/sigilgen.git"
+  },
   "bin": {
     "sigilgen": "./dist/cli.js"
   },
@@ -34,12 +46,12 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
-    "./brain": "./src/brain/index.ts",
     "./package.json": "./package.json"
   },
   "scripts": {
     "build": "tsup",
     "build:brain": "node scripts/build-brain.mjs",
+    "docs:images": "pnpm run build && node scripts/build-docs-images.mjs",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "dev": "tsup --watch",
     "fmt": "oxfmt . --ignore-path .oxfmtignore",
@@ -55,6 +67,7 @@
     "check:brain": "node scripts/build-brain.mjs --check",
     "check:determinism": "node scripts/check-determinism.mjs",
     "links": "node scripts/link-ai-files.mjs",
+    "prepare": "pnpm run build",
     "prepublishOnly": "pnpm run build && pnpm run test"
   },
   "devDependencies": {

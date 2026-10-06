@@ -131,6 +131,19 @@ Required test coverage:
 | Brain schema                | `docs/design/` and the types in `src/types.ts`         |
 | Architecture decisions      | a new ADR in `docs/architecture/decisions/`            |
 | Dependencies or toolchain   | this file                                              |
+| Rendering output            | `pnpm run docs:images`, which redraws the README art   |
+
+## Generated Files
+
+| Path                                | Built by                                      | Verified by                  |
+| ----------------------------------- | --------------------------------------------- | ---------------------------- |
+| `src/brain/fonts.json`              | `pnpm run build:brain`                        | `pnpm run check:brain`       |
+| `scripts/determinism.manifest.json` | `node scripts/check-determinism.mjs --update` | `pnpm run check:determinism` |
+| `docs/images/*.svg`                 | `pnpm run docs:images`                        | review the diff              |
+| `dist/`                             | `pnpm run build`                              | `pnpm run check`             |
+
+`docs/images/studio.jpg` is the exception: it is a photograph of a user interface, so no script can
+produce it. Re-take it by hand when the app changes visibly.
 
 ## Code Style
 

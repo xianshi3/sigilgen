@@ -1,10 +1,22 @@
 # Sigilgen
 
+[![CI](https://github.com/xianshi3/sigilgen/actions/workflows/ci.yml/badge.svg)](https://github.com/xianshi3/sigilgen/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-0b7285.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-5fa04e.svg)](https://nodejs.org)
+[![Dependencies](https://img.shields.io/badge/runtime%20deps-0-success.svg)](package.json)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](tsconfig.json)
+
 Deterministic, flat geometric SVG logos from a brand name and a few keywords.
 
 Sigilgen is not an image model. It is a curated knowledge base plus a deterministic renderer: give it
 `Acme` and `tech, minimal` and you get the same flat geometric SVG every time, on every platform, plus a
 short note explaining each choice. No network, no API key, no runtime dependencies.
+
+![Six concepts from one call](docs/images/concepts.svg)
+
+<sub>Unedited output of
+`generateLogos({ name: 'Northwind Coffee', keywords: 'coffee, artisan', variations: 6 })`, drawn by
+`scripts/build-docs-images.mjs`.</sub>
 
 ```ts
 import { generateLogo } from 'sigilgen'
@@ -18,10 +30,26 @@ logo.font.family // 'Orbit Grotesk'
 logo.conceptNotes // why this palette, this typeface, this engine
 ```
 
+### Why this exists
+
+Most logo generators are a diffusion model behind an API: you get one image, you cannot ask for it
+again, and you cannot ask why. Sigilgen takes the opposite position. Every decision — the mood, the
+engine, the palette, the typeface, the container — comes from a curated table the project ships, and
+every one of them is reported back to you in words. That buys three things an image model cannot offer:
+
+- **Reproducibility.** The same input gives the same bytes on any machine, any Node version, any
+  working directory. CI asserts it against a recorded hash across Linux, macOS, Windows and two Node
+  versions.
+- **Explainability.** A mark you dislike can be _diagnosed_ rather than rerolled: the notes name the
+  pool it drew from and the reason it chose.
+- **Editability.** Because the type is compiled from geometric skeletons rather than licensed, a
+  palette, a typeface or a whole new letter can be changed as data.
+
 ## Contents
 
 - [Features](#features)
 - [Installation](#installation)
+- [Studio](#studio-browser-app)
 - [CLI](#cli)
 - [API](#api)
 - [How a logo is decided](#how-a-logo-is-decided)
@@ -50,19 +78,58 @@ logo.conceptNotes // why this palette, this typeface, this engine
 
 ## Installation
 
+Not yet on npm. Install straight from the repository — the `prepare` script builds it for you:
+
 ```bash
-pnpm add sigilgen
+pnpm add github:xianshi3/sigilgen
 # or
-npm install sigilgen
+npm install github:xianshi3/sigilgen
 ```
 
-Node.js 22.12 or newer.
+Or clone and use the CLI in place:
 
-The CLI ships with the package:
+```bash
+git clone https://github.com/xianshi3/sigilgen.git
+cd sigilgen
+pnpm install
+pnpm build
+node dist/cli.js --name "Acme" --keywords "tech, minimal"
+```
+
+Node.js 22.12 or newer. The package has no runtime dependencies; `sharp` is optional and only needed
+for PNG output.
+
+Once installed, the CLI is on your path:
 
 ```bash
 npx sigilgen --name "Acme" --keywords "tech, minimal"
 ```
+
+## Studio (browser app)
+
+`apps/web` is a bilingual browser interface for the same generator: type a name, pick a concept, hold
+the decisions you like still while the rest vary, and copy or download the SVG.
+
+![The Sigilgen studio](docs/images/studio.jpg)
+
+<sub>Captured from the running app. The other two images on this page are generated from the
+generator itself by `pnpm run docs:images`; this one cannot be, because it is a picture of a UI.</sub>
+
+```bash
+cd apps/web
+pnpm install
+pnpm dev        # http://localhost:5173
+```
+
+It imports the generator's source directly, so editing an engine in `src/` hot-reloads the app. See
+[apps/web/README.md](apps/web/README.md).
+
+## Five engines
+
+![Five engines, one name](docs/images/engines.svg)
+
+<sub>One name through each engine. Unedited output, drawn by
+`scripts/build-docs-images.mjs`.</sub>
 
 ## CLI
 
