@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { measureText, textPath } from '../src/text'
+import { letterAdvance, measureText, textPath } from '../src/text'
 import { findFont, FONTS } from '../src/brain/index'
-import { fitText, naturalWidth } from '../src/engines/metrics'
+import { fitText, naturalWidth, opticalTracking } from '../src/engines/metrics'
 import { pathBounds } from '../src/path'
 import { polar } from '../src/geometry'
 import type { FontEntry } from '../src/types'
@@ -131,6 +131,85 @@ describe('normalWidth', () => {
 
   it('adds tracking per gap between glyphs', () => {
     expect(naturalWidth(font, 'ABC', 10)).toBe(naturalWidth(font, 'ABC') + 30)
+  })
+})
+
+describe('letterspacing', () => {
+  /**
+   * Clear space between two letters' ink, in thousandths of cap height.
+   *
+   * Cap height rather than stroke width: the serif `I` is as wide as its slabs, so reading a stem off
+   * it overstates a serif face's stroke by more than half. Cap height is the one dimension every
+   * typeface in the brain shares, and letterspacing is specified in it by convention — roughly 60 to
+   * 110 thousandths for capitals.
+   */
+  function letterGap(font: FontEntry, run = 'NORTHWIND'): number {
+    const boxes: { minX: number; maxX: number }[] = []
+    let cursor = 0
+    for (const letter of run) {
+      const glyph = font.glyphs[letter]
+      const bounds = glyph === undefined ? null : pathBounds(glyph)
+      if (bounds !== null) {
+        boxes.push({ minX: bounds.minX + cursor, maxX: bounds.maxX + cursor })
+      }
+      cursor += letterAdvance(font, letter)
+    }
+    let total = 0
+    for (let index = 0; index < boxes.length - 1; index++) {
+      total += (boxes[index + 1]?.minX ?? 0) - (boxes[index]?.maxX ?? 0)
+    }
+    return ((total / (boxes.length - 1)) * 1000) / font.metrics.capHeight
+  }
+
+  /** Clear space a word space leaves between the ink on either side of it. */
+  function wordGap(font: FontEntry): number {
+    const glyph = font.glyphs['N']
+    const bearing = (glyph === undefined ? null : pathBounds(glyph))?.minX ?? 0
+    return ((letterAdvance(font, ' ') - 2 * bearing) * 1000) / font.metrics.capHeight
+  }
+
+  it('sets every family in the band where capitals read as a word', () => {
+    // The bug this guards: spacing was authored as an absolute number of font units, so the same
+    // number meant "wide air" on a 46-unit stem and "tight contact" on a 241-unit slab. Measured
+    // across the 18 families the gap ranged from 34 to 345 thousandths of cap height — the light
+    // geometric faces came apart into visibly separate letters.
+    const gaps = FONTS.map(font => ({ id: font.id, gap: letterGap(font) }))
+    const worst = gaps.reduce((a, b) => (b.gap > a.gap ? b : a))
+    const tightest = gaps.reduce((a, b) => (b.gap < a.gap ? b : a))
+    expect(worst.gap, `${worst.id} is the loosest`).toBeLessThan(125)
+    expect(tightest.gap, `${tightest.id} is the tightest`).toBeGreaterThan(40)
+  })
+
+  it('gives every family a word space clearly wider than its letter gap', () => {
+    // Sized on the *advance* in the compiler, so the visible ratio is one less than the advance ratio.
+    // Anything at or below 1.5 reads as a single word; this is also what the earlier hard-coded space
+    // got wrong, coming out narrower than the gap between letters in the loosest family.
+    for (const font of FONTS) {
+      const ratio = wordGap(font) / letterGap(font)
+      expect(ratio, `${font.id}: word gap is ${ratio.toFixed(2)}x its letter gap`).toBeGreaterThan(
+        1.8
+      )
+      expect(ratio, `${font.id}: word gap is ${ratio.toFixed(2)}x its letter gap`).toBeLessThan(3.2)
+    }
+  })
+
+  it('carries a space advance on every family', () => {
+    for (const font of FONTS) {
+      expect(typeof font.metrics.advance[' '], `${font.id} has no space advance`).toBe('number')
+    }
+  })
+})
+
+describe('opticalTracking', () => {
+  it('reads a fraction of cap height, so it does not depend on how bearings were derived', () => {
+    // Engines used to scale an authoring constant instead. That constant is unrelated to the spacing
+    // the bearings actually produce, so the same multiplier put the gap anywhere from a third of a
+    // stroke to three times it — a wordmark at 309/1000 in one family and a lettermark overlapping in
+    // another. Cap height is the stable unit.
+    for (const font of FONTS) {
+      expect(opticalTracking(font, 0.02)).toBeCloseTo(font.metrics.capHeight * 0.02)
+      expect(opticalTracking(font, -0.03)).toBeCloseTo(font.metrics.capHeight * -0.03)
+    }
   })
 })
 

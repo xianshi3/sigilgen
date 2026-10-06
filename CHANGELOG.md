@@ -20,13 +20,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 Four alignment defects, all found by measuring the ink bounding box of real output against the canvas
-rather than by eye. The worst case was 18.5% of the canvas off centre.
+rather than by eye. The worst case was 18.5% of the canvas off centre.- **A wordmark's two words were set as one.** `measureText` counted a space at the missing-glyph
+fallback advance while `textPath` skipped it entirely, so `Northwind Coffee` was measured with a gap
+and drawn without one: `NORTHWINDCOFFEE`. Measurement and drawing now resolve every advance through
+one function, and an undrawable character leaves the gap it was measured as. A word space is 0.26 em
+rather than the full capital it fell back to.
 
-- **A wordmark's two words were set as one.** `measureText` counted a space at the missing-glyph
-  fallback advance while `textPath` skipped it entirely, so `Northwind Coffee` was measured with a gap
-  and drawn without one: `NORTHWINDCOFFEE`. Measurement and drawing now resolve every advance through
-  one function, and an undrawable character leaves the gap it was measured as. A word space is 0.26 em
-  rather than the full capital it fell back to.
 - **The horizontal wordmark lockup was flush left.** The pictogram was pinned to the canvas margin and
   the name centred in whatever was left over, so all the slack collected on the right and the mark
   drifted up to 11% of the canvas off centre. The lockup is now centred as a whole, which means fitting
@@ -41,6 +40,26 @@ rather than by eye. The worst case was 18.5% of the canvas off centre.
   left up to 18.5% of the canvas empty on one side. They now start a third of a circle apart, which is
   what they were meant to read as. The orbit mode's satellite count also starts at three: two dots on
   opposite sides of a centred ring is the same shape as one dot and its shadow.
+- **Letters came apart, and words ran together.** Two separate causes, both spacing metrics that were
+  absolute numbers where they needed to be proportional.
+  - Side bearings were authored per family in font units, so a 66-unit gap meant wide air on a
+    46-unit stem and near-contact on a 241-unit slab. Measured across the library the gap between
+    letters ranged from 34 to 345 thousandths of cap height, and the light geometric faces read as
+    `N O R T H W I N D` rather than as a word. The compiler now derives the bearing from the stroke,
+    sub-linearly so a heavy face gets proportionally less air, and keeps each family's authored
+    `sideBearing` and `tracking` as fractions so no face loses its character. The range is now 68–117.
+  - The word space was a fixed 0.26 em, which is narrower than the gap between letters in the loosest
+    family — so `Northwind Coffee` came out as one word in some faces and two in others, and
+    `stipple-display` measured a word gap of 0.06× its letter gap. The space is now compiled into each
+    family's `advance` table, sized against that family's own letter gap, and every family measures
+    2.2×.
+- **Engines derived tracking from an authoring constant.** `wordmark`, `lettermark`, `monogram` and
+  `emblem` all scaled `font.letterSpacing`, which is the number the compiler happened to use when
+  deriving bearings and has no relationship to the spacing they produce. Since tracking is added to
+  every advance, one unit widens the gap by exactly one unit, so the same multiplier put a wordmark's
+  gap at 309 thousandths of cap height in one family and made a lettermark's letters overlap in
+  another. All four now express optical tracking through `opticalTracking(font, fraction)` as a
+  fraction of cap height, which is the unit letterspacing is actually specified in.
 
 ## [1.0.0] — 2026-10-04
 

@@ -17,7 +17,7 @@
 
 import { accentRule, path, pick, placeIcon, wordmarkLetters } from './shared'
 import { contrastFill, readableOn } from '../resolvers/palette-resolver'
-import { fitText } from './metrics'
+import { fitText, opticalTracking } from './metrics'
 import { textPath } from '../text'
 import { roundedRectPath } from '../geometry'
 import type { Engine, EngineInput, IconEntry, SVGElement } from '../types'
@@ -34,8 +34,14 @@ const HORIZONTAL_ICON_RATIO = 0.17
 /** Fraction of the canvas height the pictogram occupies in a vertical lockup. */
 const VERTICAL_ICON_RATIO = 0.3
 
-/** Optical tracking added to the run, as a fraction of the font's baked tracking. */
-const WORDMARK_TRACKING = 0.15
+/**
+ * Extra letterspacing a wordmark adds, as a fraction of cap height.
+ *
+ * A name set at logo size wants a little more air than the same face would get in a paragraph, but
+ * only a little: the mark is already large, so what reads as generous here reads as gappy at twice the
+ * scale. Two percent of cap height is roughly a twentieth of the space between two letters.
+ */
+const WORDMARK_TRACKING = 0.022
 
 /** Space between pictogram and type, as a fraction of the canvas. */
 const GAP = 0.07
@@ -84,7 +90,7 @@ export const wordmark: Engine = (input: EngineInput): SVGElement[] => {
     glyphFill = contrastFill(palette, badgeTile)
   }
 
-  const tracking = font.letterSpacing * WORDMARK_TRACKING
+  const tracking = opticalTracking(font, WORDMARK_TRACKING)
   const elements: SVGElement[] = []
 
   if (layout === 'horizontal') {
@@ -206,7 +212,7 @@ function drawTypeOnly(input: EngineInput): SVGElement[] {
   }
   const canvas = palette.background ?? '#ffffff'
   const fill = contrastFill(palette, canvas)
-  const tracking = font.letterSpacing * WORDMARK_TRACKING
+  const tracking = opticalTracking(font, WORDMARK_TRACKING)
   const fitted = fitText(font, letters, size / 2, size * 0.26, size * 0.86, size * 0.48, tracking)
   input.mood.notes.push(
     `Wordmark without a pictogram; the name alone is set in ${font.family} in ${fill}.`

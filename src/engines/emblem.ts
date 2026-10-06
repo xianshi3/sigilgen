@@ -13,7 +13,7 @@
 import { path, pick, placeIcon, wordmarkLetters } from './shared'
 import { contrastFill } from './monogram'
 import { readableOn } from '../resolvers/palette-resolver'
-import { fitText } from './metrics'
+import { fitText, opticalTracking } from './metrics'
 import { textPath } from '../text'
 import { discPath, regularPolygonPath, shieldPath } from '../geometry'
 import type { Engine, EngineInput, FontEntry, IconEntry, SVGElement } from '../types'
@@ -24,8 +24,14 @@ export const FRAMES: readonly string[] = ['shield', 'hexagon', 'circle', 'banner
 /** Frames are sized so the widest one still clears the canvas edges. */
 const FRAME_RATIO = 0.86
 
-/** Tracking for the name, as a fraction of the font's baked tracking. */
-const EMBLEM_TRACKING = 0.4
+/**
+ * Letterspacing an emblem adds to its name, as a fraction of cap height.
+ *
+ * The name sits inside a frame with a pictogram above it, so it is glanced at rather than read. A
+ * little extra air keeps it from crowding the frame; much more than this and it starts to collide with
+ * the border, which the fitting pass cannot see because it only knows the interior box.
+ */
+const EMBLEM_TRACKING = 0.03
 
 /** The icon, the gap and the name split the interior block between them. */
 const BLOCK_SHARES = { icon: 0.48, gap: 0.14, name: 0.38 } as const
@@ -290,7 +296,7 @@ function drawSealStack(
       frameHalfWidth(frame, centre, frameRadius, nameTop),
       frameHalfWidth(frame, centre, frameRadius, nameTop + nameHeight)
     )
-    const tracking = font.letterSpacing * EMBLEM_TRACKING
+    const tracking = opticalTracking(font, EMBLEM_TRACKING)
     const fitted = fitText(
       font,
       letters,

@@ -688,16 +688,69 @@ const FONT_STYLES = [
 // ---------------------------------------------------------------------------------------------
 
 /**
+ * Exponent applied to the stroke when deriving letterspacing.
+ *
+ * Below 1, so a heavier stem gets proportionally *less* air. A slab's stems already fill their
+ * counters; giving it the same stroke multiple of gap as a hairline geometric would open the words up.
+ */
+const LETTERSPACING_EXPONENT = 0.72
+
+/**
+ * Base letterspacing, in the units produced by {@link LETTERSPACING_EXPONENT} of the stroke.
+ *
+ * Calibrated so a mid-weight face lands near 0.8 stroke widths of gap between letters, which is the
+ * point at which capitals read as a word. The per-family terms added to it are what keep an open
+ * display face open and a closed one closed.
+ */
+const LETTERSPACING_BASE = 1.15
+
+/**
+ * Word space, as a multiple of the gap between two letters.
+ *
+ * Measured on the *advance*, not on the gap a reader sees. The space sits between two letters' ink,
+ * so it has to replace both of their bearings before it opens anything: an advance of `n × gap` leaves
+ * a visible gap of `(n − 1) × gap`. Three point two is what makes the space between words read as two
+ * point two times the gap between letters, which is the usual convention and the smallest ratio at
+ * which the words still clearly come apart.
+ */
+const WORD_SPACE_RATIO = 3.2
+
+/** Floor on the word space, as a fraction of cap height, so words can never merge. */
+const MIN_WORD_SPACE = 0.2
+
+/**
  * Draws the uppercase alphabet for one font style.
  *
  * @param {FontStyle} font
- * @returns {Record<string, { d: string, advance: number }>}
+ * @returns {{ glyphs: Record<string, { d: string, advance: number }>, letterGap: number }}
  */
 function buildGlyphs(font) {
   const { cap } = font
   // Keep the stroke inside a range that always leaves a visible counter inside a bowl.
   const w = Math.max(cap * 0.09, Math.min(font.stroke, cap * 0.2))
   const half = w / 2
+
+  /**
+   * Space either side of a letter's ink, in font units.
+   *
+   * Letterspacing has to be read against the stroke, not in absolute font units. A 66-unit gap is
+   * wide air on a 46-unit stem and tight contact on a 241-unit slab, so an absolute number means the
+   * light geometric faces came apart into visibly separate letters while the heavy ones ran together.
+   * Measured across the 18 families, an absolute gap ranged from 0.34 to 3.45 stroke widths — a spread
+   * wide enough that half the library read as broken.
+   *
+   * Two things keep this from flattening the library's character. The family's authored `sideBearing`
+   * and `tracking` survive as fractions added to the base, so a face that was designed open stays
+   * looser than one designed closed. And the base is *sub-linear* in the stroke, because a heavy face
+   * needs proportionally less air than a light one: a slab's stems already fill the counter.
+   *
+   * Together these put every family in a 0.46–0.85 stroke-width band, which is where capitals read as
+   * a word rather than as a row of letters.
+   */
+  const leading = Math.round(
+    w ** LETTERSPACING_EXPONENT *
+      (LETTERSPACING_BASE + font.sideBearing / 1000 + font.tracking / 2000)
+  )
   // Slab serifs push the stem inwards so the slabs stay inside the ink box.
   const serifOut = font.serif * w * 0.9
   const inset = half + serifOut
@@ -729,8 +782,8 @@ function buildGlyphs(font) {
       return
     }
     const inkWidth = bounds.maxX - bounds.minX
-    // Split the total spacing evenly, so tracking lands half on each side rather than all on the right.
-    const leading = font.sideBearing + font.tracking / 2
+    // `leading` is already split evenly, so tracking lands half on each side rather than all on the
+    // right, which is what keeps the ink centred inside its own advance box.
     glyphs[letter] = {
       d: shiftPath(raw, leading - bounds.minX),
       advance: Math.round(inkWidth + leading * 2),
@@ -1106,7 +1159,9 @@ function buildGlyphs(font) {
     ])
   }
 
-  return glyphs
+  // The gap this family was set with, reported so the word space can be sized against it rather than
+  // against a constant that would be too small for one family and too large for another.
+  return { glyphs, letterGap: leading * 2 }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1122,7 +1177,7 @@ const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
  */
 function buildBrain() {
   return FONT_STYLES.map(font => {
-    const glyphs = buildGlyphs(font)
+    const { glyphs, letterGap: gapBetweenLetters } = buildGlyphs(font)
     /** @type {Record<string, string>} */
     const paths = {}
     /** @type {Record<string, number>} */
@@ -1194,6 +1249,24 @@ function buildBrain() {
       paths[letter] = glyph.d
       advance[letter] = glyph.advance
     }
+
+    /**
+     * The word space, carried in `advance` alongside the letters.
+     *
+     * It lives here rather than as a constant in the renderer because it is a property of the
+     * typeface: a family with wide letterspacing needs a wider word space, and one with a tight set
+     * needs a narrower one. A single hard-coded number made the space narrower than the gap between
+     * letters in the loosest family and three times wider in the tightest, so `Northwind Coffee` read
+     * as one word in one face and two in another.
+     *
+     * Sized as a multiple of this family's own letter gap, with a floor tied to the cap height: the
+     * multiple keeps the words clearly separated, and the floor stops a tightly-set family from
+     * closing the space up altogether.
+     */
+    advance[' '] = Math.round(
+      Math.max(gapBetweenLetters * WORD_SPACE_RATIO, font.cap * MIN_WORD_SPACE)
+    )
+
     return {
       id: font.id,
       family: font.family,

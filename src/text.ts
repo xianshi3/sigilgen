@@ -27,17 +27,8 @@ export function normaliseLetters(value: string): string {
 /** Advance assumed for a glyph the font does not define. */
 const FALLBACK_ADVANCE = 620
 
-/**
- * Advance of a word space, in font units.
- *
- * The brain's `advance` table covers `A`–`Z` only, because those are the letters a logo is allowed to
- * draw. A wordmark for a two-word name still needs a gap between the words, so the space gets a width
- * of its own rather than inheriting `FALLBACK_ADVANCE` — which is a full capital's advance and would
- * set `Northwind Coffee` as two names a country apart.
- *
- * 260 units is 0.26 em, inside the 0.2–0.4 em range a display face uses for a word space.
- */
-const SPACE_ADVANCE = 260
+/** Word space, as a fraction of cap height, used only if a font carries no space advance. */
+const FALLBACK_SPACE_RATIO = 0.2
 
 /** Optical tracking applied between glyphs, in font units. */
 const DEFAULT_TRACKING = 0
@@ -50,6 +41,12 @@ const DEFAULT_TRACKING = 0
  * centre and, for a wordmark with a space in it, ran the two words together. Routing both through one
  * function is what makes that class of bug unreachable rather than merely fixed.
  *
+ * The brain's `advance` table carries `A`–`Z` plus a space. The space is sized by the compiler against
+ * that family's own letter gap, because a word space is a property of the typeface: one hard-coded
+ * number came out narrower than the gap between letters in the loosest family, so `Northwind Coffee`
+ * read as a single word there. The ratio below is a floor for a font that somehow lacks the entry,
+ * not the value in use.
+ *
  * @param font - The typeface.
  * @param letter - One character of the run.
  * @returns The advance in font units.
@@ -59,7 +56,7 @@ export function letterAdvance(font: FontEntry, letter: string): number {
   if (advance !== undefined) {
     return advance
   }
-  return letter === ' ' ? SPACE_ADVANCE : FALLBACK_ADVANCE
+  return letter === ' ' ? font.metrics.capHeight * FALLBACK_SPACE_RATIO : FALLBACK_ADVANCE
 }
 
 /** Measured size of a laid-out text run. */

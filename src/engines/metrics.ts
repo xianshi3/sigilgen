@@ -89,6 +89,29 @@ export function naturalWidth(font: FontEntry, letters: string, tracking = 0): nu
 }
 
 /**
+ * Optical tracking for a run, in font units, from a fraction of the cap height.
+ *
+ * Engines used to express tracking as a multiple of `font.letterSpacing`, which is an authoring
+ * constant: a number the compiler happened to use when it derived the family's side bearings, with no
+ * relationship to the spacing those bearings actually produce. Because tracking is added to every
+ * advance, one unit widens the gap between two letters by exactly that unit — so multiplying an
+ * unrelated constant put the gap anywhere from a third of a stroke to three times it, depending on the
+ * family. A wordmark set in the loosest face came out at 309/1000 of cap height between letters, and
+ * the tightest lettermark came out negative, with the letters overlapping.
+ *
+ * A fraction of cap height is the unit type designers actually specify letterspacing in, and it is
+ * stable: it does not move when the compiler changes how it derives bearings, because it is measured
+ * against the one dimension every typeface shares.
+ *
+ * @param font - The typeface.
+ * @param fraction - Tracking as a fraction of cap height. Positive opens the letters up.
+ * @returns Tracking in font units.
+ */
+export function opticalTracking(font: FontEntry, fraction: number): number {
+  return font.metrics.capHeight * fraction
+}
+
+/**
  * Cap height a run should use to occupy a target width.
  *
  * @param font - The typeface.

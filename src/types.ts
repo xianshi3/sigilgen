@@ -50,7 +50,15 @@ export interface FontMetrics {
   ascender: number
   /** Lowest point used by any glyph in the family (positive, below the baseline). */
   descender: number
-  /** Advance width per glyph, keyed by the uppercase letter. */
+  /**
+   * Advance width per glyph, keyed by the uppercase letter, plus a space.
+   *
+   * The space carries no outline — there is no glyph to draw — but it carries an advance, because a
+   * wordmark for a two-word name has to open a gap between the words. Its width is a property of the
+   * typeface: the compiler sizes it against that family's own letter gap, since one hard-coded number
+   * came out narrower than the gap between letters in the loosest family and far wider in the
+   * tightest.
+   */
   advance: Record<string, number>
 }
 

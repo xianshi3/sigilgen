@@ -12,7 +12,7 @@
 import { accentRule, monogramLetters, path, pick } from './shared'
 import { contrastFill } from './monogram'
 import { readableOn } from '../resolvers/palette-resolver'
-import { fitText } from './metrics'
+import { fitText, opticalTracking } from './metrics'
 import { textPath } from '../text'
 import { discPath, segmentPath } from '../geometry'
 import type { Engine, EngineInput, SVGElement } from '../types'
@@ -23,8 +23,15 @@ export const ACCENTS: readonly string[] = ['none', 'rule', 'dot', 'corner-frame'
 /** Fraction of the canvas the letters may occupy. */
 const FILL_RATIO = 0.54
 
-/** Tracking applied between letters, as a fraction of the font's baked tracking. */
-const TIGHT_TRACKING = -0.9
+/**
+ * Letterspacing a lettermark tightens, as a fraction of cap height.
+ *
+ * One or two letters at display size are read as a shape rather than as text, so they are set closer
+ * together than the same face would be inside a word — close enough that the pair reads as one mark.
+ * Three percent of cap height closes the gap by about a fifth without ever going negative: the tightest
+ * family in the brain leaves 68/1000 between letters, so this still leaves it a clear 38.
+ */
+const TIGHT_TRACKING = -0.03
 
 /** The four edges of a square frame, as `[x1, y1, x2, y2]` pairs. */
 const FRAME_EDGES: readonly (readonly [number, number, number, number])[] = [
@@ -49,7 +56,7 @@ export const lettermark: Engine = (input: EngineInput): SVGElement[] => {
 
   const accent = pick(ACCENTS, seed, input.request.preferences.accent)
   const centre = size / 2
-  const tracking = font.letterSpacing * TIGHT_TRACKING
+  const tracking = opticalTracking(font, TIGHT_TRACKING)
 
   // Reserve vertical room for the accent so the letters never collide with it.
   const reserveTop = accent === 'none' ? 0 : size * 0.07

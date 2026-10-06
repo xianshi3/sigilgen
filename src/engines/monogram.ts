@@ -21,6 +21,7 @@ import {
   path,
   pick,
 } from './shared'
+import { opticalTracking } from './metrics'
 import { contrastFill } from '../resolvers/palette-resolver'
 import { measureText, textPath } from '../text'
 import type { Engine, EngineInput, SVGElement } from '../types'
@@ -36,8 +37,14 @@ const CAP_RATIO = 0.94
 /** Fraction of the natural width the letters are squeezed to when overlapping. */
 const OVERLAP_TIGHTENING = 0.7
 
-/** Tracking applied between letters, as a fraction of the font's baked tracking. */
-const PAIR_TRACKING = 0.5
+/**
+ * Letterspacing a side-by-side monogram tightens, as a fraction of cap height.
+ *
+ * Two letters inside a container are one mark, so they are closed up more than a lettermark's are:
+ * there is a border right beside them. Two and a half percent takes the tightest family in the brain
+ * from 68/1000 down to 43, which still leaves air.
+ */
+const PAIR_TRACKING = -0.025
 
 /**
  * Widest a letter run may be, as a fraction of the container's radius.
@@ -105,7 +112,7 @@ export const monogram: Engine = (input: EngineInput): SVGElement[] => {
     if (overlap) {
       tracking = (natural * OVERLAP_TIGHTENING - natural) / letters.length
     } else if (letters.length > 1) {
-      tracking = -font.letterSpacing * PAIR_TRACKING
+      tracking = opticalTracking(font, PAIR_TRACKING)
     }
     const metrics = measureText(font, letters, scale, tracking)
     // Two wide letters can be wider than the container is across the band they occupy. Scaling the whole
