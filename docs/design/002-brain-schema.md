@@ -79,15 +79,33 @@ rendered word:
   ones ran together. The gap across the library ranged from 34 to 345 thousandths of cap height; it is
   now 68 to 117.
 
+#### Weight, and why there is no hairline in the library
+
+Each family declares a nominal weight of 300–900 and a stroke, and the stroke is clamped into
+`cap × [0.12, 0.23]` — Regular to heavy.
+
+The floor exists because the library is a logo library. A text face can be a hairline; a mark cannot.
+At the size a wordmark fits an eighteen-character name into, a stroke of 7% of cap height is barely two
+pixels, and it is gone entirely at favicon size — which is the size a mark has to survive. Nine of the
+eighteen families were authored between 6.6% and 9.1%, so half the picker was offering hairline logos.
+The nominal weights are kept so the intended light-to-heavy ordering survives; only the absolute range
+moved.
+
+The ceiling keeps counters open. Past a fifth of the cap height the bowls of B, R, P and A begin to
+fill in, and a filled counter is not a heavier letter — it is a different one. `tests/brain.test.ts`
+checks this the hard way, sampling the winding number inside the counters of seven letters across all
+eighteen families, so a stroke that closes a bowl fails the build rather than shipping.
+
 #### Spacing, and why the space has an advance
 
-`leading = stroke^0.72 × (1.15 + sideBearing/1000 + tracking/2000)`
+`leading = stroke^0.72 × (0.98 + sideBearing/1000 + tracking/2000)`
 
 The exponent is below one so a heavier stem gets proportionally _less_ air — a slab's stems already
-fill their counters, and giving it the same stroke multiple of gap as a hairline geometric would open
+fill their counters, and giving it the same stroke multiple of gap as a light geometric would open
 the words up. The two authored terms are divided by 1000 so they enter as fractions, which keeps each
 family's character: a face designed open stays looser than one designed closed, without the absolute
-number deciding how loose.
+number deciding how loose. The base is calibrated so the library lands between 77 and 109 thousandths of
+cap height, against the 60 to 110 a type designer would specify for capitals.
 
 `advance[' ']` carries a word space with no outline behind it. It exists because a wordmark for a
 two-word name has to open a gap, and it is sized against the family's own letter gap rather than being

@@ -173,11 +173,37 @@ describe('letterspacing', () => {
     // number meant "wide air" on a 46-unit stem and "tight contact" on a 241-unit slab. Measured
     // across the 18 families the gap ranged from 34 to 345 thousandths of cap height — the light
     // geometric faces came apart into visibly separate letters.
+    //
+    // The band is 60 to 115 rather than the 60 to 110 a type designer would quote, to leave room for
+    // the open end of a 900-weight face without letting the library drift back out of it.
     const gaps = FONTS.map(font => ({ id: font.id, gap: letterGap(font) }))
     const worst = gaps.reduce((a, b) => (b.gap > a.gap ? b : a))
     const tightest = gaps.reduce((a, b) => (b.gap < a.gap ? b : a))
-    expect(worst.gap, `${worst.id} is the loosest`).toBeLessThan(125)
-    expect(tightest.gap, `${tightest.id} is the tightest`).toBeGreaterThan(40)
+    expect(worst.gap, `${worst.id} is the loosest`).toBeLessThan(115)
+    expect(tightest.gap, `${tightest.id} is the tightest`).toBeGreaterThan(60)
+  })
+
+  it('keeps every family at a weight a logo can actually use', () => {
+    // Nine of the eighteen were authored below 10% of cap height, which is hairline territory. At the
+    // size a wordmark fits a long name into, that is a couple of pixels, and it is gone by favicon
+    // size. A Regular sans is 12 to 14%, so the floor is there.
+    for (const font of FONTS) {
+      // The serif `I` is as wide as its slabs, so this over-reads a serif face. It is the *sans* and
+      // display families this guards, and for those the `I` is a plain stem.
+      if (font.category === 'serif') {
+        continue
+      }
+      const glyph = font.glyphs['I']
+      const bounds = glyph === undefined ? null : pathBounds(glyph)
+      if (bounds === null) {
+        throw new Error(`${font.id} has no I`)
+      }
+      const ratio = (bounds.maxX - bounds.minX) / font.metrics.capHeight
+      expect(ratio, `${font.id} is ${(ratio * 100).toFixed(1)}% of cap height`).toBeGreaterThan(
+        0.115
+      )
+      expect(ratio, `${font.id} is ${(ratio * 100).toFixed(1)}% of cap height`).toBeLessThan(0.235)
+    }
   })
 
   it('gives every family a word space clearly wider than its letter gap', () => {

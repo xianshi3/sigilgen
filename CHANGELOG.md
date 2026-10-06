@@ -60,6 +60,14 @@ rather than the full capital it fell back to.
   gap at 309 thousandths of cap height in one family and made a lettermark's letters overlap in
   another. All four now express optical tracking through `opticalTracking(font, fraction)` as a
   fraction of cap height, which is the unit letterspacing is actually specified in.
+- **Half the library was set at hairline weight.** Nine of the eighteen families were authored between
+  6.6% and 9.1% of cap height, which is hairline territory — a Regular sans is 12 to 14%. A text face
+  can get away with that; a logo cannot. At the size a wordmark fits an eighteen-character name into, a
+  7% stroke is barely two pixels, and it is gone by favicon size, which is the size a mark has to
+  survive. The library now spans 12.5% to 22% — Regular to heavy — with the nominal weights kept so the
+  intended light-to-heavy ordering survives. `tests/brain.test.ts` already sampled the winding number
+  inside the counters of seven letters across all eighteen families, so raising the weight could not
+  quietly close a bowl in `B`, `R`, `P` or `A`; it did not.
 
 ## [1.0.0] — 2026-10-04
 

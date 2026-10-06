@@ -363,7 +363,7 @@ const FONT_STYLES = [
     category: 'geometric-sans',
     weight: 500,
     cap: 700,
-    stroke: 64,
+    stroke: 109,
     width: 580,
     sideBearing: 46,
     tracking: 40,
@@ -381,7 +381,7 @@ const FONT_STYLES = [
     category: 'geometric-sans',
     weight: 400,
     cap: 700,
-    stroke: 52,
+    stroke: 98,
     width: 600,
     sideBearing: 52,
     tracking: 62,
@@ -399,7 +399,7 @@ const FONT_STYLES = [
     category: 'geometric-sans',
     weight: 600,
     cap: 700,
-    stroke: 92,
+    stroke: 119,
     width: 640,
     sideBearing: 30,
     tracking: 22,
@@ -417,7 +417,7 @@ const FONT_STYLES = [
     category: 'geometric-sans',
     weight: 800,
     cap: 700,
-    stroke: 132,
+    stroke: 140,
     width: 600,
     sideBearing: 26,
     tracking: 12,
@@ -435,7 +435,7 @@ const FONT_STYLES = [
     category: 'geometric-sans',
     weight: 700,
     cap: 700,
-    stroke: 108,
+    stroke: 130,
     width: 500,
     sideBearing: 34,
     tracking: 30,
@@ -453,7 +453,7 @@ const FONT_STYLES = [
     category: 'geometric-sans',
     weight: 300,
     cap: 700,
-    stroke: 46,
+    stroke: 88,
     width: 560,
     sideBearing: 56,
     tracking: 74,
@@ -471,7 +471,7 @@ const FONT_STYLES = [
     category: 'humanist-sans',
     weight: 400,
     cap: 700,
-    stroke: 62,
+    stroke: 98,
     width: 540,
     sideBearing: 44,
     tracking: 46,
@@ -489,7 +489,7 @@ const FONT_STYLES = [
     category: 'humanist-sans',
     weight: 500,
     cap: 700,
-    stroke: 78,
+    stroke: 109,
     width: 555,
     sideBearing: 42,
     tracking: 36,
@@ -507,7 +507,7 @@ const FONT_STYLES = [
     category: 'humanist-sans',
     weight: 600,
     cap: 700,
-    stroke: 94,
+    stroke: 119,
     width: 570,
     sideBearing: 38,
     tracking: 26,
@@ -525,7 +525,7 @@ const FONT_STYLES = [
     category: 'humanist-sans',
     weight: 300,
     cap: 700,
-    stroke: 48,
+    stroke: 88,
     width: 520,
     sideBearing: 52,
     tracking: 64,
@@ -543,7 +543,7 @@ const FONT_STYLES = [
     category: 'serif',
     weight: 400,
     cap: 700,
-    stroke: 64,
+    stroke: 98,
     width: 600,
     sideBearing: 40,
     tracking: 42,
@@ -561,7 +561,7 @@ const FONT_STYLES = [
     category: 'serif',
     weight: 400,
     cap: 700,
-    stroke: 52,
+    stroke: 98,
     width: 580,
     sideBearing: 44,
     tracking: 58,
@@ -579,7 +579,7 @@ const FONT_STYLES = [
     category: 'serif',
     weight: 500,
     cap: 700,
-    stroke: 86,
+    stroke: 109,
     width: 620,
     sideBearing: 34,
     tracking: 30,
@@ -597,7 +597,7 @@ const FONT_STYLES = [
     category: 'serif',
     weight: 400,
     cap: 700,
-    stroke: 46,
+    stroke: 98,
     width: 590,
     sideBearing: 46,
     tracking: 52,
@@ -615,7 +615,7 @@ const FONT_STYLES = [
     category: 'display',
     weight: 700,
     cap: 700,
-    stroke: 118,
+    stroke: 130,
     width: 640,
     sideBearing: 30,
     tracking: 16,
@@ -633,7 +633,7 @@ const FONT_STYLES = [
     category: 'display',
     weight: 400,
     cap: 700,
-    stroke: 58,
+    stroke: 98,
     width: 660,
     sideBearing: 58,
     tracking: 84,
@@ -651,7 +651,7 @@ const FONT_STYLES = [
     category: 'display',
     weight: 900,
     cap: 700,
-    stroke: 140,
+    stroke: 154,
     width: 600,
     sideBearing: 24,
     tracking: 0,
@@ -669,7 +669,7 @@ const FONT_STYLES = [
     category: 'display',
     weight: 600,
     cap: 700,
-    stroke: 84,
+    stroke: 119,
     width: 680,
     sideBearing: 66,
     tracking: 96,
@@ -688,6 +688,22 @@ const FONT_STYLES = [
 // ---------------------------------------------------------------------------------------------
 
 /**
+ * Bounds on the stroke, as a fraction of cap height.
+ *
+ * The floor is Regular weight. A text face can be a hairline; a logo cannot — at 25% of a 512px canvas
+ * a 7%-of-cap stroke is barely two pixels and vanishes entirely at favicon size, which is the size a
+ * mark has to survive. Nine of the eighteen families were authored below 10% of cap before this floor,
+ * so the picker was offering hairline logos.
+ *
+ * The ceiling keeps counters open. Past a fifth of the cap the bowls of B, R, P and A start to fill
+ * in, and a filled counter is not a heavier letter, it is a different one.
+ */
+const MIN_STROKE_RATIO = 0.12
+
+/** See {@link MIN_STROKE_RATIO} for why this is where it is. */
+const MAX_STROKE_RATIO = 0.23
+
+/**
  * Exponent applied to the stroke when deriving letterspacing.
  *
  * Below 1, so a heavier stem gets proportionally *less* air. A slab's stems already fill their
@@ -702,7 +718,7 @@ const LETTERSPACING_EXPONENT = 0.72
  * point at which capitals read as a word. The per-family terms added to it are what keep an open
  * display face open and a closed one closed.
  */
-const LETTERSPACING_BASE = 1.15
+const LETTERSPACING_BASE = 0.98
 
 /**
  * Word space, as a multiple of the gap between two letters.
@@ -726,8 +742,13 @@ const MIN_WORD_SPACE = 0.2
  */
 function buildGlyphs(font) {
   const { cap } = font
-  // Keep the stroke inside a range that always leaves a visible counter inside a bowl.
-  const w = Math.max(cap * 0.09, Math.min(font.stroke, cap * 0.2))
+  // The stroke is clamped into a band that is both drawable and usable.
+  //
+  // The lower bound is Regular weight, not the hairline a text face can get away with: a mark has to
+  // survive at favicon size, and a 7%-of-cap stroke is gone by then. The upper bound leaves the
+  // counters of B, R, P and A open — past a fifth of the cap the bowls start to fill in, and a filled
+  // counter is a different letter rather than a heavier one.
+  const w = Math.max(cap * MIN_STROKE_RATIO, Math.min(font.stroke, cap * MAX_STROKE_RATIO))
   const half = w / 2
 
   /**
