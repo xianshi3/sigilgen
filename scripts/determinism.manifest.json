@@ -1,15 +1,15 @@
 {
   "cases": {
-    "wordmark|graphite-signal|nexus-grotesk|ring-orbit|fd5182a780c9": "02d9a9cff334e71af4b770697b754822bb64d3600b0a91f6c753625585345d3a",
-    "monogram|neon-synth|orbit-grotesk|terminal-window|45c95219ae0d": "a89cfe62800af47a9f7ea1b8a3168614214b732071d4cb5d2c6a811e3dd39ba7",
-    "monogram|ink-monolith|cascade-humanist|blueprint-draft|17567241434e": "95f32fd2f0c52221d5b47181344d1c7e754047f5419d9c0a6764498cd6cd43d1",
-    "emblem|gold-atelier|stipple-display|diamond-gem|ce0c746da272": "e1b4ee488f83c95c7732aa86b561ce8ba200778e01290aa4317e9f9fc2c30d0e",
-    "abstract|azure-current|nova-display|-|eb5e61c8085d, abstract|signal-amber|halo-display|-|037d32adf0d4, emblem|signal-amber|nova-display|compass-draft|b912c417a1d8, abstract|citrus-pop|cascade-humanist|-|f38c0962789f, wordmark|turquoise-tide|nexus-grotesk|compass-draft|35817d964746, emblem|citrus-pop|halo-display|hot-air-balloon|2a83bf4edf6e": "cac2e58477cccd0e8ba46cfb8a86500c56c0a8d2605fd0bf7e190d00d29f2d48",
-    "monogram|steel-forge|monolith-grotesk|hard-hat|966b431d42b7, emblem|cobalt-forge|monolith-grotesk|wrench|d83d90363bf9, lettermark|cobalt-forge|axis-grotesk|-|98fdce69fbe8, emblem|cobalt-forge|axis-grotesk|wrench|bfb7e6fbb7fc, emblem|cobalt-forge|vector-grotesk|wrench|b0ec8c7f443f, wordmark|cobalt-forge|axis-grotesk|hard-hat|d5519ec8984f": "33b89bf5048fa998bd5c7f9cdb1d93f44f9e943973e6c6a947186841bf132a1b",
-    "lettermark|custom-coffee|cascade-humanist|-|280972664eb4": "06c32f1d632a78fa40dbac2c039410b6278f69499d8ca861460f2036cc51c7c7",
+    "wordmark|graphite-signal|nexus-grotesk|ring-orbit|fd5182a780c9": "da36027dcadb651a2f14a732e7cc6855b6887950b8d9b52243f53f4b40f08638",
+    "monogram|neon-synth|orbit-grotesk|terminal-window|45c95219ae0d": "4e596974dcaca909f4eb061ea61222416f1380b9c38a800fcbcbebe9b550bf6c",
+    "monogram|ink-monolith|cascade-humanist|blueprint-draft|17567241434e": "1afe4c826a60c3b5026cb5f61dc1442a3fcc42a03ec6e22068fd999cbecbf2e0",
+    "emblem|gold-atelier|stipple-display|diamond-gem|ce0c746da272": "822ba4cb6811fd2b8ccc4eb0f9acc8736a9d4a338f27120a77e91b27a6c500d3",
+    "abstract|azure-current|nova-display|-|eb5e61c8085d, abstract|signal-amber|halo-display|-|037d32adf0d4, emblem|signal-amber|nova-display|compass-draft|b912c417a1d8, abstract|citrus-pop|cascade-humanist|-|f38c0962789f, wordmark|turquoise-tide|nexus-grotesk|compass-draft|35817d964746, emblem|citrus-pop|halo-display|hot-air-balloon|2a83bf4edf6e": "e1cb987f5b1ecd113069e6b276f44110c4e2330d175179c40a74584b87851c1e",
+    "monogram|steel-forge|monolith-grotesk|hard-hat|966b431d42b7, emblem|cobalt-forge|monolith-grotesk|wrench|d83d90363bf9, lettermark|cobalt-forge|axis-grotesk|-|98fdce69fbe8, emblem|cobalt-forge|axis-grotesk|wrench|bfb7e6fbb7fc, emblem|cobalt-forge|vector-grotesk|wrench|b0ec8c7f443f, wordmark|cobalt-forge|axis-grotesk|hard-hat|d5519ec8984f": "25ea26dc58e17ef32a4ee83dcb0a4962db464dacfa642451aaab16d894a4713d",
+    "lettermark|custom-coffee|cascade-humanist|-|280972664eb4": "710950a2acbc3dbee902492d0d90d65414a510f23e3aec0384cb6ea2608895e0",
     "abstract|cobalt-forge|monolith-grotesk|-|e4e4505adedb": "1313891594f7cfd240a20905b7cb6709c4a6260e75bd28e75caea19d5266317f",
-    "emblem|deep-ocean|flow-humanist|hot-air-balloon|014f24674f0b": "20753d8063015f0bebb7e012af4e28cd3c04270306f5c387ba246a12e6a683e6",
-    "lettermark|violet-studio|axis-grotesk|-|0e395306aed0, lettermark|ink-monolith|axis-grotesk|-|5734cc883028, lettermark|ink-monolith|axis-grotesk|-|7ea7e023681e, lettermark|cobalt-forge|monolith-grotesk|-|572d5b1232e7, lettermark|violet-studio|monolith-grotesk|-|8076f511c5e6, lettermark|violet-studio|monolith-grotesk|-|f48064f6c0d7": "63fcf03b5e23983491b6ff13ee0446d5c904aa7044933f2b7fb3e371464d47a6"
+    "emblem|deep-ocean|flow-humanist|hot-air-balloon|014f24674f0b": "b225f34ac65e11a83fc61be32ec297e9f40c0a08c1cac1615743e3ae7553de42",
+    "lettermark|violet-studio|axis-grotesk|-|0e395306aed0, lettermark|ink-monolith|axis-grotesk|-|5734cc883028, lettermark|ink-monolith|axis-grotesk|-|7ea7e023681e, lettermark|cobalt-forge|monolith-grotesk|-|572d5b1232e7, lettermark|violet-studio|monolith-grotesk|-|8076f511c5e6, lettermark|violet-studio|monolith-grotesk|-|f48064f6c0d7": "8754fc0ac01be664744e13401ea23f4a44b44cd2bbf889f9b21d566009f56d64"
   },
-  "combined": "92819771d5040e88d9dd527636884bbf621c5fc8cf31b0021e5cff71b1343ef0"
+  "combined": "e1b55f331282a4ab032cf96a2780d595b826018d13856b62c3220717d2579bcb"
 }

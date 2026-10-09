@@ -47,41 +47,49 @@ so the two cannot disagree. `fitText` now centres both axes on the measured ink,
 half-tracking-unit fudge factor. Measured worst case across the monogram, wordmark and emblem engines,
 over 1650 input cases and 3434 generated marks: **under 0.25% of the canvas**, where it was 6.88%.
 
-#### Known defect: capitals do not reach the cap line or the baseline
+#### Capitals did not reach the cap line or the baseline
 
-Found while measuring, and **not fixed** — it is a compiler change, not an engine change, and it
-changes the identity of all 18 typefaces.
+Found while measuring, in the same pass. Fixed here.
 
-`buildGlyphs` insets every stroke endpoint by half a stroke so that a round terminal disc lands exactly
-on the cap line and the baseline, then closes the gap with `capRound` — which returns an empty string
-for any family with `round: false`. That is **10 of the 18 families**. Their `stroke()` produces a
-butt-ended quad that reaches exactly as far as its centreline and no further, so with no disc the
-terminal stops a half-stroke short of the edge it was meant to meet. Measured in `orbit-grotesk`
-(cap 700), against the rules at 0 and 700:
+Letters that do not share a baseline do not read as set at all, and the error scales with the mark — it
+was worst at exactly the sizes a logo is used at. Measured in `orbit-grotesk` (cap 700) against the
+rules at 0 and 700: `L` stopped 55 units below the cap line, `S` 63 above the baseline, `I` floated 55
+clear at each end, and every letter of `slab-serif` sat between 62 and 72% of cap height. `SALVO` in one
+family spanned 39 points of cap height from its shortest letter to its tallest.
 
-| letter      | ink      | short by              |
-| ----------- | -------- | --------------------- |
-| `O` `E` `Z` | 0 – 700  | — correct             |
-| `A`         | 0 – 662  | 38 above the baseline |
-| `L`         | 55 – 700 | 55 below the cap line |
-| `S`         | 0 – 637  | 63 above the baseline |
-| `V`         | 34 – 666 | 34 at both ends       |
-| `I`         | 55 – 646 | 55 at both ends       |
+`stroke` returns a butt-ended quad, so it reaches exactly as far as its centreline and no further.
+`buildGlyphs` therefore insets every endpoint by half a stroke and closes the gap with a terminal disc.
+Five things had to be true for that to work, and each was wrong:
 
-The worst family is `slab-serif`, where letters reach 61% of cap height and the spread inside one word
-such as `SALVO` is 39 points of cap height. Letters that do not share a baseline do not read as set at
-all, and the error scales with the mark — it is worst at exactly the sizes a logo is used at.
+- **`capRound` returned an empty string for any family with `round: false`** — and `round` was read
+  nowhere else, so the flag was not choosing a terminal style, it was choosing whether a terminal
+  existed. Ten of the eighteen families were drawn with their terminals missing. The disc is now
+  unconditional and the flag is gone: a geometric sans with softly rounded terminals is idiomatic, and
+  it is the only arrangement whose geometry is expressible. Running a butt end to the edge instead would
+  need a different inset on the vertical axis than the side bearing uses, plus an audit of every
+  diagonal, since a butt end on a diagonal does not reach the same row a disc does.
+- **The disc wound the other way from the stroke.** It is centred on an endpoint, so half of it lies
+  inside the stroke's own rectangle, and the non-zero fill rule only keeps that overlap filled if the two
+  sub-paths wind alike. Wound the other way, every terminal in the library punched a white notch through
+  its own stem. A bounding-box test cannot see this and neither can the existing counter-sampling, because
+  a terminal is neither out of bounds nor a counter. A new guard asserts that filling a glyph as one path
+  agrees with filling each sub-path and taking the union; the two differ exactly where opposite windings
+  overlap. Verified to fail against the pre-fix build.
+- **A junction is not a terminal.** `U`'s stems end inside the bowl, and a disc there overlaps a band
+  wound the other way. `stem` takes a `freeTo` flag for that.
+- **The slab sat centred on the stem's endpoint** rather than against the cap line or the baseline, which
+  is why the four serif families came out lowest of all.
+- **`inset` was doing double duty** as both the side bearing and the terminal inset, so a serif overhang
+  — which should only widen a letter — was also lowering its cap line. The vertical half is now `vInset`.
 
-`round` is read in exactly one place, `capRound`, so this is a geometry switch where a style switch was
-intended. Either `capRound` always emits the disc — one line, and precisely the geometry the eight
-round families already use — or the endpoint inset becomes `serifOut + (round ? half : 0)` so a butt end
-runs all the way to the edge. The second preserves the flat terminals the ten families were presumably
-drawn to have, but every diagonal terminal (`V`, `W`, `X`, `Y`, `A`, `K`, `M`, `N`, `Z`) then needs its
-own audit, since a butt end on a diagonal does not reach the same row a disc does.
+Two arc-built letters needed geometry of their own. `U`'s bowl stopped a half stroke above the baseline,
+because `arcBand` measures its thickness inward, so the outer edge is at `ry`. And `S`'s lower bowl swept
+130 degrees from 40 to -90, the short way round, which never passes the bottom of its own ellipse — so
+`S`'s lowest point was its lower-right terminal. It sweeps 230 now.
 
-Recorded as `it.fails` in `tests/brain.test.ts`: the suite stays green while the defect is open, the
-assertion documents what is wrong rather than endorsing what is drawn, and fixing the compiler flips it
-to a real failure that prompts the `.fails` to come off.
+All eighteen families now measure exactly 100% of cap height on all twenty-five cap-only letters, so the
+spread inside a word is zero points of cap height. `Q` is excluded: its tail is a descender and is meant
+to pass the baseline, as a round letter is meant to overshoot the cap line.
 
 #### Previously
 

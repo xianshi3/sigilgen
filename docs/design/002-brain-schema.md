@@ -127,48 +127,49 @@ what `scripts/build-brain.mjs` produces.
 Glyph outlines are authored with the cap top at `y = 0` and the baseline at `y = capHeight`, y growing
 downwards to match SVG. There are no `A` commands — see [ADR-002](../architecture/decisions/ADR-002-no-elliptical-arcs.md).
 
-#### Known defect: terminals do not reach the cap line or the baseline
+#### Terminals: every capital spans `0..capHeight`
 
-**Every capital must span `0..capHeight`.** This does not currently hold, and it is the one place where
-the compiler's geometry depends on a style flag.
+**Every capital must reach the cap line and sit on the baseline.** Letters that do not share a baseline
+do not read as set at all, and the error scales with the mark — it is worst at exactly the sizes a logo
+is used at. This is enforced by `tests/brain.test.ts` against all eighteen families.
 
-`stroke(x1, y1, x2, y2, weight)` returns a butt-ended quad: it reaches exactly as far as its centreline
-and no further. `buildGlyphs` therefore insets every endpoint by half a stroke, on the assumption that a
-round terminal disc will carry the ink back out to the edge. That disc is `capRound`, and `capRound`
-returns an empty string whenever `round` is false — which is **10 of the 18 families**. With no disc, the
-terminal stops a half-stroke short of the cap line and again short of the baseline.
+Getting there is not a matter of nudging a number, because `stroke` reaches exactly as far as its
+centreline and no further. So `buildGlyphs` insets every endpoint by half a stroke and closes the gap
+with a terminal disc, which is `capRound`. Five separate things had to be true for that to work, and
+each of them was wrong at some point:
 
-Measured in `orbit-grotesk` against the rules at 0 and 700:
+- **The disc must exist.** `capRound` used to return an empty string for any family with `round: false`,
+  and `round` was read nowhere else — so the flag was not choosing a terminal style, it was choosing
+  whether a terminal existed, and ten of the eighteen families came out with their letters floating
+  clear of both edges. The disc is now unconditional and the flag is gone. A geometric sans with softly
+  rounded terminals is idiomatic, and it is the only arrangement whose geometry is expressible: running a
+  butt end all the way to the edge instead needs a different inset for the vertical axis than the side
+  bearing needs, and an audit of every diagonal.
+- **The disc must wind the same way as the stroke.** It sits centred on an endpoint, so half of it lies
+  inside the stroke's own rectangle, and under the non-zero fill rule that overlap only stays filled if
+  the two sub-paths wind alike. Wound the other way, every terminal in the library punched a white notch
+  through its own stem. Neither a bounding-box test nor the counter-sampling can see this, because a
+  terminal is neither out of bounds nor a counter; the guard asserts that filling a glyph as one path
+  agrees with filling each sub-path and taking the union, which differ exactly where opposite windings
+  overlap. Restricted to letters with no counter, since `ring` winding its inner ellipse against its
+  outer is a hole on purpose.
+- **A junction is not a terminal.** `U`'s stems end inside the bowl, and a disc there overlaps a band
+  wound the other way. `stem` takes a `freeTo` flag for that.
+- **The slab reaches the edge, not the stem's endpoint.** A slab centred on the inset endpoint stopped
+  half a stroke short, and since `serifOut` is added on top of the half stroke the four serif families
+  came out lowest of all, every letter of slab-serif between 62 and 72% of cap height.
+- **`inset` is two insets.** It was both the side bearing and the terminal inset, so a serif overhang —
+  which should only widen a letter — was also lowering its cap line. The vertical half is now `vInset`,
+  half a stroke and nothing else, and it is what `V` `W` `X` `Y` `A` `T` `U` use.
 
-| letter      | ink      | short by              |
-| ----------- | -------- | --------------------- |
-| `O` `E` `Z` | 0 – 700  | correct               |
-| `A`         | 0 – 662  | 38 above the baseline |
-| `L`         | 55 – 700 | 55 below the cap line |
-| `S`         | 0 – 637  | 63 above the baseline |
-| `V`         | 34 – 666 | 34 at both ends       |
-| `I`         | 55 – 646 | 55 at both ends       |
+Two arc-built letters needed geometry of their own. `U`'s bowl stopped a half stroke above the baseline,
+because `arcBand` measures thickness inward, so its outer edge is at `ry` and `ry` has to be `cap - side`.
+And `S`'s lower bowl swept 130 degrees from 40 to -90, the short way, which never passes the bottom of
+its own ellipse — so the letter's lowest point was its lower-right terminal and `S` stopped 9% of cap
+height above the baseline. It sweeps 230 now.
 
-`slab-serif` is the worst case: letters reach 61% of cap height, and one word such as `SALVO` spans 39
-points of cap height from its shortest letter to its tallest.
-
-`round` is read in exactly one place, `capRound`. So the flag that was meant to choose a terminal style
-is in fact choosing whether a terminal exists, and two thirds of the library is being drawn with
-terminals missing. The fix belongs here in the compiler, not in an engine:
-
-- `capRound` always emits the disc. One line, and precisely the geometry the eight round families
-  already use — at the cost of giving the ten flat families round terminals.
-- Or the endpoint inset becomes `serifOut + (round ? half : 0)`, so a butt end runs all the way to the
-  edge. This preserves the flat terminals the ten families were presumably drawn to have, but every
-  diagonal terminal — `V`, `W`, `X`, `Y`, `A`, `K`, `M`, `N`, `Z` — needs its own audit, because a butt
-  end on a diagonal does not reach the same row a disc does, and `V`'s apex currently has no `capRound`
-  call at all.
-
-Engines do not depend on this being fixed: `textInk` measures what a run actually draws rather than
-assuming the cap box, so layout is correct either way. But letters that do not share a baseline do not
-read as set at all, and the error scales with the mark — it is worst at exactly the sizes a logo is used
-at. `tests/brain.test.ts` asserts the invariant as `it.fails`: the suite stays green while the defect is
-open, and fixing the compiler turns it into a real failure that prompts the `.fails` to come off.
+`Q` is excluded from the guard: its tail is a descender and is _meant_ to pass the baseline, exactly as a
+round letter is meant to overshoot the cap line.
 
 ### Icon
 

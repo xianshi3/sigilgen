@@ -421,10 +421,14 @@ describe('fitText', () => {
     expect(fitted.height).toBeLessThanOrEqual(50)
   })
 
-  it('centres horizontally and vertically', () => {
+  it('centres the ink horizontally and vertically', () => {
+    // The ink, not the boxes the run is measured by. The advance box is wider than the drawn letters by
+    // the outer side bearings and the cap box is taller than they are by however far they fall short of
+    // the cap line, so asserting the boxes are centred would be asserting something `fitText` does not
+    // promise — and something no reader can see.
     const fitted = fitText(font, 'ACME', 250, 100, 200, 80)
-    expect(fitted.left + fitted.width / 2).toBeCloseTo(250)
-    expect(fitted.top + fitted.height / 2).toBeCloseTo(140)
+    expect(fitted.left + fitted.ink.offsetX + fitted.ink.width / 2).toBeCloseTo(250)
+    expect(fitted.top + fitted.ink.offsetY + fitted.ink.height / 2).toBeCloseTo(140)
   })
 
   it('never returns a zero or negative scale', () => {

@@ -205,18 +205,6 @@ function stroke(x1, y1, x2, y2, weight) {
 }
 
 /**
- * A filled circle approximated with four cubic Béziers.
- *
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- * @returns {string}
- */
-function disc(cx, cy, r) {
-  return `M ${fmt(cx - r)} ${fmt(cy)} ${arcToBeziers({ cx, cy, rx: r, ry: r }, 180, 540)} Z`
-}
-
-/**
  * Parameters in `(0, 1)` where a cubic Bézier's coordinate turns around.
  *
  * Mirrors `cubicExtrema` in `src/path.ts` so that build-time metrics and the runtime's `pathBounds`
@@ -348,7 +336,6 @@ function shiftPath(d, dx) {
  * @property {number} tracking extra letter spacing in font units
  * @property {number} xHeight lowercase height
  * @property {number} serif slab-serif strength, 0 disables serifs
- * @property {boolean} round round stroke terminals
  * @property {number} flatA width of the flattened A apex, 0 for a pointed apex
  * @property {number} aperture extra opening angle for C, G and S, in degrees
  * @property {number} oval horizontal squeeze applied to O and Q, 1 keeps them circular
@@ -369,7 +356,6 @@ const FONT_STYLES = [
     tracking: 40,
     xHeight: 500,
     serif: 0,
-    round: false,
     flatA: 0.18,
     aperture: 0,
     oval: 1,
@@ -387,7 +373,6 @@ const FONT_STYLES = [
     tracking: 62,
     xHeight: 520,
     serif: 0,
-    round: false,
     flatA: 0.3,
     aperture: 4,
     oval: 1,
@@ -405,7 +390,6 @@ const FONT_STYLES = [
     tracking: 22,
     xHeight: 480,
     serif: 0,
-    round: false,
     flatA: 0,
     aperture: -4,
     oval: 0.94,
@@ -423,7 +407,6 @@ const FONT_STYLES = [
     tracking: 12,
     xHeight: 490,
     serif: 0,
-    round: false,
     flatA: 0,
     aperture: 0,
     oval: 0.96,
@@ -441,7 +424,6 @@ const FONT_STYLES = [
     tracking: 30,
     xHeight: 470,
     serif: 0,
-    round: false,
     flatA: 0.26,
     aperture: 2,
     oval: 0.9,
@@ -459,7 +441,6 @@ const FONT_STYLES = [
     tracking: 74,
     xHeight: 510,
     serif: 0,
-    round: true,
     flatA: 0.22,
     aperture: 6,
     oval: 1,
@@ -477,7 +458,6 @@ const FONT_STYLES = [
     tracking: 46,
     xHeight: 500,
     serif: 0,
-    round: true,
     flatA: 0.2,
     aperture: 2,
     oval: 0.97,
@@ -495,7 +475,6 @@ const FONT_STYLES = [
     tracking: 36,
     xHeight: 505,
     serif: 0,
-    round: true,
     flatA: 0.28,
     aperture: 4,
     oval: 0.98,
@@ -513,7 +492,6 @@ const FONT_STYLES = [
     tracking: 26,
     xHeight: 500,
     serif: 0,
-    round: false,
     flatA: 0.12,
     aperture: -2,
     oval: 0.95,
@@ -531,7 +509,6 @@ const FONT_STYLES = [
     tracking: 64,
     xHeight: 515,
     serif: 0,
-    round: true,
     flatA: 0.34,
     aperture: 8,
     oval: 1,
@@ -549,7 +526,6 @@ const FONT_STYLES = [
     tracking: 42,
     xHeight: 480,
     serif: 0.55,
-    round: false,
     flatA: 0.3,
     aperture: 2,
     oval: 0.98,
@@ -567,7 +543,6 @@ const FONT_STYLES = [
     tracking: 58,
     xHeight: 440,
     serif: 0.5,
-    round: true,
     flatA: 0.26,
     aperture: 6,
     oval: 1,
@@ -585,7 +560,6 @@ const FONT_STYLES = [
     tracking: 30,
     xHeight: 470,
     serif: 1,
-    round: false,
     flatA: 0.34,
     aperture: 0,
     oval: 0.96,
@@ -603,7 +577,6 @@ const FONT_STYLES = [
     tracking: 52,
     xHeight: 455,
     serif: 0.85,
-    round: false,
     flatA: 0.22,
     aperture: 4,
     oval: 1,
@@ -621,7 +594,6 @@ const FONT_STYLES = [
     tracking: 16,
     xHeight: 510,
     serif: 0,
-    round: true,
     flatA: 0.3,
     aperture: 2,
     oval: 1,
@@ -639,7 +611,6 @@ const FONT_STYLES = [
     tracking: 84,
     xHeight: 520,
     serif: 0,
-    round: true,
     flatA: 0.4,
     aperture: 8,
     oval: 1,
@@ -657,7 +628,6 @@ const FONT_STYLES = [
     tracking: 0,
     xHeight: 500,
     serif: 0,
-    round: false,
     flatA: 0,
     aperture: -2,
     oval: 0.95,
@@ -675,7 +645,6 @@ const FONT_STYLES = [
     tracking: 96,
     xHeight: 460,
     serif: 0,
-    round: false,
     flatA: 0.36,
     aperture: -4,
     oval: 0.92,
@@ -775,6 +744,16 @@ function buildGlyphs(font) {
   // Slab serifs push the stem inwards so the slabs stay inside the ink box.
   const serifOut = font.serif * w * 0.9
   const inset = half + serifOut
+  /**
+   * The vertical endpoint inset: half a stroke and nothing else.
+   *
+   * `inset` does double duty — it is the side bearing as well as the terminal inset — and only the
+   * horizontal half of it belongs to the serif. A serif overhang widens a letter; it must not lower its
+   * cap line, or the letter sits `serifOut` short of every other letter in the family. Letters that end
+   * in a terminal disc use this, so the disc lands exactly on the edge; letters that end in a slab
+   * reach the edge through {@link slab} instead.
+   */
+  const vInset = half
   const minCounter = cap * 0.1
 
   /** @type {Record<string, { d: string, advance: number }>} */
@@ -812,17 +791,43 @@ function buildGlyphs(font) {
   }
 
   /**
-   * Round terminal cap, when the family asks for one.
+   * The terminal cap that carries a stroke out to the cap line and the baseline.
+   *
+   * `stroke` returns a butt-ended quad: it reaches exactly as far as its centreline and no further. Every
+   * endpoint in this file is inset by half a stroke, on the assumption that a disc of radius `half` at
+   * that endpoint will carry the ink back out to the edge it is supposed to meet. This disc is that
+   * mechanism, so it is structural rather than stylistic: without it a stem stops half a stroke short of
+   * the cap line and again short of the baseline, and a diagonal stops short by a third of that, because
+   * a butt end on a diagonal does not reach the same row a disc does.
+   *
+   * This used to be gated on `font.round`, on the reasonable-sounding theory that a flat family should
+   * not grow round terminals. It was wrong: `round` was read nowhere else, so the flag was not choosing
+   * a terminal style, it was choosing whether a terminal existed. Ten of the eighteen families came out
+   * with their letters floating clear of both edges — `L` stopping 55 units below the cap line, `I`
+   * floating 55 clear at each end, `slab-serif` reaching 61% of cap height. Letters that do not share a
+   * baseline do not read as set at all, and the error grows with the mark.
+   *
+   * So the disc is unconditional and the flag is gone. A geometric sans with softly rounded terminals is
+   * idiomatic, and it is the only arrangement in which the geometry is expressible at all: the
+   * alternative, running a butt end all the way to the edge, needs a different endpoint inset for the
+   * vertical axis than the `inset` the horizontal bearings need, and an audit of every diagonal.
    *
    * @param {number} x
    * @param {number} y
    * @returns {string}
    */
-  const capRound = (x, y) => (font.round ? disc(x, y, half) : '')
+  const capRound = (x, y) =>
+    // Wound the same way round as `stroke`. A disc of radius `half` centred on a stroke's endpoint lies
+    // half inside the stroke's own rectangle, and under the non-zero fill rule an overlap only stays
+    // filled if the two sub-paths wind alike. Wound the other way the overlap cancels and every terminal
+    // in the library became a white notch — see the winding guard in `tests/brain.test.ts`, which is what
+    // found it. (`ring`'s inner ellipse is deliberately wound the other way; that hole is the point of
+    // it. A terminal is not a counter.)
+    `M ${fmt(x + half)} ${fmt(y)} ${arcToBeziers({ cx: x, cy: y, rx: half, ry: half }, 0, -360)} Z`
 
   /**
-   * A slab serif centred on a stem, sitting at `y`. Its span equals the glyph inset, so it always
-   * lands exactly on the ink box edge.
+   * A slab serif centred on a stem, sitting at `y`. Its span reaches the cap line or the baseline, so a
+   * serif family lands on the same extremes as a sans rather than a half-stroke inside them.
    *
    * @param {number} x
    * @param {number} y
@@ -832,7 +837,14 @@ function buildGlyphs(font) {
     if (font.serif <= 0) {
       return ''
     }
-    return stroke(x - inset, y, x + inset, y, w * 0.5)
+    // The outer edge sits on the cap line or the baseline, not on the stem's endpoint. The stem is
+    // inset by half a stroke so that a terminal can carry it out to the edge; a slab centred on that
+    // endpoint instead stops half a stroke short, and since `serifOut` is added on top of the half
+    // stroke the four serif families came out lowest of all — every letter of slab-serif between 62 and
+    // 72% of cap height. Which edge to sit against follows from which end of the stem this is.
+    const thickness = w * 0.5
+    const centre = y < cap / 2 ? thickness / 2 : cap - thickness / 2
+    return stroke(x - inset, centre, x + inset, centre, thickness)
   }
 
   /**
@@ -842,14 +854,24 @@ function buildGlyphs(font) {
    * @param {number} from
    * @param {number} to
    * @param {boolean} [serifs]
+   * @param {boolean} [freeTo] - Whether the far end is a free terminal. Pass `false` where the stem runs
+   *   into another part of the letter: `U`'s stems end inside the bowl, and a disc there overlaps a band
+   *   wound the other way, so under the non-zero fill rule the two cancel and the junction opens a hole.
+   *   A junction is not a terminal, so nothing is gained by capping it.
    * @returns {Array<string>}
    */
-  const stem = (x, from, to, serifs = true) => {
+  const stem = (x, from, to, serifs = true, freeTo = true) => {
     const parts = [stroke(x, from, x, to, w)]
     if (serifs && font.serif > 0) {
-      parts.push(slab(x, from), slab(x, to))
+      parts.push(slab(x, from))
+      if (freeTo) {
+        parts.push(slab(x, to))
+      }
     } else {
-      parts.push(capRound(x, from), capRound(x, to))
+      parts.push(capRound(x, from))
+      if (freeTo) {
+        parts.push(capRound(x, to))
+      }
     }
     return parts
   }
@@ -905,12 +927,17 @@ function buildGlyphs(font) {
     const yBar = cap * 0.7
     const legX = (width / 2 - apex / 2) * (1 - yBar / cap)
     emit('A', width, [
-      stroke(width / 2 - apex / 2, inset, half, cap - inset, w),
-      stroke(width / 2 + apex / 2, inset, width - half, cap - inset, w),
+      stroke(width / 2 - apex / 2, vInset, half, cap - vInset, w),
+      stroke(width / 2 + apex / 2, vInset, width - half, cap - vInset, w),
       stroke(legX, yBar, width - legX, yBar, w),
-      capRound(half, cap - inset),
-      capRound(width - half, cap - inset),
-      apex > 0 ? stroke(width / 2 - apex / 2, inset, width / 2 + apex / 2, inset, w) : '',
+      capRound(half, cap - vInset),
+      capRound(width - half, cap - vInset),
+      // The apex is a horizontal bar, so it needs the same treatment a slab gets: its outer edge sits
+      // on the cap line rather than on the stem's endpoint. A pointed apex has nothing to carry it out,
+      // so it gets a disc instead. The bar's own weight is `w`, so its centre is half of that.
+      apex > 0
+        ? stroke(width / 2 - apex / 2, w * 0.5, width / 2 + apex / 2, w * 0.5, w)
+        : capRound(width / 2, vInset),
     ])
   }
 
@@ -1095,18 +1122,27 @@ function buildGlyphs(font) {
     const thickness = Math.min(w, radius * 0.44)
     // Two overlapping C-shapes that meet at the waist. Both sweeps run counter-clockwise so the two
     // bands share a winding and merge instead of cutting a hole where they overlap.
+    //
+    // The lower bowl sweeps 230 degrees, from the right-hand terminal down through the bottom of its own
+    // ellipse, round to the upper left. It used to sweep 130, from 40 to -90, which is the short way:
+    // that never passes the bottom, so the letter's lowest point was the terminal on the lower right and
+    // S stopped 9% of cap height above the baseline. `arcBand` walks its angles literally, so the sweep
+    // that reaches the baseline is the one where `to` is greater than `from`.
     emit('S', width, [
       arcBand({ cx, cy: cap * 0.25, rx: width / 2, ry: radius }, thickness, 330, 80),
-      arcBand({ cx, cy: cap * 0.75, rx: width / 2, ry: radius }, thickness, 40, -90),
+      arcBand({ cx, cy: cap * 0.75, rx: width / 2, ry: radius }, thickness, 40, 270),
     ])
   }
 
   // --- T -------------------------------------------------------------------------------------
   {
     const width = font.width * 0.94
+    // `serifs: false` means the stem closes its ends with discs, so its vertical range is `vInset` and
+    // not `inset`: a serif overhang is horizontal, and folding it into the vertical range left T short
+    // of the baseline by exactly that overhang in the four serif families.
     emit('T', width, [
-      ...bar(inset, width - inset, inset),
-      ...stem(width / 2, inset, cap - inset, false),
+      ...bar(inset, width - inset, vInset),
+      ...stem(width / 2, vInset, cap - vInset, false),
     ])
   }
 
@@ -1115,10 +1151,16 @@ function buildGlyphs(font) {
     const { width } = font
     const side = cap - Math.max(cap * 0.3, w + minCounter)
     emit('U', width, [
-      ...stem(inset, inset, side, false),
-      ...stem(width - inset, inset, side, false),
+      // `serifs: false`, so the vertical range is `vInset`: these stems close with discs, and a serif
+      // overhang is horizontal only. `freeTo: false` because the far end runs into the bowl rather than
+      // ending in air.
+      ...stem(inset, vInset, side, false, false),
+      ...stem(width - inset, vInset, side, false, false),
       arcBand(
-        { cx: width / 2, cy: side, rx: width / 2 - inset + half, ry: cap - inset - side },
+        // `ry` is measured to the outer edge, so the bowl closes on the baseline rather than a half
+        // stroke above it. The sweep is the lower half, so raising `ry` extends the bowl downwards
+        // without moving where it meets the stems.
+        { cx: width / 2, cy: side, rx: width / 2 - inset + half, ry: cap - side },
         w,
         0,
         180
@@ -1130,10 +1172,14 @@ function buildGlyphs(font) {
   {
     const { width } = font
     emit('V', width, [
-      stroke(inset, inset, width / 2, cap - inset, w),
-      stroke(width - inset, inset, width / 2, cap - inset, w),
-      capRound(inset, inset),
-      capRound(width - inset, inset),
+      stroke(inset, vInset, width / 2, cap - vInset, w),
+      stroke(width - inset, vInset, width / 2, cap - vInset, w),
+      capRound(inset, vInset),
+      capRound(width - inset, vInset),
+      // The apex needs a terminal too, or the point stops half a stroke above the baseline. A butt end
+      // on a diagonal does not even reach that far: its extreme row is offset by the stroke's normal
+      // component, which is why every diagonal terminal in this file is closed with a disc.
+      capRound(width / 2, cap - vInset),
     ])
   }
 
@@ -1143,10 +1189,15 @@ function buildGlyphs(font) {
     const q1 = width * 0.29
     const q3 = width * 0.71
     emit('W', width, [
-      stroke(inset, inset, q1, cap - inset, w),
-      stroke(q1, cap - inset, width / 2, inset + cap * 0.18, w),
-      stroke(width / 2, inset + cap * 0.18, q3, cap - inset, w),
-      stroke(q3, cap - inset, width - inset, inset, w),
+      stroke(inset, vInset, q1, cap - vInset, w),
+      stroke(q1, cap - vInset, width / 2, vInset + cap * 0.18, w),
+      stroke(width / 2, vInset + cap * 0.18, q3, cap - vInset, w),
+      stroke(q3, cap - vInset, width - inset, vInset, w),
+      // Terminals at all four outer ends. The two middle joints are interior and are left bare.
+      capRound(inset, vInset),
+      capRound(width - inset, vInset),
+      capRound(q1, cap - vInset),
+      capRound(q3, cap - vInset),
     ])
   }
 
@@ -1154,8 +1205,13 @@ function buildGlyphs(font) {
   {
     const width = font.width * 0.96
     emit('X', width, [
-      stroke(inset, inset, width - inset, cap - inset, w),
-      stroke(width - inset, inset, inset, cap - inset, w),
+      stroke(inset, vInset, width - inset, cap - vInset, w),
+      stroke(width - inset, vInset, inset, cap - vInset, w),
+      // All four ends are terminals, and none of them is interior, so all four are closed.
+      capRound(inset, vInset),
+      capRound(width - inset, vInset),
+      capRound(width - inset, cap - vInset),
+      capRound(inset, cap - vInset),
     ])
   }
 
@@ -1164,9 +1220,12 @@ function buildGlyphs(font) {
     const width = font.width * 0.96
     const midY = cap * 0.54
     emit('Y', width, [
-      stroke(inset, inset, width / 2, midY, w),
-      stroke(width - inset, inset, width / 2, midY, w),
-      ...stem(width / 2, midY, cap - inset, false),
+      stroke(inset, vInset, width / 2, midY, w),
+      stroke(width - inset, vInset, width / 2, midY, w),
+      // The two upper diagonals need terminals of their own; the stem below carries its own.
+      capRound(inset, vInset),
+      capRound(width - inset, vInset),
+      ...stem(width / 2, midY, cap - vInset, false),
     ])
   }
 

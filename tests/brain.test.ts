@@ -474,48 +474,36 @@ describe('colour names', () => {
   })
 })
 
-describe('letterform extent (known defect)', () => {
+describe('letterform extent', () => {
   /**
-   * Every capital in a typeface must reach the cap line and sit on the baseline. That is not a style
-   * question: no typeface draws its `L` floating above the baseline, because a mark set in letters that
-   * do not share a baseline does not read as set at all.
+   * Every capital must reach the cap line and sit on the baseline. Letters that do not share a baseline
+   * do not read as set at all, and the error scales with the mark — it is worst at exactly the sizes a
+   * logo is used at.
    *
-   * The compiler does not do this, and has never done so. `buildGlyphs` insets every stroke endpoint by
-   * half a stroke so that a round terminal disc lands exactly on the cap line and the baseline, and it
-   * closes the gap with `capRound` — which returns an empty string for any family with `round: false`.
-   * That is 10 of the 18 families. Their `stroke()` helper produces a butt-ended quad that reaches
-   * exactly as far as its centreline and no further, so with no disc the terminal stops a half-stroke
-   * short of the edge it was supposed to meet.
+   * Nothing here held at first. `buildGlyphs` insets every stroke endpoint by half a stroke so a round
+   * terminal disc can carry the ink back out to the edge, then closes the gap with `capRound` — which
+   * returned an empty string for any family with `round: false`, and `round` was read nowhere else, so
+   * the flag was not choosing a terminal style, it was choosing whether a terminal existed. Ten of the
+   * eighteen families came out with letters floating clear of both edges: `L` 55 units below the cap
+   * line, `S` 63 above the baseline, `I` 55 clear at each end, and every letter of slab-serif between 62
+   * and 72% of cap height.
    *
-   * Measured, orbit-grotesk, cap 700:
+   * Three further faults sat behind that one and only showed up once it was fixed. The slab sat centred
+   * on the stem's endpoint rather than against the edge, so the serif families stayed lowest of all. The
+   * diagonal letters had terminals at some ends and not others, and a butt end on a diagonal does not
+   * reach the same row a disc does. And `inset` was doing double duty as both the side bearing and the
+   * terminal inset, so a serif overhang — which should only widen a letter — was also lowering its cap
+   * line.
    *
-   *   O  E  Z    0 .. 700   correct
-   *   A          0 .. 662   38 above the baseline
-   *   L         55 .. 700   55 below the cap line
-   *   S          0 .. 637   63 above the baseline
-   *   V         34 .. 666   34 clear at both ends
-   *   I         55 .. 646   55 clear at both ends
-   *
-   * The worst family is slab-serif, where letters reach 61% of cap height and the spread inside a single
-   * word such as SALVO is 39 points of cap height.
-   *
-   * The fix is a compiler change, not an engine change: `round` must stop deciding whether a terminal
-   * exists. Either `capRound` always emits the disc — one line, and exactly the geometry the eight
-   * round families already use — or the endpoint inset becomes `serifOut + (round ? half : 0)` so a butt
-   * end runs all the way to the edge. The second preserves the flat terminals the ten families were
-   * presumably drawn to have, but every diagonal terminal (`V`, `W`, `X`, `Y`, `A`, `K`, `M`, `N`, `Z`)
-   * needs its own audit, since a butt end on a diagonal does not reach the same row a disc does.
-   *
-   * This is recorded as `it.fails` so the suite stays green while the defect is open, and so that
-   * fixing the compiler flips this test to a real failure and prompts the `.fails` to come off. It is a
-   * statement of what is wrong, not an endorsement of what is currently drawn.
+   * `Q` is excluded: its tail is a descender and is *meant* to pass the baseline, exactly as a round
+   * letter is meant to overshoot the cap line.
    */
-  it.fails('draws every capital to the full cap height, from the cap line to the baseline', () => {
+  it('draws every capital to the full cap height, from the cap line to the baseline', () => {
     const capOnly = 'ABCDEFGHIJKLMNPRSTUVWXYZ'
     for (const font of FONTS) {
       const { capHeight } = font.metrics
-      // A round letter may overshoot the cap line a little, and a terminal inset by a rounding step is
-      // invisible; anything past two percent of cap height is visible in a logo.
+      // A round letter may overshoot the cap line a little and a terminal may land a rounding step off;
+      // anything past two percent of cap height is visible in a logo.
       const tolerance = capHeight * 0.02
       for (const letter of capOnly) {
         const outline = font.glyphs[letter]
@@ -530,12 +518,66 @@ describe('letterform extent (known defect)', () => {
         }
         expect(
           Math.abs(bounds.minY),
-          `${font.id} ${letter} stops ${bounds.minY.toFixed(0)} units short of the cap line`
+          `${font.id} ${letter} starts ${bounds.minY.toFixed(0)} units off the cap line`
         ).toBeLessThan(tolerance)
         expect(
           Math.abs(capHeight - bounds.maxY),
-          `${font.id} ${letter} stops ${(capHeight - bounds.maxY).toFixed(0)} units short of the baseline`
+          `${font.id} ${letter} ends ${(bounds.maxY - capHeight).toFixed(0)} units off the baseline`
         ).toBeLessThan(tolerance)
+      }
+    }
+  })
+
+  it('paints a terminal disc and its stroke as one solid shape', () => {
+    // A terminal disc of radius `half` sits centred on a stroke's endpoint, so exactly half of it lies
+    // inside the stroke's own rectangle. SVG fills with `nonzero`, which keeps that overlap filled only
+    // if the two sub-paths wind the same way. Wound the other way the winding cancels and every terminal
+    // in the library punched a white notch through its own stem. A bounding-box test cannot see that, and
+    // neither can the counter-sampling the other glyph guards use, because a terminal is neither a
+    // counter nor out of bounds.
+    //
+    // The property is that filling the glyph as one path agrees with filling each sub-path and taking
+    // the union. The two differ exactly where opposite windings overlap. Restricted to letters with no
+    // counter, because a real counter is a legitimate difference: `ring` walks its inner ellipse against
+    // its outer, and that hole is the point of it.
+    const noCounter = 'CEFILSTUVWXYZ'
+    const band = 14
+    const step = 11
+    for (const font of FONTS) {
+      const cap = font.metrics.capHeight
+      for (const letter of noCounter) {
+        const outline = font.glyphs[letter]
+        if (outline === undefined) {
+          continue
+        }
+        const bounds = pathBounds(outline)
+        if (bounds === null) {
+          continue
+        }
+        const together = flatten(outline)
+        const parts = outline
+          .split(/(?=M)/)
+          .filter(piece => piece.trim() !== '')
+          .map(piece => flatten(piece))
+
+        // Only the band around the ink box, which is where every terminal in the library sits.
+        for (let y = bounds.minY + 1.5; y < bounds.maxY; y += step) {
+          const nearEdge = y - bounds.minY < band || bounds.maxY - y < band
+          for (let x = bounds.minX + 1.5; x < bounds.maxX; x += step) {
+            if (!nearEdge && x - bounds.minX >= band && bounds.maxX - x >= band) {
+              continue
+            }
+            if (y > cap + band) {
+              continue
+            }
+            const painted = isPainted(together, x, y)
+            const union = parts.some(edges => isPainted(edges, x, y))
+            expect(
+              painted,
+              `${font.id} ${letter} at ${x.toFixed(0)},${y.toFixed(0)}: filled as a union but not as one path`
+            ).toBe(union)
+          }
+        }
       }
     }
   })
