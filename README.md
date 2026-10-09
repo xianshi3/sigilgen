@@ -294,15 +294,26 @@ Throws `RasterSupportError` with an actionable message when `sharp` is absent.
 
 Also exported, for building your own pipeline:
 
-| Export                                         | Purpose                                     |
-| ---------------------------------------------- | ------------------------------------------- |
-| `SeedResolver`                                 | The reproducible numeric stream             |
-| `MoodResolver`                                 | Keywords and brief to a design direction    |
-| `route`, `engineWeights`, `ENGINES`            | Engine selection                            |
-| `resolvePalette`, `resolveFont`, `resolveIcon` | Resource selection                          |
-| `serialiseDocument`                            | The serializer, including its safety checks |
-| `BRAIN`, `PALETTES`, `FONTS`, `ICONS`, `MOODS` | The curated data                            |
-| `sha256`, `fmt`, `parsePath`, `transformPath`  | Primitives                                  |
+| Export                                         | Purpose                                      |
+| ---------------------------------------------- | -------------------------------------------- |
+| `SeedResolver`                                 | The reproducible numeric stream              |
+| `MoodResolver`                                 | Keywords and brief to a design direction     |
+| `route`, `engineWeights`, `ENGINES`            | Engine selection                             |
+| `resolvePalette`, `resolveFont`, `resolveIcon` | Resource selection                           |
+| `serialiseDocument`                            | The serializer, including its safety checks  |
+| `BRAIN`, `PALETTES`, `FONTS`, `ICONS`, `MOODS` | The curated data                             |
+| `sha256`, `fmt`, `parsePath`, `transformPath`  | Primitives                                   |
+| `measureText`, `textPath`                      | Setting and drawing a run from brain metrics |
+| `textInk`                                      | The ink a run will actually draw             |
+| `fitText`, `naturalWidth`, `opticalTracking`   | Fitting type into a box                      |
+
+#### `textInk(font, letters, scale, tracking?): TextInk`
+
+The ink a run will draw, measured rather than assumed: `{ offsetX, offsetY, width, height }` relative
+to the run's origin and cap top. `measureText` answers a different question — how wide the advance boxes
+are — and the two differ by the outer side bearings, and in height by however far the tallest letter
+falls short of the cap line. Anything that _composes around_ a run needs this rather than
+`measureText`; `fitText` returns it as `FittedText.ink`, and the engines centre on it.
 
 ## How a logo is decided
 

@@ -15,7 +15,7 @@
  * - **Colour emphasis** — whether the name or the pictogram carries the accent.
  */
 
-import { accentRule, path, pick, placeIcon, wordmarkLetters } from './shared'
+import { accentRule, iconInkSize, path, pick, placeIcon, wordmarkLetters } from './shared'
 import { contrastFill, readableOn } from '../resolvers/palette-resolver'
 import { fitText, opticalTracking } from './metrics'
 import { textPath } from '../text'
@@ -115,21 +115,26 @@ export const wordmark: Engine = (input: EngineInput): SVGElement[] => {
       size * 0.34,
       tracking
     )
-    const lockupWidth = iconBox + gap + fitted.width
+    const iconInk = decorationInkSize(treatment, icon, iconBox)
+    // Centred on the two inks. The advance box is wider than the drawn name by its outer side
+    // bearings, and a pictogram narrower than it is tall is letterboxed inside its own box, so
+    // centring on either box left the lockup visibly off the middle — up to 1.2% of the canvas.
+    const lockupWidth = iconInk.width + gap + fitted.ink.width
     const startX = (size - lockupWidth) / 2
-    const textLeft = startX + iconBox + gap
-    const capTop = size / 2 - fitted.height / 2
+    const iconLeft = startX - (iconBox - iconInk.width) / 2
+    const textLeft = startX + iconInk.width + gap - fitted.ink.offsetX
+    const capTop = size / 2 - fitted.ink.height / 2 - fitted.ink.offsetY
 
     elements.push(
-      ...decorate(icon, treatment, startX, size / 2 - iconBox / 2, iconBox, glyphFill, badgeTile)
+      ...decorate(icon, treatment, iconLeft, size / 2 - iconBox / 2, iconBox, glyphFill, badgeTile)
     )
     if (treatment === 'rule') {
       elements.push(
         accentRule(
-          startX + iconBox + gap * 0.45,
+          iconLeft + iconInk.width + gap * 0.45,
           size / 2,
           size * RULE_THICKNESS,
-          fitted.height * 1.15,
+          fitted.ink.height * 1.15,
           accent
         )
       )
@@ -141,22 +146,23 @@ export const wordmark: Engine = (input: EngineInput): SVGElement[] => {
     const margin = size * MARGIN
     const gap = size * GAP
     const iconBox = size * VERTICAL_ICON_RATIO
-    const blockHeight = iconBox + gap + size * 0.16
-    const iconTop = (size - blockHeight) / 2
-    const textTop = iconTop + iconBox + gap
-    const fitted = fitText(
-      font,
-      letters,
-      size / 2,
-      textTop,
-      size - margin * 2,
-      size * 0.16,
-      tracking
-    )
+    const band = size * 0.16
+
+    // Fit the name first, then place both parts on the ink that actually exists rather than on the
+    // room that was reserved for it. Two things make the reserved room an overestimate: a long name is
+    // bound by width and comes out shorter than the band, and the pictogram is letterboxed inside its
+    // own box so its ink is shorter than that box too. Centring the reserved block instead left a long
+    // name sitting high, its last line of type below the block meant to contain it.
+    const fitted = fitText(font, letters, size / 2, 0, size - margin * 2, band, tracking)
+    const iconInk = decorationInkSize(treatment, icon, iconBox)
+    const inkTop = (size - (iconInk.height + gap + fitted.ink.height)) / 2
+    // The pictogram sits in the middle of its box, so the box starts half its slack higher than the ink.
+    const iconTop = inkTop - (iconBox - iconInk.height) / 2
+    const capTop = inkTop + iconInk.height + gap - fitted.ink.offsetY
 
     elements.push(
       ...decorate(icon, treatment, (size - iconBox) / 2, iconTop, iconBox, glyphFill, badgeTile),
-      path(textPath(font, letters, fitted.left, fitted.top, fitted.scale, tracking), lockupFill)
+      path(textPath(font, letters, fitted.left, capTop, fitted.scale, tracking), lockupFill)
     )
   }
 
@@ -196,6 +202,27 @@ function decorate(
     path(roundedRectPath(x, y, box, box, box * BADGE_CORNER), tile),
     placeIcon(icon, x + inset, y + inset, box - inset * 2, glyph),
   ]
+}
+
+/**
+ * The ink a decoration occupies inside its box.
+ *
+ * The badge treatment paints a tile that fills the box outright, so its mark is the box. The other two
+ * treatments paint only the pictogram, which {@link placeIcon} letterboxes inside the box. A lockup
+ * centred on one and composed against the other comes out a percentage of the canvas off the middle,
+ * which is why this lives beside {@link decorate} rather than being re-derived at each call site.
+ *
+ * @param treatment - One of {@link TREATMENTS}.
+ * @param icon - The pictogram being decorated.
+ * @param box - Side length of the pictogram's box.
+ * @returns The ink width and height in user units.
+ */
+function decorationInkSize(
+  treatment: string,
+  icon: IconEntry,
+  box: number
+): { width: number; height: number } {
+  return treatment === 'badge' ? { width: box, height: box } : iconInkSize(icon, box)
 }
 
 /**

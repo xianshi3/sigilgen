@@ -19,12 +19,80 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+Three more centring defects, found the same way as the four below: by generating across a wide input
+space and measuring the ink bounding box of every result against the canvas. All three share one cause
+— a layout was centred on the **room reserved** for its contents rather than on the **ink those
+contents actually draw**.
+
+- **The emblem banner sat a twentieth of the canvas high.** `frameBox` gave the banner a box from
+  `-0.72r` to `+0.56r`, whose centre is `-0.08r`, while the shield, hexagon and circle are all exactly
+  `-r..+r`. Combined with the interior fault below, a banner emblem's ink was **6.88% of the canvas
+  off centre** — the worst misalignment in the library, on every single emblem.
+- **A badge's contents were centred on their slots, not their ink.** The name is fitted into a band
+  reserved for it, but a long name in a narrow frame comes out far shorter than that band, and the
+  interior was then centred on the band. Icon and name together sat high by about a fifth of the way
+  out of the block's centre, while each individual slot was placed exactly where the table said. Both
+  are now placed on the ink, with the clear gap the table asked for hung off the pictogram's ink.
+- **A vertical wordmark was placed against a block its own contents did not fill.** Two independent
+  reasons: a long name is bound by width and comes out shorter than the band reserved for it, and
+  `placeIcon` scales by the _larger_ of a pictogram's two extents, so a pictogram narrower than it is
+  tall is letterboxed and its ink is shorter than the box too. `Northwind Coffee` in a vertical lockup
+  came out **5.79% of the canvas low**.
+
+The underlying gap was that no engine could ask how big a thing's ink is. `measureText` answers a
+different question — how wide the advance boxes are — and the two differ by the outer side bearings
+and, in height, by however far the letters fall short of the cap line. New `textInk` measures the
+answer, and `iconInkSize` exposes the same for a pictogram from the same computation `placeIcon` uses,
+so the two cannot disagree. `fitText` now centres both axes on the measured ink, which also retired its
+half-tracking-unit fudge factor. Measured worst case across the monogram, wordmark and emblem engines,
+over 1650 input cases and 3434 generated marks: **under 0.25% of the canvas**, where it was 6.88%.
+
+#### Known defect: capitals do not reach the cap line or the baseline
+
+Found while measuring, and **not fixed** — it is a compiler change, not an engine change, and it
+changes the identity of all 18 typefaces.
+
+`buildGlyphs` insets every stroke endpoint by half a stroke so that a round terminal disc lands exactly
+on the cap line and the baseline, then closes the gap with `capRound` — which returns an empty string
+for any family with `round: false`. That is **10 of the 18 families**. Their `stroke()` produces a
+butt-ended quad that reaches exactly as far as its centreline and no further, so with no disc the
+terminal stops a half-stroke short of the edge it was meant to meet. Measured in `orbit-grotesk`
+(cap 700), against the rules at 0 and 700:
+
+| letter      | ink      | short by              |
+| ----------- | -------- | --------------------- |
+| `O` `E` `Z` | 0 – 700  | — correct             |
+| `A`         | 0 – 662  | 38 above the baseline |
+| `L`         | 55 – 700 | 55 below the cap line |
+| `S`         | 0 – 637  | 63 above the baseline |
+| `V`         | 34 – 666 | 34 at both ends       |
+| `I`         | 55 – 646 | 55 at both ends       |
+
+The worst family is `slab-serif`, where letters reach 61% of cap height and the spread inside one word
+such as `SALVO` is 39 points of cap height. Letters that do not share a baseline do not read as set at
+all, and the error scales with the mark — it is worst at exactly the sizes a logo is used at.
+
+`round` is read in exactly one place, `capRound`, so this is a geometry switch where a style switch was
+intended. Either `capRound` always emits the disc — one line, and precisely the geometry the eight
+round families already use — or the endpoint inset becomes `serifOut + (round ? half : 0)` so a butt end
+runs all the way to the edge. The second preserves the flat terminals the ten families were presumably
+drawn to have, but every diagonal terminal (`V`, `W`, `X`, `Y`, `A`, `K`, `M`, `N`, `Z`) then needs its
+own audit, since a butt end on a diagonal does not reach the same row a disc does.
+
+Recorded as `it.fails` in `tests/brain.test.ts`: the suite stays green while the defect is open, the
+assertion documents what is wrong rather than endorsing what is drawn, and fixing the compiler flips it
+to a real failure that prompts the `.fails` to come off.
+
+#### Previously
+
 Four alignment defects, all found by measuring the ink bounding box of real output against the canvas
-rather than by eye. The worst case was 18.5% of the canvas off centre.- **A wordmark's two words were set as one.** `measureText` counted a space at the missing-glyph
-fallback advance while `textPath` skipped it entirely, so `Northwind Coffee` was measured with a gap
-and drawn without one: `NORTHWINDCOFFEE`. Measurement and drawing now resolve every advance through
-one function, and an undrawable character leaves the gap it was measured as. A word space is 0.26 em
-rather than the full capital it fell back to.
+rather than by eye. The worst case was 18.5% of the canvas off centre.
+
+- **A wordmark's two words were set as one.** `measureText` counted a space at the missing-glyph
+  fallback advance while `textPath` skipped it entirely, so `Northwind Coffee` was measured with a gap
+  and drawn without one: `NORTHWINDCOFFEE`. Measurement and drawing now resolve every advance through
+  one function, and an undrawable character leaves the gap it was measured as. A word space is 0.26 em
+  rather than the full capital it fell back to.
 
 - **The horizontal wordmark lockup was flush left.** The pictogram was pinned to the canvas margin and
   the name centred in whatever was left over, so all the slack collected on the right and the mark

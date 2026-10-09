@@ -6,7 +6,7 @@
  * size.
  */
 
-import { letterAdvance, measureText } from '../text'
+import { letterAdvance, measureText, textInk, type TextInk } from '../text'
 import type { FontEntry } from '../types'
 
 /** A fitted text run. */
@@ -17,14 +17,22 @@ export interface FittedText {
   width: number
   /** Cap height in user units. */
   height: number
-  /** Left edge that centres the run on `centreX`, in user units. */
+  /** Left edge that centres the run's *ink* on `centreX`, in user units. */
   left: number
   /**
-   * Top of the caps that centres the run vertically in its box, in user units.
+   * Top of the caps that centres the run's *ink* vertically in its box, in user units.
    *
    * Note this is the cap top, not the baseline: see `textPath`.
    */
   top: number
+  /**
+   * The ink the run will draw, relative to its origin and cap top.
+   *
+   * Engines that lay out *around* a run need this rather than `width` and `height`. Those two are the
+   * advance box and the cap box; the ink is narrower by the outer side bearings and shorter by however
+   * much the letters fall short of the cap line, which in this library is most of them.
+   */
+  ink: TextInk
 }
 
 /**
@@ -55,17 +63,21 @@ export function fitText(
   const scale = Math.max(Math.min(byWidth, byHeight), 0.0001)
 
   const metrics = measureText(font, letters, scale, tracking)
+  const ink = textInk(font, letters, scale, tracking)
   return {
     scale,
     width: metrics.width,
     height: metrics.height,
-    // `metrics.width` is the advance box, not the ink. The two differ by the outer side bearings, which
-    // cancel because the compiler gives every glyph equal bearings, plus one trailing tracking unit,
-    // which does not: the last letter's advance is counted but its glyph stops at the bearing. So the
-    // ink sits `tracking / 2` left of the box's centre, and centring the box centres a mark that is not
-    // there. Shifting by half a tracking unit puts the ink where the eye expects it.
-    left: centreX - metrics.width / 2 + (tracking * scale) / 2,
-    top: boxTop + (boxHeight - metrics.height) / 2,
+    ink,
+    // Both axes are centred on the measured ink rather than on the boxes the run is measured by.
+    //
+    // The advance box is wider than the ink by the two outer side bearings and one trailing tracking
+    // unit, so centring the box left every composed mark a bearing's width off centre — a vertical
+    // wordmark's icon and name came out 1.2% of the canvas left. The cap box is taller than the ink by
+    // however far the tallest letter falls short of the cap line, so centring the box pushed a stacked
+    // name down by a gap larger than the one that was asked for.
+    left: centreX - ink.width / 2 - ink.offsetX,
+    top: boxTop + (boxHeight - ink.height) / 2 - ink.offsetY,
   }
 }
 

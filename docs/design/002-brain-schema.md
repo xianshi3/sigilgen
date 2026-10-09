@@ -127,6 +127,49 @@ what `scripts/build-brain.mjs` produces.
 Glyph outlines are authored with the cap top at `y = 0` and the baseline at `y = capHeight`, y growing
 downwards to match SVG. There are no `A` commands — see [ADR-002](../architecture/decisions/ADR-002-no-elliptical-arcs.md).
 
+#### Known defect: terminals do not reach the cap line or the baseline
+
+**Every capital must span `0..capHeight`.** This does not currently hold, and it is the one place where
+the compiler's geometry depends on a style flag.
+
+`stroke(x1, y1, x2, y2, weight)` returns a butt-ended quad: it reaches exactly as far as its centreline
+and no further. `buildGlyphs` therefore insets every endpoint by half a stroke, on the assumption that a
+round terminal disc will carry the ink back out to the edge. That disc is `capRound`, and `capRound`
+returns an empty string whenever `round` is false — which is **10 of the 18 families**. With no disc, the
+terminal stops a half-stroke short of the cap line and again short of the baseline.
+
+Measured in `orbit-grotesk` against the rules at 0 and 700:
+
+| letter      | ink      | short by              |
+| ----------- | -------- | --------------------- |
+| `O` `E` `Z` | 0 – 700  | correct               |
+| `A`         | 0 – 662  | 38 above the baseline |
+| `L`         | 55 – 700 | 55 below the cap line |
+| `S`         | 0 – 637  | 63 above the baseline |
+| `V`         | 34 – 666 | 34 at both ends       |
+| `I`         | 55 – 646 | 55 at both ends       |
+
+`slab-serif` is the worst case: letters reach 61% of cap height, and one word such as `SALVO` spans 39
+points of cap height from its shortest letter to its tallest.
+
+`round` is read in exactly one place, `capRound`. So the flag that was meant to choose a terminal style
+is in fact choosing whether a terminal exists, and two thirds of the library is being drawn with
+terminals missing. The fix belongs here in the compiler, not in an engine:
+
+- `capRound` always emits the disc. One line, and precisely the geometry the eight round families
+  already use — at the cost of giving the ten flat families round terminals.
+- Or the endpoint inset becomes `serifOut + (round ? half : 0)`, so a butt end runs all the way to the
+  edge. This preserves the flat terminals the ten families were presumably drawn to have, but every
+  diagonal terminal — `V`, `W`, `X`, `Y`, `A`, `K`, `M`, `N`, `Z` — needs its own audit, because a butt
+  end on a diagonal does not reach the same row a disc does, and `V`'s apex currently has no `capRound`
+  call at all.
+
+Engines do not depend on this being fixed: `textInk` measures what a run actually draws rather than
+assuming the cap box, so layout is correct either way. But letters that do not share a baseline do not
+read as set at all, and the error scales with the mark — it is worst at exactly the sizes a logo is used
+at. `tests/brain.test.ts` asserts the invariant as `it.fails`: the suite stays green while the defect is
+open, and fixing the compiler turns it into a real failure that prompts the `.fails` to come off.
+
 ### Icon
 
 ```ts

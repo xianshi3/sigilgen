@@ -113,6 +113,45 @@ export function placeIcon(
   box: number,
   fill: string
 ): SVGElement {
+  const place = iconPlacement(icon, x, y, box)
+  return path(transformPath(icon.path, place.scale, place.translateX, place.translateY), fill)
+}
+
+/**
+ * The ink size an icon will actually occupy in a box of side `box`.
+ *
+ * `placeIcon` scales by the *larger* of the icon's two extents, so a pictogram that is taller than it
+ * is wide is letterboxed horizontally and its ink comes out narrower *and shorter* than the box it was
+ * given. Any engine that lays out around an icon has to know that, or it centres on a box the ink does
+ * not fill: a vertical wordmark came out five percent of the canvas low because the name was positioned
+ * against a full-height icon box that the icon only filled to ninety-three percent.
+ *
+ * Derived from the same measurement {@link placeIcon} uses, so the two cannot disagree.
+ *
+ * @param icon - The icon to place.
+ * @param box - Side length of the icon's box in user units.
+ * @returns The ink width and height in user units.
+ */
+export function iconInkSize(icon: IconEntry, box: number): { width: number; height: number } {
+  const { width, height, scale } = iconPlacement(icon, 0, 0, box)
+  return { width: width * scale, height: height * scale }
+}
+
+/** The scale and translation {@link placeIcon} will use, computed once. */
+function iconPlacement(
+  icon: IconEntry,
+  x: number,
+  y: number,
+  box: number
+): {
+  width: number
+  height: number
+  offsetX: number
+  offsetY: number
+  scale: number
+  translateX: number
+  translateY: number
+} {
   const [minX = 0, minY = 0, vbWidth = 24, vbHeight = 24] = icon.viewBox.split(/\s+/).map(Number)
   const geometry = iconExtent(icon)
   // Fall back to the declared grid when an icon somehow measures as empty.
@@ -124,9 +163,15 @@ export function placeIcon(
   }
 
   const scale = box / Math.max(width, height)
-  const translateX = x + (box - width * scale) / 2 - offsetX * scale
-  const translateY = y + (box - height * scale) / 2 - offsetY * scale
-  return path(transformPath(icon.path, scale, translateX, translateY), fill)
+  return {
+    width,
+    height,
+    offsetX,
+    offsetY,
+    scale,
+    translateX: x + (box - width * scale) / 2 - offsetX * scale,
+    translateY: y + (box - height * scale) / 2 - offsetY * scale,
+  }
 }
 
 /** Measured icon extents, cached per key: measuring is a parse, and placement happens repeatedly. */

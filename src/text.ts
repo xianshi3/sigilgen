@@ -6,7 +6,7 @@
  * a `transform` attribute, which keeps the emitted SVG flat and each glyph independently movable.
  */
 
-import { transformPath } from './path'
+import { pathBounds, transformPath } from './path'
 import type { FontEntry } from './types'
 
 /**
@@ -90,6 +90,83 @@ export function measureText(
   }
   // Each advance already includes both side bearings, which is exactly the box the run occupies.
   return { width: Math.max(width, 0) * scale, height: font.metrics.capHeight * scale }
+}
+
+/** A run's ink, relative to its own origin and cap top, in user units. */
+export interface TextInk {
+  /** Distance from the run origin rightwards to the ink's left edge. */
+  offsetX: number
+  /** Distance from the cap top downwards to the ink's top edge. */
+  offsetY: number
+  /** Ink width. */
+  width: number
+  /** Ink height. */
+  height: number
+}
+
+/**
+ * The ink a run will actually draw, measured rather than assumed.
+ *
+ * `measureText` answers a different question: how wide the advance boxes are. The two differ by the
+ * outer side bearings, and in height by however much shorter the tallest letter is drawn than the cap
+ * line says it should be — which in this library is most of them, because the compiler insets every
+ * stroke by half a stroke and relies on round terminals to carry it back out to the cap line.
+ *
+ * An engine that lays out *around* a run needs this, not `measureText`. Centring a lockup on the
+ * advance width leaves the mark a bearing's width off centre; stacking a name under a pictogram by the
+ * cap height opens a gap larger than the one that was asked for.
+ */
+export function textInk(
+  font: FontEntry,
+  letters: string,
+  scale: number,
+  tracking = DEFAULT_TRACKING
+): TextInk {
+  let minX = Number.POSITIVE_INFINITY
+  let minY = Number.POSITIVE_INFINITY
+  let maxX = Number.NEGATIVE_INFINITY
+  let maxY = Number.NEGATIVE_INFINITY
+  let cursor = 0
+  for (const letter of letters) {
+    const glyph = glyphInk(font, letter)
+    if (glyph !== null) {
+      minX = Math.min(minX, glyph.minX + cursor)
+      minY = Math.min(minY, glyph.minY)
+      maxX = Math.max(maxX, glyph.maxX + cursor)
+      maxY = Math.max(maxY, glyph.maxY)
+    }
+    cursor += letterAdvance(font, letter) + tracking
+  }
+  if (!Number.isFinite(minX)) {
+    return { offsetX: 0, offsetY: 0, width: 0, height: 0 }
+  }
+  return {
+    offsetX: minX * scale,
+    offsetY: minY * scale,
+    width: (maxX - minX) * scale,
+    height: (maxY - minY) * scale,
+  }
+}
+
+/** Measured glyph ink, cached per family and letter: measuring one is a parse. */
+const GLYPH_INK_CACHE = new Map<
+  string,
+  { minX: number; minY: number; maxX: number; maxY: number } | null
+>()
+
+function glyphInk(
+  font: FontEntry,
+  letter: string
+): { minX: number; minY: number; maxX: number; maxY: number } | null {
+  const key = `${font.id}\u0000${letter}`
+  const cached = GLYPH_INK_CACHE.get(key)
+  if (cached !== undefined) {
+    return cached
+  }
+  const glyph = font.glyphs[letter]
+  const box = typeof glyph === 'string' && glyph !== '' ? pathBounds(glyph) : null
+  GLYPH_INK_CACHE.set(key, box)
+  return box
 }
 
 /**

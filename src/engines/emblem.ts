@@ -10,7 +10,7 @@
  * proportional rather than absolute so the whole thing scales.
  */
 
-import { path, pick, placeIcon, wordmarkLetters } from './shared'
+import { iconInkSize, path, pick, placeIcon, wordmarkLetters } from './shared'
 import { contrastFill } from './monogram'
 import { readableOn } from '../resolvers/palette-resolver'
 import { fitText, opticalTracking } from './metrics'
@@ -150,8 +150,11 @@ function frameBox(frame: string, centre: number, frameRadius: number): FrameBox 
   switch (frame) {
     case 'banner': {
       const width = frameRadius * 1.86
+      // Half the height, so the box is centred on the canvas like every other frame. At 0.72 the box
+      // ran from -0.72r to +0.56r, whose centre is -0.08r — a badge sitting a twentieth of the canvas
+      // above the middle, which reads as a mistake rather than as a raised flag.
       return {
-        top: centre - frameRadius * 0.72,
+        top: centre - frameRadius * 0.64,
         height: frameRadius * 1.28,
         width,
         notch: width * 0.1,
@@ -277,39 +280,67 @@ function drawSealStack(
   const gapShare = hasName ? BLOCK_SHARES.gap : 0
 
   const blockHeight = box.height * room.block
-  // `lift` pulls a tapered frame's contents up into its wider half.
-  const blockTop = box.top + (box.height - blockHeight) / 2 - frameRadius * room.lift
   const iconBox = blockHeight * iconShare
   const nameHeight = blockHeight * nameShare
   const gap = blockHeight * gapShare
-  const nameTop = blockTop + iconBox + gap
 
-  if (icon !== null) {
-    elements.push(placeIcon(icon, centre - iconBox / 2, blockTop, iconBox, iconFill))
-  }
+  // The pictogram is letterboxed inside its own box, so its ink is shorter than `iconBox` whenever it
+  // is not square. Everything below is placed on the ink, not on the room reserved for it.
+  const iconInk = icon === null ? { width: iconBox, height: iconBox } : iconInkSize(icon, iconBox)
 
   if (hasName) {
-    // The name is fitted to the narrowest row of the frame across the band it occupies, so a tapered
-    // frame cannot hand it more room than it actually has. `fitText` centres the run vertically in
-    // that band, so the fitted ink never reaches a row outside it.
-    const narrowest = Math.min(
-      frameHalfWidth(frame, centre, frameRadius, nameTop),
-      frameHalfWidth(frame, centre, frameRadius, nameTop + nameHeight)
-    )
     const tracking = opticalTracking(font, EMBLEM_TRACKING)
+
+    // Provisional band, used only to measure how much width the frame actually offers at the rows the
+    // name will occupy. A tapered frame must not hand it more room than it has, so the narrowest of
+    // those two rows is the budget.
+    const provisional = box.top + (box.height - blockHeight) / 2 - frameRadius * room.lift
+    const nameBandTop = provisional + iconBox + gap
+    const narrowest = Math.min(
+      frameHalfWidth(frame, centre, frameRadius, nameBandTop),
+      frameHalfWidth(frame, centre, frameRadius, nameBandTop + nameHeight)
+    )
     const fitted = fitText(
       font,
       letters,
       centre,
-      nameTop,
+      nameBandTop,
       narrowest * 2 * NAME_MARGIN,
       nameHeight,
       tracking
     )
+
+    // Centre the two *inks* in the frame, then hang the name off the pictogram's ink with the clear gap
+    // the table asked for. `nameHeight` is a budget, not a prediction: a long name in a narrow frame
+    // comes out far shorter than the band reserved for it, and `fitText` then centred that shorter run
+    // inside the taller band. Every badge therefore sat high inside its own frame, by about a
+    // twentieth of the block, while each slot was placed exactly where the table said it should be.
+    const inkHeight = iconInk.height + gap + fitted.ink.height
+    const inkTop = box.top + (box.height - inkHeight) / 2 - frameRadius * room.lift
+    const iconTop = inkTop - (iconBox - iconInk.height) / 2
+    const capTop = inkTop + iconInk.height + gap - fitted.ink.offsetY
+
+    if (icon !== null) {
+      elements.push(placeIcon(icon, centre - iconBox / 2, iconTop, iconBox, iconFill))
+    }
     elements.push(
-      path(textPath(font, letters, fitted.left, fitted.top, fitted.scale, tracking), innerFill)
+      path(textPath(font, letters, fitted.left, capTop, fitted.scale, tracking), innerFill)
     )
+    return elements
   }
 
+  // With no name the pictogram is the whole composition, so it centres on the frame directly.
+  if (icon !== null) {
+    const inkTop = box.top + (box.height - iconInk.height) / 2 - frameRadius * room.lift
+    elements.push(
+      placeIcon(
+        icon,
+        centre - iconBox / 2,
+        inkTop - (iconBox - iconInk.height) / 2,
+        iconBox,
+        iconFill
+      )
+    )
+  }
   return elements
 }

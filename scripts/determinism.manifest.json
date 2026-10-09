@@ -1,15 +1,15 @@
 {
   "cases": {
-    "wordmark|graphite-signal|nexus-grotesk|ring-orbit|fd5182a780c9": "d62235dfab7f457524da082e87c699a812a8e896bc0d009cc19d83d1071061ba",
+    "wordmark|graphite-signal|nexus-grotesk|ring-orbit|fd5182a780c9": "02d9a9cff334e71af4b770697b754822bb64d3600b0a91f6c753625585345d3a",
     "monogram|neon-synth|orbit-grotesk|terminal-window|45c95219ae0d": "a89cfe62800af47a9f7ea1b8a3168614214b732071d4cb5d2c6a811e3dd39ba7",
     "monogram|ink-monolith|cascade-humanist|blueprint-draft|17567241434e": "95f32fd2f0c52221d5b47181344d1c7e754047f5419d9c0a6764498cd6cd43d1",
-    "emblem|gold-atelier|stipple-display|diamond-gem|ce0c746da272": "561dc806cffedf859bf801b4f4314ec17f6af5a19856908b27a0c9d5fdb3b891",
-    "abstract|azure-current|nova-display|-|eb5e61c8085d, abstract|signal-amber|halo-display|-|037d32adf0d4, emblem|signal-amber|nova-display|compass-draft|b912c417a1d8, abstract|citrus-pop|cascade-humanist|-|f38c0962789f, wordmark|turquoise-tide|nexus-grotesk|compass-draft|35817d964746, emblem|citrus-pop|halo-display|hot-air-balloon|2a83bf4edf6e": "0fa6c1c856a3181aad5fa1312e5c53e6cbba10f152e5920b876894fd5f65e888",
-    "monogram|steel-forge|monolith-grotesk|hard-hat|966b431d42b7, emblem|cobalt-forge|monolith-grotesk|wrench|d83d90363bf9, lettermark|cobalt-forge|axis-grotesk|-|98fdce69fbe8, emblem|cobalt-forge|axis-grotesk|wrench|bfb7e6fbb7fc, emblem|cobalt-forge|vector-grotesk|wrench|b0ec8c7f443f, wordmark|cobalt-forge|axis-grotesk|hard-hat|d5519ec8984f": "07e6d29eb954613c0925c4b9b6cb3aa915032fa96158b79c221f2dba94f36e57",
-    "lettermark|custom-coffee|cascade-humanist|-|280972664eb4": "e299dd175d98e896fc7b008518bc86beb5026f07baa4661330a4081e2cc92f7a",
+    "emblem|gold-atelier|stipple-display|diamond-gem|ce0c746da272": "e1b4ee488f83c95c7732aa86b561ce8ba200778e01290aa4317e9f9fc2c30d0e",
+    "abstract|azure-current|nova-display|-|eb5e61c8085d, abstract|signal-amber|halo-display|-|037d32adf0d4, emblem|signal-amber|nova-display|compass-draft|b912c417a1d8, abstract|citrus-pop|cascade-humanist|-|f38c0962789f, wordmark|turquoise-tide|nexus-grotesk|compass-draft|35817d964746, emblem|citrus-pop|halo-display|hot-air-balloon|2a83bf4edf6e": "cac2e58477cccd0e8ba46cfb8a86500c56c0a8d2605fd0bf7e190d00d29f2d48",
+    "monogram|steel-forge|monolith-grotesk|hard-hat|966b431d42b7, emblem|cobalt-forge|monolith-grotesk|wrench|d83d90363bf9, lettermark|cobalt-forge|axis-grotesk|-|98fdce69fbe8, emblem|cobalt-forge|axis-grotesk|wrench|bfb7e6fbb7fc, emblem|cobalt-forge|vector-grotesk|wrench|b0ec8c7f443f, wordmark|cobalt-forge|axis-grotesk|hard-hat|d5519ec8984f": "33b89bf5048fa998bd5c7f9cdb1d93f44f9e943973e6c6a947186841bf132a1b",
+    "lettermark|custom-coffee|cascade-humanist|-|280972664eb4": "06c32f1d632a78fa40dbac2c039410b6278f69499d8ca861460f2036cc51c7c7",
     "abstract|cobalt-forge|monolith-grotesk|-|e4e4505adedb": "1313891594f7cfd240a20905b7cb6709c4a6260e75bd28e75caea19d5266317f",
-    "emblem|deep-ocean|flow-humanist|hot-air-balloon|014f24674f0b": "78c1d3d02ef80386d24d97dec67023855dff4376858d2c6fa98011b769ea084d",
-    "lettermark|violet-studio|axis-grotesk|-|0e395306aed0, lettermark|ink-monolith|axis-grotesk|-|5734cc883028, lettermark|ink-monolith|axis-grotesk|-|7ea7e023681e, lettermark|cobalt-forge|monolith-grotesk|-|572d5b1232e7, lettermark|violet-studio|monolith-grotesk|-|8076f511c5e6, lettermark|violet-studio|monolith-grotesk|-|f48064f6c0d7": "b2122e393ef42a363ea6ceff62e366e63ec3642f4c1dafad8b05b186110db19c"
+    "emblem|deep-ocean|flow-humanist|hot-air-balloon|014f24674f0b": "20753d8063015f0bebb7e012af4e28cd3c04270306f5c387ba246a12e6a683e6",
+    "lettermark|violet-studio|axis-grotesk|-|0e395306aed0, lettermark|ink-monolith|axis-grotesk|-|5734cc883028, lettermark|ink-monolith|axis-grotesk|-|7ea7e023681e, lettermark|cobalt-forge|monolith-grotesk|-|572d5b1232e7, lettermark|violet-studio|monolith-grotesk|-|8076f511c5e6, lettermark|violet-studio|monolith-grotesk|-|f48064f6c0d7": "63fcf03b5e23983491b6ff13ee0446d5c904aa7044933f2b7fb3e371464d47a6"
   },
-  "combined": "51d154bf5075d53fa5f473d66ffc757a278cbfdf95120e2c8671fd8dfe5f8552"
+  "combined": "92819771d5040e88d9dd527636884bbf621c5fc8cf31b0021e5cff71b1343ef0"
 }

@@ -45,8 +45,9 @@ export {
 export { sha256, toHex } from './sha256'
 export { fmt, round, clamp } from './format'
 export { parsePath, transformPath, isSafePathData, arcPath } from './path'
-export { measureText, textPath } from './text'
-export { fitText, capHeightForWidth, naturalWidth } from './engines/metrics'
+export { measureText, textPath, textInk } from './text'
+export type { TextInk } from './text'
+export { fitText, capHeightForWidth, naturalWidth, opticalTracking } from './engines/metrics'
 
 export { ENGINE_NAMES } from './types'
 export type {

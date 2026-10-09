@@ -473,3 +473,70 @@ describe('colour names', () => {
     expect(normaliseColour('#12345')).toBeNull()
   })
 })
+
+describe('letterform extent (known defect)', () => {
+  /**
+   * Every capital in a typeface must reach the cap line and sit on the baseline. That is not a style
+   * question: no typeface draws its `L` floating above the baseline, because a mark set in letters that
+   * do not share a baseline does not read as set at all.
+   *
+   * The compiler does not do this, and has never done so. `buildGlyphs` insets every stroke endpoint by
+   * half a stroke so that a round terminal disc lands exactly on the cap line and the baseline, and it
+   * closes the gap with `capRound` — which returns an empty string for any family with `round: false`.
+   * That is 10 of the 18 families. Their `stroke()` helper produces a butt-ended quad that reaches
+   * exactly as far as its centreline and no further, so with no disc the terminal stops a half-stroke
+   * short of the edge it was supposed to meet.
+   *
+   * Measured, orbit-grotesk, cap 700:
+   *
+   *   O  E  Z    0 .. 700   correct
+   *   A          0 .. 662   38 above the baseline
+   *   L         55 .. 700   55 below the cap line
+   *   S          0 .. 637   63 above the baseline
+   *   V         34 .. 666   34 clear at both ends
+   *   I         55 .. 646   55 clear at both ends
+   *
+   * The worst family is slab-serif, where letters reach 61% of cap height and the spread inside a single
+   * word such as SALVO is 39 points of cap height.
+   *
+   * The fix is a compiler change, not an engine change: `round` must stop deciding whether a terminal
+   * exists. Either `capRound` always emits the disc — one line, and exactly the geometry the eight
+   * round families already use — or the endpoint inset becomes `serifOut + (round ? half : 0)` so a butt
+   * end runs all the way to the edge. The second preserves the flat terminals the ten families were
+   * presumably drawn to have, but every diagonal terminal (`V`, `W`, `X`, `Y`, `A`, `K`, `M`, `N`, `Z`)
+   * needs its own audit, since a butt end on a diagonal does not reach the same row a disc does.
+   *
+   * This is recorded as `it.fails` so the suite stays green while the defect is open, and so that
+   * fixing the compiler flips this test to a real failure and prompts the `.fails` to come off. It is a
+   * statement of what is wrong, not an endorsement of what is currently drawn.
+   */
+  it.fails('draws every capital to the full cap height, from the cap line to the baseline', () => {
+    const capOnly = 'ABCDEFGHIJKLMNPRSTUVWXYZ'
+    for (const font of FONTS) {
+      const { capHeight } = font.metrics
+      // A round letter may overshoot the cap line a little, and a terminal inset by a rounding step is
+      // invisible; anything past two percent of cap height is visible in a logo.
+      const tolerance = capHeight * 0.02
+      for (const letter of capOnly) {
+        const outline = font.glyphs[letter]
+        expect(outline, `${font.id} has no ${letter}`).toBeTypeOf('string')
+        if (outline === undefined) {
+          continue
+        }
+        const bounds = pathBounds(outline)
+        expect(bounds, `${font.id} ${letter} has no measurable ink`).not.toBeNull()
+        if (bounds === null) {
+          continue
+        }
+        expect(
+          Math.abs(bounds.minY),
+          `${font.id} ${letter} stops ${bounds.minY.toFixed(0)} units short of the cap line`
+        ).toBeLessThan(tolerance)
+        expect(
+          Math.abs(capHeight - bounds.maxY),
+          `${font.id} ${letter} stops ${(capHeight - bounds.maxY).toFixed(0)} units short of the baseline`
+        ).toBeLessThan(tolerance)
+      }
+    }
+  })
+})

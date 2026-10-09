@@ -52,7 +52,7 @@ const LABEL = '#8b93a1'
 function cell(svg, x, y, caption) {
   const open = svg.indexOf('>')
   const close = svg.lastIndexOf('</svg>')
-  if (open < 0 || close < open) {
+  if (open === -1 || close === -1 || close < open) {
     throw new Error(`cannot unwrap this document:\n${svg.slice(0, 120)}`)
   }
   const body = svg.slice(open + 1, close)

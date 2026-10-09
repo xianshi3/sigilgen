@@ -8,6 +8,58 @@ import type { FontEntry } from '../src/types'
 
 const font: FontEntry = findFont('orbit-grotesk')!
 
+/** Sub-path count of a run drawn in the reference family, for counting what a run actually draws. */
+const subPathCount = (letters: string): number =>
+  (textPath(font, letters, 0, 0, 1).match(/M/g) ?? []).length
+
+/**
+ * Clear space between two letters' ink, in thousandths of cap height.
+ *
+ * Cap height rather than stroke width: the serif `I` is as wide as its slabs, so reading a stem off
+ * it overstates a serif face's stroke by more than half. Cap height is the one dimension every
+ * typeface in the brain shares, and letterspacing is specified in it by convention — roughly 60 to
+ * 110 thousandths for capitals.
+ */
+function letterGap(entry: FontEntry, run = 'NORTHWIND'): number {
+  const boxes: { minX: number; maxX: number }[] = []
+  let cursor = 0
+  for (const letter of run) {
+    const glyph = entry.glyphs[letter]
+    const bounds = glyph === undefined ? null : pathBounds(glyph)
+    if (bounds !== null) {
+      boxes.push({ minX: bounds.minX + cursor, maxX: bounds.maxX + cursor })
+    }
+    cursor += letterAdvance(entry, letter)
+  }
+  let total = 0
+  for (let index = 0; index < boxes.length - 1; index++) {
+    total += (boxes[index + 1]?.minX ?? 0) - (boxes[index]?.maxX ?? 0)
+  }
+  return ((total / (boxes.length - 1)) * 1000) / entry.metrics.capHeight
+}
+
+/** Clear space a word space leaves between the ink on either side of it. */
+function wordGap(entry: FontEntry): number {
+  const glyph = entry.glyphs['N']
+  const bearing = (glyph === undefined ? null : pathBounds(glyph))?.minX ?? 0
+  return ((letterAdvance(entry, ' ') - 2 * bearing) * 1000) / entry.metrics.capHeight
+}
+
+/**
+ * How far the ink of a fitted run sits from where it was asked to be centred, as a fraction of the
+ * canvas. This is the invariant behind "the logo looks aligned", and it is measurable rather than a
+ * matter of taste: the ink is the only thing a reader sees, so the ink is what has to be centred.
+ */
+function drift(entry: FontEntry, letters: string, tracking: number): number {
+  const centre = 256
+  const fitted = fitText(entry, letters, centre, 0, 400, 200, tracking)
+  const bounds = pathBounds(textPath(entry, letters, fitted.left, 0, fitted.scale, tracking))
+  if (bounds === null) {
+    throw new Error(`no ink for ${entry.id} / ${letters}`)
+  }
+  return Math.abs((bounds.minX + bounds.maxX) / 2 - centre) / 512
+}
+
 describe('measureText', () => {
   it('measures a single glyph as its advance', () => {
     expect(measureText(font, 'A', 1).width).toBe(font.metrics.advance['A'])
@@ -42,11 +94,9 @@ describe('textPath', () => {
   it('concatenates the sub-paths of every drawable glyph', () => {
     // A glyph is several sub-paths (a leg, a crossbar), so the count is the sum of its parts rather
     // than one per letter. Two runs of the same letter must differ by exactly that.
-    const countOf = (letters: string): number =>
-      (textPath(font, letters, 0, 0, 1).match(/M/g) ?? []).length
-    const one = countOf('A')
+    const one = subPathCount('A')
     expect(one).toBeGreaterThan(0)
-    expect(countOf('AA')).toBe(one * 2)
+    expect(subPathCount('AA')).toBe(one * 2)
   })
 
   it('returns an empty string for an empty run', () => {
@@ -56,9 +106,7 @@ describe('textPath', () => {
   it('draws no letter the font does not define, rather than substituting one', () => {
     // Silently substituting a wrong letter would be worse than a gap. Digits are not in the brain, so
     // `A1B` must contribute exactly the sub-paths of `A` and `B` and nothing else.
-    const drawn = (letters: string): number =>
-      (textPath(font, letters, 0, 0, 1).match(/M/g) ?? []).length
-    expect(drawn('A1B')).toBe(drawn('AB'))
+    expect(subPathCount('A1B')).toBe(subPathCount('AB'))
   })
 
   it('advances past a letter it cannot draw, so measuring and drawing agree', () => {
@@ -135,39 +183,6 @@ describe('normalWidth', () => {
 })
 
 describe('letterspacing', () => {
-  /**
-   * Clear space between two letters' ink, in thousandths of cap height.
-   *
-   * Cap height rather than stroke width: the serif `I` is as wide as its slabs, so reading a stem off
-   * it overstates a serif face's stroke by more than half. Cap height is the one dimension every
-   * typeface in the brain shares, and letterspacing is specified in it by convention — roughly 60 to
-   * 110 thousandths for capitals.
-   */
-  function letterGap(font: FontEntry, run = 'NORTHWIND'): number {
-    const boxes: { minX: number; maxX: number }[] = []
-    let cursor = 0
-    for (const letter of run) {
-      const glyph = font.glyphs[letter]
-      const bounds = glyph === undefined ? null : pathBounds(glyph)
-      if (bounds !== null) {
-        boxes.push({ minX: bounds.minX + cursor, maxX: bounds.maxX + cursor })
-      }
-      cursor += letterAdvance(font, letter)
-    }
-    let total = 0
-    for (let index = 0; index < boxes.length - 1; index++) {
-      total += (boxes[index + 1]?.minX ?? 0) - (boxes[index]?.maxX ?? 0)
-    }
-    return ((total / (boxes.length - 1)) * 1000) / font.metrics.capHeight
-  }
-
-  /** Clear space a word space leaves between the ink on either side of it. */
-  function wordGap(font: FontEntry): number {
-    const glyph = font.glyphs['N']
-    const bearing = (glyph === undefined ? null : pathBounds(glyph))?.minX ?? 0
-    return ((letterAdvance(font, ' ') - 2 * bearing) * 1000) / font.metrics.capHeight
-  }
-
   it('sets every family in the band where capitals read as a word', () => {
     // The bug this guards: spacing was authored as an absolute number of font units, so the same
     // number meant "wide air" on a 46-unit stem and "tight contact" on a 241-unit slab. Measured
@@ -176,7 +191,7 @@ describe('letterspacing', () => {
     //
     // The band is 60 to 115 rather than the 60 to 110 a type designer would quote, to leave room for
     // the open end of a 900-weight face without letting the library drift back out of it.
-    const gaps = FONTS.map(font => ({ id: font.id, gap: letterGap(font) }))
+    const gaps = FONTS.map(entry => ({ id: entry.id, gap: letterGap(entry) }))
     const worst = gaps.reduce((a, b) => (b.gap > a.gap ? b : a))
     const tightest = gaps.reduce((a, b) => (b.gap < a.gap ? b : a))
     expect(worst.gap, `${worst.id} is the loosest`).toBeLessThan(115)
@@ -187,22 +202,22 @@ describe('letterspacing', () => {
     // Nine of the eighteen were authored below 10% of cap height, which is hairline territory. At the
     // size a wordmark fits a long name into, that is a couple of pixels, and it is gone by favicon
     // size. A Regular sans is 12 to 14%, so the floor is there.
-    for (const font of FONTS) {
+    for (const entry of FONTS) {
       // The serif `I` is as wide as its slabs, so this over-reads a serif face. It is the *sans* and
       // display families this guards, and for those the `I` is a plain stem.
-      if (font.category === 'serif') {
+      if (entry.category === 'serif') {
         continue
       }
-      const glyph = font.glyphs['I']
+      const glyph = entry.glyphs['I']
       const bounds = glyph === undefined ? null : pathBounds(glyph)
       if (bounds === null) {
-        throw new Error(`${font.id} has no I`)
+        throw new Error(`${entry.id} has no I`)
       }
-      const ratio = (bounds.maxX - bounds.minX) / font.metrics.capHeight
-      expect(ratio, `${font.id} is ${(ratio * 100).toFixed(1)}% of cap height`).toBeGreaterThan(
+      const ratio = (bounds.maxX - bounds.minX) / entry.metrics.capHeight
+      expect(ratio, `${entry.id} is ${(ratio * 100).toFixed(1)}% of cap height`).toBeGreaterThan(
         0.115
       )
-      expect(ratio, `${font.id} is ${(ratio * 100).toFixed(1)}% of cap height`).toBeLessThan(0.235)
+      expect(ratio, `${entry.id} is ${(ratio * 100).toFixed(1)}% of cap height`).toBeLessThan(0.235)
     }
   })
 
@@ -210,18 +225,20 @@ describe('letterspacing', () => {
     // Sized on the *advance* in the compiler, so the visible ratio is one less than the advance ratio.
     // Anything at or below 1.5 reads as a single word; this is also what the earlier hard-coded space
     // got wrong, coming out narrower than the gap between letters in the loosest family.
-    for (const font of FONTS) {
-      const ratio = wordGap(font) / letterGap(font)
-      expect(ratio, `${font.id}: word gap is ${ratio.toFixed(2)}x its letter gap`).toBeGreaterThan(
+    for (const entry of FONTS) {
+      const ratio = wordGap(entry) / letterGap(entry)
+      expect(ratio, `${entry.id}: word gap is ${ratio.toFixed(2)}x its letter gap`).toBeGreaterThan(
         1.8
       )
-      expect(ratio, `${font.id}: word gap is ${ratio.toFixed(2)}x its letter gap`).toBeLessThan(3.2)
+      expect(ratio, `${entry.id}: word gap is ${ratio.toFixed(2)}x its letter gap`).toBeLessThan(
+        3.2
+      )
     }
   })
 
   it('carries a space advance on every family', () => {
-    for (const font of FONTS) {
-      expect(typeof font.metrics.advance[' '], `${font.id} has no space advance`).toBe('number')
+    for (const entry of FONTS) {
+      expect(typeof entry.metrics.advance[' '], `${entry.id} has no space advance`).toBe('number')
     }
   })
 })
@@ -232,9 +249,9 @@ describe('opticalTracking', () => {
     // the bearings actually produce, so the same multiplier put the gap anywhere from a third of a
     // stroke to three times it — a wordmark at 309/1000 in one family and a lettermark overlapping in
     // another. Cap height is the stable unit.
-    for (const font of FONTS) {
-      expect(opticalTracking(font, 0.02)).toBeCloseTo(font.metrics.capHeight * 0.02)
-      expect(opticalTracking(font, -0.03)).toBeCloseTo(font.metrics.capHeight * -0.03)
+    for (const entry of FONTS) {
+      expect(opticalTracking(font, 0.02)).toBeCloseTo(entry.metrics.capHeight * 0.02)
+      expect(opticalTracking(font, -0.03)).toBeCloseTo(entry.metrics.capHeight * -0.03)
     }
   })
 })
@@ -245,16 +262,6 @@ describe('horizontal centring', () => {
    * canvas. This is the invariant behind "the logo looks aligned", and it is measurable rather than a
    * matter of taste: the ink is the only thing a reader sees, so the ink is what has to be centred.
    */
-  const drift = (entry: FontEntry, letters: string, tracking: number): number => {
-    const centre = 256
-    const fitted = fitText(entry, letters, centre, 0, 400, 200, tracking)
-    const bounds = pathBounds(textPath(entry, letters, fitted.left, 0, fitted.scale, tracking))
-    if (bounds === null) {
-      throw new Error(`no ink for ${entry.id} / ${letters}`)
-    }
-    return Math.abs((bounds.minX + bounds.maxX) / 2 - centre) / 512
-  }
-
   it('centres the ink, not just the advance box, for every typeface', () => {
     // Tracking is the interesting case: the last letter's advance is counted but its glyph stops at
     // the bearing, so centring the advance box leaves the ink half a tracking unit off. Untracked runs
