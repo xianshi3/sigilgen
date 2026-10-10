@@ -47,7 +47,7 @@ so the two cannot disagree. `fitText` now centres both axes on the measured ink,
 half-tracking-unit fudge factor. Measured worst case across the monogram, wordmark and emblem engines,
 over 1650 input cases and 3434 generated marks: **under 0.25% of the canvas**, where it was 6.88%.
 
-fix(type): wind every band the way the strokes wind
+#### Arc bands wound against the strokes, and every bowl letter carried a seam
 
 An arc band's winding used to depend on which way round its sweep ran, so a band cancelled against every
 stroke it overlapped. `B`, `D`, `P` and `R` each carried a seam down the side where their bowl met their
@@ -77,7 +77,6 @@ The winding guard in `tests/brain.test.ts` now covers `B`, `D`, `P`, `R` and `J`
 with counters, and they are in the set because their counters come from a single band contour rather than
 from an opposite-wound pair — which is exactly what let them regress. Verified to fail against the pre-fix
 build: `orbit-grotesk B at 88,2`.
-
 
 #### Capitals did not reach the cap line or the baseline
 
