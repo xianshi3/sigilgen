@@ -537,10 +537,15 @@ describe('letterform extent', () => {
     // counter nor out of bounds.
     //
     // The property is that filling the glyph as one path agrees with filling each sub-path and taking
-    // the union. The two differ exactly where opposite windings overlap. Restricted to letters with no
-    // counter, because a real counter is a legitimate difference: `ring` walks its inner ellipse against
-    // its outer, and that hole is the point of it.
-    const noCounter = 'CEFILSTUVWXYZ'
+    // the union. The two differ exactly where opposite windings overlap.
+    //
+    // Restricted to letters with no counter, because a real counter is a legitimate difference: `ring`
+    // walks its inner ellipse against its outer, and that hole is the point of it. `B`, `D`, `P`, `R` and
+    // `J` are here despite having counters, because their counters come from a single band contour rather
+    // than from a pair — which is exactly what makes them the letters that regressed. A band used to wind
+    // against every stroke it overlapped, so each of them carried a seam down the side where its bowl met
+    // its stem, and the bounding box could not see it because the stem beside the seam reached both edges.
+    const noCounter = 'BCDEFJILPRSTUVWXYZ'
     const band = 14
     const step = 11
     for (const font of FONTS) {

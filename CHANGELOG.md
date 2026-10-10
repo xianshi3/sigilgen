@@ -47,6 +47,38 @@ so the two cannot disagree. `fitText` now centres both axes on the measured ink,
 half-tracking-unit fudge factor. Measured worst case across the monogram, wordmark and emblem engines,
 over 1650 input cases and 3434 generated marks: **under 0.25% of the canvas**, where it was 6.88%.
 
+fix(type): wind every band the way the strokes wind
+
+An arc band's winding used to depend on which way round its sweep ran, so a band cancelled against every
+stroke it overlapped. `B`, `D`, `P` and `R` each carried a seam down the side where their bowl met their
+stem, and `J`'s hook had one too in the serif families.
+
+Three things made this hard to see, and each is worth recording because the obvious check misses all three:
+
+- **A bounding box cannot see it.** The stem beside the seam reaches the cap line and the baseline
+  perfectly well, so the letter's extent is correct. The defect is inside the ink.
+- **The counter-sampling cannot see it either.** It samples the middle of a bowl, which is a legitimate
+  counter. A seam is neither a counter nor out of bounds.
+- **The direction is not visible in the letter.** A band wound the other way looks identical; it only
+  differs where it overlaps something. So the damage tracked the sweep each letter happened to ask for,
+  which is why it looked like some bowls were fine and some were not.
+
+`arcBand` now pins the outer arc to one direction and the inner arc to the other, whichever way the caller
+sweeps, and the pinned direction is the one that matches `stroke`. Which one that is, is not a matter of
+taste and cost a wrong turn to establish: a stroke winds −1, and an outer ellipse walked with increasing
+angle winds +1, so the first attempt pinned the wrong way and changed nothing. The winding numbers say it
+directly — `ring`'s outer contour is +1 and the stem beside it is −1.
+
+`B`'s bowls also turned out to be a half stroke inside both edges, because `bowl` passed its rows straight
+to `arcBand` and never went through `reach`. The rows are read back as edges now. `B`'s bowls measure
+`0..357` and `343..700` where they were `55..357` and `343..646`.
+
+The winding guard in `tests/brain.test.ts` now covers `B`, `D`, `P`, `R` and `J` as well. They are letters
+with counters, and they are in the set because their counters come from a single band contour rather than
+from an opposite-wound pair — which is exactly what let them regress. Verified to fail against the pre-fix
+build: `orbit-grotesk B at 88,2`.
+
+
 #### Capitals did not reach the cap line or the baseline
 
 Found while measuring, in the same pass. Fixed here.

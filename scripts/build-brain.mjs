@@ -117,45 +117,6 @@ function arcToBeziers(ellipse, from, to) {
 }
 
 /**
- * An annular sector: the stroke of a circular or elliptical arc.
- *
- * The band is always emitted with positive winding, whichever way the arc runs: a clockwise outer
- * edge pairs with a counter-clockwise inner edge, and when the requested sweep is negative the whole
- * contour is emitted back to front instead. That matters because letters are built from several
- * overlapping bands (S, G) and opposite windings would cancel into holes.
- *
- * @param {{ cx: number, cy: number, rx: number, ry: number }} ellipse
- * @param {number} weight stroke thickness
- * @param {number} from start angle in degrees
- * @param {number} to end angle in degrees
- * @returns {string}
- */
-function arcBand(ellipse, weight, from, to) {
-  const { cx, cy, rx, ry } = ellipse
-  const inner = { cx, cy, rx: Math.max(rx - weight, 0.5), ry: Math.max(ry - weight, 0.5) }
-  const outerFrom = point(cx, cy, rx, ry, from)
-  const innerTo = point(inner.cx, inner.cy, inner.rx, inner.ry, to)
-
-  if (to - from < 0) {
-    return [
-      `M ${fmt(innerTo.x)} ${fmt(innerTo.y)}`,
-      arcToBeziers(inner, to, from),
-      `L ${fmt(outerFrom.x)} ${fmt(outerFrom.y)}`,
-      arcToBeziers(ellipse, from, to),
-      'Z',
-    ].join(' ')
-  }
-
-  return [
-    `M ${fmt(outerFrom.x)} ${fmt(outerFrom.y)}`,
-    arcToBeziers(ellipse, from, to),
-    `L ${fmt(innerTo.x)} ${fmt(innerTo.y)}`,
-    arcToBeziers(inner, to, from),
-    'Z',
-  ].join(' ')
-}
-
-/**
  * A full ring (annulus): a closed outer ellipse plus a closed inner ellipse walked the other way, so
  * the band is filled and the counter stays empty.
  *
@@ -200,6 +161,48 @@ function stroke(x1, y1, x2, y2, weight) {
     `L ${fmt(x2 + nx)} ${fmt(y2 + ny)}`,
     `L ${fmt(x2 - nx)} ${fmt(y2 - ny)}`,
     `L ${fmt(x1 - nx)} ${fmt(y1 - ny)}`,
+    'Z',
+  ].join(' ')
+}
+
+/**
+ * An elliptical band of the given thickness, spanning an angular sweep.
+ *
+ * The outer arc is always walked with *increasing* angle and the inner one back the other way, whatever
+ * direction the caller swept. That direction used to decide the winding: the same band came out wound one
+ * way for a rising sweep and the opposite way for a falling one, so a band overlapped a stem cancelled it
+ * under the non-zero fill rule and every bowl letter grew a white sliver down its left side — `B`, `D`, `P`
+ * and `R` all showed it, and the bounding-box test could not, because the stem beside the sliver reaches the
+ * cap line and the baseline perfectly well.
+ *
+ * Pinning the outer arc to one direction pins the winding, and the inner arc to the other keeps the counter
+ * open. `ring` walks its two ellipses the same way round for the same reason.
+ *
+ * The pinned direction is *decreasing*, which is the one that matches {@link stroke}. A stroke winds −1;
+ * an outer ellipse walked with increasing angle winds +1, so a band pinned the other way cancels against
+ * every stroke it overlaps. That is what put a seam down the left of `B`, `D`, `P` and `R`, and the winding
+ * a shape comes out with depends on which way round it was drawn, so the damage tracked the sweep direction
+ * each letter happened to ask for rather than anything visible in the letter itself.
+ *
+ * @param {{ cx: number, cy: number, rx: number, ry: number }} ellipse
+ * @param {number} weight
+ * @param {number} from
+ * @param {number} to
+ * @returns {string}
+ */
+function arcBand(ellipse, weight, from, to) {
+  const { cx, cy, rx, ry } = ellipse
+  const inner = { cx, cy, rx: Math.max(rx - weight, 0.5), ry: Math.max(ry - weight, 0.5) }
+  const rising = to <= from
+  const outerFrom = rising ? from : to
+  const outerTo = rising ? to : from
+  const innerEnd = point(inner.cx, inner.cy, inner.rx, inner.ry, outerTo)
+  const outerStart = point(cx, cy, rx, ry, outerFrom)
+  return [
+    `M ${fmt(innerEnd.x)} ${fmt(innerEnd.y)}`,
+    arcToBeziers(inner, outerTo, outerFrom),
+    `L ${fmt(outerStart.x)} ${fmt(outerStart.y)}`,
+    arcToBeziers(ellipse, outerFrom, outerTo),
     'Z',
   ].join(' ')
 }
@@ -1160,10 +1163,16 @@ function buildGlyphs(font) {
    * @returns {string}
    */
   const bowl = (x, y0, y1, rightX) => {
-    const ry = (y1 - y0) / 2
+    // The rows are read back as edges, so a bowl asked to reach the cap line or the baseline does. A band
+    // measures its thickness inward, so its outer edge is at `ry` and `ry` is what has to span the letter.
+    // Passed `inset` untranslated, every bowl sat a half stroke inside both edges — invisible in the
+    // bounding box, because the stem beside it reaches them perfectly well.
+    const top = asRow(y0)
+    const bottom = asRow(y1)
+    const ry = (bottom - top) / 2
     const rx = rightX - x
     const thickness = Math.min(w, Math.max(ry - minCounter * 0.5, w * 0.5))
-    return arcBand({ cx: x, cy: (y0 + y1) / 2, rx, ry }, thickness, -90, 90)
+    return arcBand({ cx: x, cy: (top + bottom) / 2, rx, ry }, thickness, -90, 90)
   }
 
   /**
