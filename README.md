@@ -110,7 +110,7 @@ npx sigilgen --name "Acme" --keywords "tech, minimal"
 `apps/web` is a bilingual browser interface for the same generator: type a name, pick a concept, hold
 the decisions you like still while the rest vary, and copy or download the SVG.
 
-![The Sigilgen studio](docs/images/studio.jpg)
+![The Sigilgen studio](docs/images/studio-v.jpg)
 
 <sub>Captured from the running app. The other two images on this page are generated from the
 generator itself by `pnpm run docs:images`; this one cannot be, because it is a picture of a UI.</sub>
