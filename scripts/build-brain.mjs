@@ -229,6 +229,29 @@ function onBaseline(cap, y) {
 }
 
 /**
+ * The horizontal half-extent of a butt end: how far the quad's corners sit either side of the centreline.
+ *
+ * The companion of {@link verticalReach}, and the reason a shared apex needs a wedge. Two diagonals
+ * meeting at a point are each cut perpendicular to their own direction, and the two cuts are at different
+ * angles, so they cross and leave a wedge of background between them. That wedge is as wide at the apex
+ * as this number, which is what sizes the fill.
+ *
+ * @param {number} x1
+ * @param {number} y1
+ * @param {number} x2
+ * @param {number} y2
+ * @param {number} weight
+ * @returns {number}
+ */
+function buttHalf(x1, y1, x2, y2, weight) {
+  const length = Math.hypot(x2 - x1, y2 - y1)
+  if (length === 0) {
+    return 0
+  }
+  return (Math.abs(y2 - y1) / length) * (weight / 2)
+}
+
+/**
  * The vertical offset at which a stroke's ink reaches a row, given the rows its centreline spans.
  *
  * A quad's corners sit at `y ± ny`, where `ny = (dx / length) * (weight / 2)`. So a butt end stops
@@ -884,6 +907,49 @@ function buildGlyphs(font) {
   }
 
   /**
+   * The wedge that fills the notch where two diagonals meet at a point on the cap line or the baseline.
+   *
+   * A butt end is cut perpendicular to its own stroke, so the two arms of a `V` are cut at two different
+   * angles and the cuts cross. Their ink then reaches the baseline in two places, `2 * base` apart, with a
+   * wedge of background between them — a notch in the point of every `V` and `W` in every flat family, and
+   * a gash across the top of every flat-topped `A`. A round family never sees it, because a disc is the
+   * same shape whichever way the stroke runs and closes the junction on its own.
+   *
+   * So the junction is filled explicitly. The wedge is a triangle with its point at the apex, so it covers
+   * exactly the background the two cuts left between them and nothing else: its base is the gap between the
+   * two tips, and its depth is how far up the arms' inner edges run before they cross.
+   *
+   * @param {number} x - Apex x.
+   * @param {number} y - Apex row: the cap line or the baseline.
+   * @param {number} base - Half the distance between the two tips, from {@link buttHalf}.
+   * @param {number} depth - How far into the letter the arms' inner edges run before crossing.
+   * @returns {string}
+   */
+  const apexWedge = (x, y, base, depth) => {
+    // Nothing to fill in a round family: the disc that closes each terminal is the same shape whichever
+    // way its stroke runs, so it closes the junction too.
+    if (font.round) {
+      return ''
+    }
+    const inner = y < cap / 2 ? y + depth : y - depth
+    // Base on the edge row, point into the letter, wound to match `stroke`.
+    //
+    // The orientation is not cosmetic and was wrong on the first attempt. Each arm's ink at the baseline is
+    // a single point, `base` either side of the apex, and the two arms' cuts cross `depth` above that — so
+    // the background left between them is a triangle standing on the edge row, not hanging from it. Filling
+    // it with an upward-pointing wedge covers none of the notch and leaves a sliver of it showing.
+    //
+    // The winding is the same requirement as `capRound`: the wedge overlaps both arms, and under the
+    // non-zero fill rule that overlap only stays filled if the sub-paths wind alike.
+    return [
+      `M ${fmt(x - base)} ${fmt(y)}`,
+      `L ${fmt(x + base)} ${fmt(y)}`,
+      `L ${fmt(x)} ${fmt(inner)}`,
+      'Z',
+    ].join(' ')
+  }
+
+  /**
    * The round terminal that closes a stroke out to the cap line or the baseline, or nothing.
    *
    * A disc is a circle, so its reach does not depend on the angle of the stroke it caps: a disc of
@@ -1122,16 +1188,27 @@ function buildGlyphs(font) {
       reach(width / 2 + apex / 2, 0, width - half, cap, w),
       reach(legX, yBar, width - legX, yBar, w),
       // The flat apex is a horizontal bar, so it needs what a slab gets: its outer edge on the cap line
-      // rather than on the diagonals' endpoints, or the two do not meet and a notch opens at the top. Its
-      // own weight is `w`, so its centre is half of that.
+      // rather than on the diagonals' endpoints, or the two do not meet and a gash opens at the top. It
+      // also has to be wider than the gap between the diagonals' *centrelines* by the half-extent of a
+      // butt end, because each diagonal's topmost corner sits that far to the outside of its own
+      // centreline. Span only the centrelines and the bar is a gash with two horns either side of it.
       //
-      // A pointed apex has no bar, and its two diagonals already land their tips on the cap line. A round
-      // family still wants a disc there, and the disc belongs half a stroke *inside* the row the ink has
-      // to reach — the same offset `reach` applies to every other terminal. At the row itself it would
-      // overshoot by half a stroke.
+      // A pointed apex has no bar, and its two diagonals already cross, so it needs only the wedge. A
+      // round family needs neither the widening nor the wedge: a disc closes the junction on its own.
       apex > 0
-        ? stroke(width / 2 - apex / 2, w * 0.5, width / 2 + apex / 2, w * 0.5, w)
-        : capRound(width / 2, half),
+        ? stroke(
+            width / 2 - apex / 2 - buttHalf(width / 2 - apex / 2, 0, half, cap, w),
+            w * 0.5,
+            width / 2 + apex / 2 + buttHalf(width / 2 + apex / 2, 0, width - half, cap, w),
+            w * 0.5,
+            w
+          )
+        : apexWedge(
+            width / 2,
+            0,
+            buttHalf(width / 2, 0, half, cap, w),
+            verticalReach(width / 2, 0, half, cap, w)
+          ),
     ])
   }
 
@@ -1367,9 +1444,13 @@ function buildGlyphs(font) {
     emit('V', width, [
       reach(inset, 0, width / 2, cap, w),
       reach(width - inset, 0, width / 2, cap, w),
-      // The apex needs a terminal too, or the point stops half a stroke above the baseline. A butt end
-      // on a diagonal does not even reach that far: its extreme row is offset by the stroke's normal
-      // component, which is why every diagonal terminal in this file is closed with a disc.
+      // The two arms are cut perpendicular to themselves and the cuts cross, so the point needs filling.
+      apexWedge(
+        width / 2,
+        cap,
+        buttHalf(inset, 0, width / 2, cap, w),
+        verticalReach(inset, 0, width / 2, cap, w)
+      ),
     ])
   }
 
@@ -1383,7 +1464,23 @@ function buildGlyphs(font) {
       reach(q1, cap, width / 2, 0 + cap * 0.18, w),
       reach(width / 2, 0 + cap * 0.18, q3, cap, w),
       reach(q3, cap, width - inset, 0, w),
-      // Terminals at all four outer ends. The two middle joints are interior and are left bare.
+      // Both points need filling, for the same reason a `V`'s does. The middle peak is a junction too, and
+      // an interior one — the two arms stop short of the cap line, so the notch it leaves opens upward
+      // from the row their cuts meet rather than sitting on an edge, which is why it needs the row its own
+      // projection puts the cuts on, not the junction row.
+      apexWedge(q1, cap, buttHalf(inset, 0, q1, cap, w), verticalReach(inset, 0, q1, cap, w)),
+      apexWedge(
+        q3,
+        cap,
+        buttHalf(width - inset, 0, q3, cap, w),
+        verticalReach(width - inset, 0, q3, cap, w)
+      ),
+      apexWedge(
+        width / 2,
+        cap * 0.18 - verticalReach(q1, cap, width / 2, cap * 0.18, w),
+        buttHalf(q1, cap, width / 2, cap * 0.18, w),
+        verticalReach(q1, cap, width / 2, cap * 0.18, w)
+      ),
     ])
   }
 
