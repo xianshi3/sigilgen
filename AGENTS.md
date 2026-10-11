@@ -142,7 +142,7 @@ Required test coverage:
 | `docs/images/*.svg`                 | `pnpm run docs:images`                        | review the diff              |
 | `dist/`                             | `pnpm run build`                              | `pnpm run check`             |
 
-`docs/images/studio.jpg` is the exception: it is a photograph of a user interface, so no script can
+`docs/images/studio-v.jpg` is the exception: it is a photograph of a user interface, so no script can
 produce it. Re-take it by hand when the app changes visibly.
 
 ## Code Style
