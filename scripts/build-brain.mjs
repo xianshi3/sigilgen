@@ -120,6 +120,13 @@ function arcToBeziers(ellipse, from, to) {
  * A full ring (annulus): a closed outer ellipse plus a closed inner ellipse walked the other way, so
  * the band is filled and the counter stays empty.
  *
+ * Which way round the outer one runs is not cosmetic, and is the same requirement as {@link arcBand}'s.
+ * A stroke winds one way, so an outer ellipse walked the other cancels against every stroke it meets:
+ * `Q`'s tail crosses the band, and wound against the outer contour it took the band with it — outer +1,
+ * tail −1, total zero, so the band showed a gap wherever the tail passed through it. Every one of the
+ * eighteen families had it, because every `Q` has a tail. The counter only depends on the two ellipses
+ * being opposed, not on which of them starts ahead, so swapping them costs nothing.
+ *
  * @param {{ cx: number, cy: number, rx: number, ry: number }} ellipse
  * @param {number} weight
  * @returns {string}
@@ -129,10 +136,10 @@ function ring(ellipse, weight) {
   const inner = { cx, cy, rx: Math.max(rx - weight, 0.5), ry: Math.max(ry - weight, 0.5) }
   return [
     `M ${fmt(cx - rx)} ${fmt(cy)}`,
-    arcToBeziers(ellipse, 180, 540),
+    arcToBeziers(ellipse, 180, -180),
     'Z',
     `M ${fmt(cx - inner.rx)} ${fmt(cy)}`,
-    arcToBeziers(inner, 180, -180),
+    arcToBeziers(inner, 180, 540),
     'Z',
   ].join(' ')
 }
@@ -937,17 +944,34 @@ function buildGlyphs(font) {
     const inner = y < cap / 2 ? y + depth : y - depth
     // Base on the edge row, point into the letter, wound to match `stroke`.
     //
-    // The orientation is not cosmetic and was wrong on the first attempt. Each arm's ink at the baseline is
-    // a single point, `base` either side of the apex, and the two arms' cuts cross `depth` above that — so
-    // the background left between them is a triangle standing on the edge row, not hanging from it. Filling
-    // it with an upward-pointing wedge covers none of the notch and leaves a sliver of it showing.
+    // The orientation is not cosmetic and has now been wrong twice, in two different ways. Each arm's ink
+    // at the baseline is a single point, `base` either side of the apex, and the two arms' cuts cross
+    // `depth` above that — so the background left between them is a triangle standing on the edge row, not
+    // hanging from it. Filling it with an upward-pointing wedge covers none of the notch and leaves a
+    // sliver of it showing.
     //
-    // The winding is the same requirement as `capRound`: the wedge overlaps both arms, and under the
-    // non-zero fill rule that overlap only stays filled if the sub-paths wind alike.
+    // Winding it in a fixed order was the second mistake, and it survived for a while because the order
+    // happens to be right at the baseline and wrong at the cap line: the signed area of this triangle is
+    // `(inner - y) * -2 * base`, so its sign is the sign of `inner - y`. A wedge pointing into the letter
+    // from the baseline winds the way `stroke` does and one pointing into it from the cap line winds
+    // against it, which cancels the wedge out of exactly the overlap it exists to fill. Only the families
+    // whose apex actually leaves a notch showed it, so it read as a quirk of two typefaces rather than as
+    // a rule with a sign in it.
+    //
+    // So the order is read off the area rather than assumed. The winding is the same requirement as
+    // `capRound`: the wedge overlaps both arms, and under the non-zero fill rule that overlap only stays
+    // filled if the sub-paths wind alike.
+    const tip = [x - base, x + base, x]
+    const rows = [y, y, inner]
+    const twice =
+      (tip[0] ?? 0) * ((rows[1] ?? 0) - (rows[2] ?? 0)) +
+      (tip[1] ?? 0) * ((rows[2] ?? 0) - (rows[0] ?? 0)) +
+      (tip[2] ?? 0) * ((rows[0] ?? 0) - (rows[1] ?? 0))
+    const order = twice < 0 ? [0, 1, 2] : [2, 1, 0]
     return [
-      `M ${fmt(x - base)} ${fmt(y)}`,
-      `L ${fmt(x + base)} ${fmt(y)}`,
-      `L ${fmt(x)} ${fmt(inner)}`,
+      `M ${fmt(tip[order[0] ?? 0])} ${fmt(rows[order[0] ?? 0])}`,
+      `L ${fmt(tip[order[1] ?? 0])} ${fmt(rows[order[1] ?? 0])}`,
+      `L ${fmt(tip[order[2] ?? 0])} ${fmt(rows[order[2] ?? 0])}`,
       'Z',
     ].join(' ')
   }

@@ -292,6 +292,50 @@ function isPainted(edges: readonly Edge[], px: number, py: number): boolean {
 }
 
 /**
+ * Twice the signed area of a flattened outline, by the shoelace formula.
+ *
+ * This is how a sub-path's orientation is read off directly, rather than by testing whether some sample
+ * point inside it winds nonzero — which only says *that* a contour is solid, never which way it turns.
+ * Two overlapping contours cancel under the `nonzero` rule exactly when their signs disagree, so the sign
+ * is the thing that matters and it is the thing a bounding box does not carry.
+ *
+ * @param edges - The flattened outline of one sub-path.
+ * @returns A negative area for one direction and a positive one for the other; zero when degenerate.
+ */
+function signedArea(edges: readonly Edge[]): number {
+  let twice = 0
+  for (const edge of edges) {
+    twice += edge.x1 * edge.y2 - edge.x2 * edge.y1
+  }
+  return twice / 2
+}
+
+/**
+ * Whether one sub-path's ink box sits inside another's.
+ *
+ * The difference between a counter and a cancellation is geometric rather than numeric: at a sample
+ * point, a ring's counter and a stroke cancelled out of a band are both "several sub-paths paint here and
+ * the whole does not". What separates them is that a counter's two contours are nested inside one another
+ * and a tail crossing a band is inside nothing — neither of its two sub-paths contains the other. So an
+ * overlap is a defect exactly when it is a partial one.
+ *
+ * @param outer - The wider sub-path's box.
+ * @param inner - The narrower sub-path's box.
+ * @returns `true` when `inner` lies within `outer` to within half a unit.
+ */
+function covers(
+  outer: NonNullable<ReturnType<typeof pathBounds>>,
+  inner: NonNullable<ReturnType<typeof pathBounds>>
+): boolean {
+  return (
+    outer.minX <= inner.minX + 0.5 &&
+    outer.minY <= inner.minY + 0.5 &&
+    outer.maxX >= inner.maxX - 0.5 &&
+    outer.maxY >= inner.maxY - 0.5
+  )
+}
+
+/**
  * Winding contribution of one edge to a sample point.
  *
  * The standard crossing test: an edge counts when it straddles the sample's scanline, and counts `+1`
@@ -540,12 +584,16 @@ describe('letterform extent', () => {
     // the union. The two differ exactly where opposite windings overlap.
     //
     // Restricted to letters with no counter, because a real counter is a legitimate difference: `ring`
-    // walks its inner ellipse against its outer, and that hole is the point of it. `B`, `D`, `P`, `R` and
-    // `J` are here despite having counters, because their counters come from a single band contour rather
-    // than from a pair — which is exactly what makes them the letters that regressed. A band used to wind
-    // against every stroke it overlapped, so each of them carried a seam down the side where its bowl met
-    // its stem, and the bounding box could not see it because the stem beside the seam reached both edges.
-    const noCounter = 'BCDEFJILPRSTUVWXYZ'
+    // walks its inner ellipse against its outer, and that hole is the point of it. `A`, `B`, `D`, `P`, `R`
+    // and `J` are here despite looking countered, because their counters are the empty space between
+    // strokes rather than a hole any contour encloses — no sub-path paints them, so both fills agree
+    // there. That is exactly what makes them the letters that regressed twice over: a band used to wind
+    // against every stroke it overlapped, so each of `B`, `D`, `P` and `R` carried a seam down the side
+    // where its bowl met its stem, and the apex wedge used to wind one way at the baseline and the other
+    // at the cap line, cancelling itself out of the notch it exists to fill. Neither is visible in a
+    // bounding box, because the stem beside the seam reaches both edges and the arms reach the cap line
+    // whether or not the wedge lands.
+    const noCounter = 'ABCDEFJILPRSTUVWXYZ'
     const band = 14
     const step = 11
     for (const font of FONTS) {
@@ -583,6 +631,105 @@ describe('letterform extent', () => {
             ).toBe(union)
           }
         }
+      }
+    }
+  })
+
+  it('does not let a ring erase a stroke laid across its band', () => {
+    // A ring is a filled outer ellipse with an inner one punched back out of it, so the two wind against
+    // each other on purpose — and that makes the outer contour a hazard to anything drawn across the band.
+    // `Q`'s tail crosses it, and wound the other way the pair summed to zero: outer +1, tail -1, nothing
+    // left. The band went white wherever the tail passed through it, in all eighteen families, because
+    // every `Q` has a tail.
+    //
+    // A counter is the same arithmetic performed deliberately, so the test has to tell the two apart. The
+    // difference is geometric rather than numeric — at a sample point, a ring's counter and a cancelled
+    // tail are both "two sub-paths paint here and the whole does not". But a counter's contours are nested
+    // inside one another's boxes, and a tail crossing a band is inside nothing: neither of its two sub-paths
+    // contains the other. So an overlap is a defect exactly when it is a partial one.
+    const ringed = 'COQSG'
+    const step = 9
+    for (const font of FONTS) {
+      for (const letter of ringed) {
+        const outline = font.glyphs[letter]
+        if (outline === undefined) {
+          continue
+        }
+        const bounds = pathBounds(outline)
+        if (bounds === null) {
+          continue
+        }
+        const together = flatten(outline)
+        const parts = outline
+          .split(/(?=M)/)
+          .filter(piece => piece.trim() !== '')
+          .map(piece => ({ edges: flatten(piece), box: pathBounds(piece) }))
+          .filter(part => part.box !== null) as {
+          edges: ReturnType<typeof flatten>
+          box: NonNullable<ReturnType<typeof pathBounds>>
+        }[]
+
+        for (let y = bounds.minY + 1.5; y < bounds.maxY; y += step) {
+          for (let x = bounds.minX + 1.5; x < bounds.maxX; x += step) {
+            if (isPainted(together, x, y)) {
+              continue
+            }
+            const painters = parts.filter(part => isPainted(part.edges, x, y))
+            if (painters.length < 2) {
+              continue
+            }
+            // Legitimate when some pair of the painters nests: that pair is a ring's two ellipses and the
+            // open area between them is the counter the letter is drawn around.
+            let nested = false
+            for (const a of painters) {
+              for (const b of painters) {
+                if (a !== b && (covers(a.box, b.box) || covers(b.box, a.box))) {
+                  nested = true
+                }
+              }
+            }
+            expect(
+              nested,
+              `${font.id} ${letter} at ${x.toFixed(0)},${y.toFixed(0)}: a stroke is erased where it crosses the band`
+            ).toBe(true)
+          }
+        }
+      }
+    }
+  })
+
+  it('winds every contour of a stroke letter the same way', () => {
+    // The cheap guard for the whole class, and the only one that reaches the apex wedge.
+    //
+    // A wedge fills the background two flat cuts leave at a junction, so it is *designed* not to overlap
+    // the arms by more than a hair — which means no grid can reliably sample its overlap. What can be
+    // sampled is its orientation: read off the signed area of its triangle, which the builder now does
+    // rather than assuming an order, because a fixed vertex order winds one way at the baseline and the
+    // other at the cap line. Wound the wrong way the wedge cancels itself out of the very notch it exists
+    // to fill, and only the families whose junction actually leaves a notch show it — so it reads as a
+    // quirk of two typefaces rather than as a rule with a sign in it. Two `A`s and five `W`s had it.
+    //
+    // The property is that a letter built only from strokes has no contour wound against its neighbours:
+    // every contour of it is a solid piece. A counter in such a letter is empty space between strokes,
+    // not a hole any contour encloses, so nothing there needs the opposite winding. Only the ring letters
+    // are exempt, and they are exempt because their outer ellipse and inner one are wound against each
+    // other on purpose.
+    const RINGED = 'COQSG'
+    for (const font of FONTS) {
+      for (const [letter, outline] of Object.entries(font.glyphs)) {
+        if (RINGED.includes(letter)) {
+          continue
+        }
+        const signs = new Set(
+          outline
+            .split(/(?=M)/)
+            .filter(piece => piece.trim() !== '')
+            .map(piece => Math.sign(signedArea(flatten(piece))))
+        )
+        expect(
+          signs.size,
+          `${font.id} ${letter}: a contour is wound against the strokes it sits in`
+        ).toBe(1)
       }
     }
   })

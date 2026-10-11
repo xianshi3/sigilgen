@@ -19,6 +19,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **A ring erased the stroke laid across its band.** A ring is a filled outer ellipse with an inner one
+  punched back out of it, so the two wind against each other on purpose — which makes the outer contour
+  a hazard to anything drawn across the band. `Q`'s tail crosses it, and wound the other way the pair
+  summed to zero: outer +1, tail −1, nothing left. The band went white wherever the tail passed through
+  it, in all eighteen families, because every `Q` has a tail. `ring` now walks its outer ellipse the way
+  strokes do; the counter only depends on the two being opposed, not on which starts ahead, so the swap
+  costs nothing.
+- **The apex wedge cancelled itself out of the notch it fills.** A wedge fills the background two flat
+  cuts leave at a junction, and its winding is the sign of `(inner - y) * -2 * base` — so a fixed vertex
+  order is right at the baseline and wrong at the cap line. Wound the wrong way it cancels against the
+  arms it overlaps and takes the notch with it, which is exactly the defect it was added to repair. The
+  order is read off the signed area now. Two `A`s and five `W`s had it, and only in families whose
+  junction actually leaves a notch — which is why it read as a quirk of two typefaces rather than as a
+  rule with a sign in it.
+
 Three more centring defects, found the same way as the four below: by generating across a wide input
 space and measuring the ink bounding box of every result against the canvas. All three share one cause
 — a layout was centred on the **room reserved** for its contents rather than on the **ink those
