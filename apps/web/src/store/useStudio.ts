@@ -41,6 +41,14 @@ export interface StudioState extends StudioConfig {
   zoomBy: (delta: number) => void
   toggleLeftPanel: () => void
   toggleRightPanel: () => void
+  /**
+   * Sets a panel's open state outright.
+   *
+   * Toggling alone is not enough: a narrow viewport has to close *both* panels at once when the layout
+   * changes, and a toggle cannot express "close" for a panel that might already be closed.
+   */
+  setLeftPanelOpen: (open: boolean) => void
+  setRightPanelOpen: (open: boolean) => void
   /** Pins a dimension, or releases it back to the seed. */
   setPreference: (dimension: DesignDimension, value: PinnedValue) => void
   reroll: () => void
@@ -153,6 +161,10 @@ export const useStudio = create<StudioState>()(
       toggleLeftPanel: () => set(state => ({ leftPanelOpen: !state.leftPanelOpen })),
 
       toggleRightPanel: () => set(state => ({ rightPanelOpen: !state.rightPanelOpen })),
+
+      setLeftPanelOpen: leftPanelOpen => set({ leftPanelOpen }),
+
+      setRightPanelOpen: rightPanelOpen => set({ rightPanelOpen }),
 
       // 'random' is dropped rather than stored, so the generator keeps seeing an absent preference and
       // a released dimension is indistinguishable from one that was never touched.

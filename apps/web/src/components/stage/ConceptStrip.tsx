@@ -35,7 +35,9 @@ export function ConceptStrip({ concepts }: ConceptStripProps) {
   }
 
   return (
-    <div className="flex items-stretch gap-2.5 px-gutter py-3">
+    // Scrolls sideways rather than compressing: six 64px tiles plus gutters need about 440px, so on a
+    // narrow viewport they either overflowed the page or shrank past being clickable.
+    <div className="flex items-stretch gap-2.5 overflow-x-auto px-gutter py-3">
       {concepts.map((concept, index) => {
         const selected = index === active
         return (

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useRef, type KeyboardEvent, type ReactNode } from 'react'
 
 export interface SegmentedOption<T extends string> {
   value: T
@@ -21,6 +21,17 @@ export interface SegmentedProps<T extends string> {
  * The moving highlight behind the selected segment is the whole point: it is the one piece of motion
  * in the control, and it tells the eye where the value went without the label having to change
  * contrast to signal selection.
+ *
+ * ## Keyboard behaviour
+ *
+ * `role="radiogroup"` is a contract, not a label. A group of radios is expected to be **one** tab stop,
+ * with the arrow keys moving between the options and selecting as they go. Without that, every segment
+ * is its own tab stop — a reader tabbing through the studio passed through eight stops to get from the
+ * language control to the theme control, and the arrow keys that a screen reader announces as available
+ * did nothing at all.
+ *
+ * Selection follows focus, which is what the native control does, and the group wraps at both ends so a
+ * held arrow key cycles rather than sticking.
  */
 export function Segmented<T extends string>({
   value,
@@ -30,6 +41,58 @@ export function Segmented<T extends string>({
   ...rest
 }: SegmentedProps<T>) {
   const activeIndex = options.findIndex(option => option.value === value)
+  const buttons = useRef<(HTMLButtonElement | null)[]>([])
+
+  /**
+   * Moves the selection, and the focus with it.
+   *
+   * @param from - Index the reader is moving away from.
+   * @param delta - How far to move; wrapped into range so the group cycles.
+   */
+  const move = (from: number, delta: number): void => {
+    const count = options.length
+    if (count === 0) {
+      return
+    }
+    const next = (((from + delta) % count) + count) % count
+    const option = options[next]
+    if (option === undefined) {
+      return
+    }
+    onChange(option.value)
+    buttons.current[next]?.focus()
+  }
+
+  /**
+   * Handles the keys a radiogroup is expected to answer to.
+   *
+   * @param event - The key event on the focused segment.
+   * @param index - Index of that segment.
+   */
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number): void => {
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        event.preventDefault()
+        move(index, 1)
+        break
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        event.preventDefault()
+        move(index, -1)
+        break
+      case 'Home':
+        event.preventDefault()
+        move(0, 0)
+        break
+      case 'End':
+        event.preventDefault()
+        move(options.length - 1, 0)
+        break
+      default:
+        break
+    }
+  }
 
   return (
     <div
@@ -50,15 +113,29 @@ export function Segmented<T extends string>({
           }}
         />
       ) : null}
-      {options.map(option => {
+      {options.map((option, index) => {
         const selected = option.value === value
+        // One tab stop for the whole group, the selected option keeping it. Everything else is reachable
+        // with the arrow keys, which is what a `radiogroup` promises.
+        //
+        // If nothing matches — a stored value from an older build naming an option that no longer exists —
+        // the first option takes the tab stop, because a group in which nothing is reachable by keyboard
+        // is worse than one showing a stale selection.
+        const isTabStop = activeIndex < 0 ? index === 0 : selected
         return (
           <button
             key={option.value}
+            ref={element => {
+              buttons.current[index] = element
+            }}
             type="button"
             role="radio"
             aria-checked={selected}
+            tabIndex={isTabStop ? 0 : -1}
             title={option.title}
+            onKeyDown={event => {
+              onKeyDown(event, index)
+            }}
             onClick={() => {
               onChange(option.value)
             }}

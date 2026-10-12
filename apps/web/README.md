@@ -141,6 +141,26 @@ removed the accent _and_ the letter carrying it, which both mangled the name and
 collapse onto one file. Folding still converges "Café" and "Cafe", which is correct — they are the same
 brand to a reader.
 
+**The panels become drawers below 900px.** They are 288 and 300 units wide and do not shrink, so between
+them they need 588 before the stage gets anything. At a 390px phone the three-column layout rendered
+un-reflowed: the stage was squeezed to zero width and the right panel's text was cut off mid-word. Past
+that width the panels overlay the stage and only one opens at a time — two open at once would cover the
+mark, which is the one thing the app exists to show. Narrowing records which panels were open and closes
+them; widening puts them back. Forgetting them instead would mean a reader who briefly shrank the window
+lost both panels until they reloaded.
+
+**The panel toggles sit above the drawers in the stacking order.** A toggle underneath an open drawer is
+unreachable, and the reader has no way to close it at all.
+
+**The title bar wraps rather than clipping.** The brand, two segmented controls and the primary button
+need about 420px between them. Below `sm` the controls take a full row, which costs 24px of height only
+where there is height to spare — the alternative was the brand clipped mid-word.
+
+**A `radiogroup` is a contract, not a label.** `Segmented` is one tab stop, with arrow keys moving between
+the options and selection following focus, wrapping at both ends. Without it every segment was its own
+tab stop, so a reader crossing the studio passed through eight stops to get from the language control to
+the theme control, and the arrow keys a screen reader announces as available did nothing.
+
 ## Not in this package
 
 The published CLI and library live in the repository root. The browser app is additive: nothing in the core

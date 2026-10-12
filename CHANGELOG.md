@@ -74,12 +74,40 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   are lost. Folding still converges "Café" and "Cafe" on purpose — they are the same brand to a reader —
   but two genuinely different names no longer collide.
 
+### Fixed
+
+- **The studio did not respond to viewport width at all.** The three-column layout is 288 + 300 units of
+  fixed, non-shrinking panels beside the stage. At a 390px phone they consumed the entire viewport: the
+  stage was squeezed to zero width and the right panel's text was cut off mid-word. Below 900px the panels
+  now overlay the stage as drawers, only one at a time — two open at once would cover the mark, which is
+  the one thing the app exists to show. Narrowing records which panels were open and closes them; widening
+  puts them back.
+- **A panel toggle could be buried under the drawer it opens.** The toggles sat below the panels in the
+  stacking order, which was harmless while the panels were columns and fatal once they were overlays: the
+  toggle was unreachable and the drawer could not be closed at all.
+- **The title bar clipped its own brand.** The brand, two segmented controls and the primary button need
+  about 420px between them. Below `sm` the controls now take a full row, costing 24px of height only where
+  there is height to spare.
+- **The concept strip could overflow the page.** Six 64px tiles plus gutters need about 440px; the row
+  scrolls sideways instead of compressing past being clickable.
+- **`Segmented` claimed `role="radiogroup"` without honouring it.** It is a contract, not a label: one tab
+  stop, arrow keys to move, selection following focus. Every segment was its own tab stop, so a reader
+  crossing the studio passed through eight stops to get from the language control to the theme control, and
+  the arrow keys a screen reader announces as available did nothing. Arrow keys, `Home`/`End` and wrapping
+  now work, and a group whose stored value matches no option still has a tab stop rather than becoming
+  unreachable by keyboard.
+- **`vitest.config.ts` and `tsconfig.json` had drifted apart.** The studio's aliases were declared in both
+  places, and `tsconfig` used one wildcard where the test config enumerated five entry points. A sixth
+  import — `@sigilgen/text`, pulled in by `font-sample.ts` — typechecked, built and ran in the browser, and
+  failed only under test. The test config now derives its aliases from `tsconfig.json`, which makes that
+  class of drift impossible rather than merely unlikely.
+
 ### Added
 
 - **A test suite for the studio.** `apps/web` had roughly two thousand lines of React and TypeScript, a
   stateful store with persistence, and a hand-rolled i18n layer, and not one test — while `pnpm run check`
-  only linted, formatted and typechecked it. It has its own Vitest configuration, its own gate, and 45
-  tests across three files.
+  only linted, formatted and typechecked it. It has its own Vitest configuration, its own gate, and tests
+  for the store, persistence, the provider, the primitives and the layout.
 - **`apps/web/README.md`.** The studio had no documentation of its own, so the things a contributor has to
   know before touching it — that it is a separate package the root gate does not cover, that it imports
   the library's _source_ so its aliases are declared twice and must agree, and that it stores absence
