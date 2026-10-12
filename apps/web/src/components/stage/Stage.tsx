@@ -144,8 +144,11 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
             // Keyed by the concept's own seed fingerprint, so switching concepts cross-fades while
             // retyping the name swaps the image without a flash.
             key={concept.seed}
-            initial={{ opacity: 0, scale: 0.985 }}
-            animate={{ opacity: 1, scale: 1 }}
+            // Opacity only, no scale: a scale transform on the wrapper shrinks the SVG's rendered box
+            // below the size its viewBox expects, so the content letterboxes instead of filling the
+            // sheet. The image this replaced never scaled, and the cross-fade reads fine without it.
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: DURATION_BASE, ease: EASE_APPLE }}
             className="h-full w-full"
           >

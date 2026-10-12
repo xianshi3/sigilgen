@@ -118,6 +118,43 @@ describe('Stage', () => {
     expect(image.getAttribute('aria-label')).toContain(concept?.palette.id ?? '')
   })
 
+  it('fills the sheet in fit mode, so the mark is never letterboxed', () => {
+    // Guards the class that makes the SVG fill its parent. A `scale` animation on the wrapper shrank
+    // the SVG's rendered box below the size its viewBox expected, so the content letterboxed instead of
+    // filling the sheet — but jsdom reports no layout, so that particular regression is caught by
+    // inspecting the live page rather than here. What this does catch is the class going wrong, which
+    // is the other way to break the same thing.
+    //
+    // `getAttribute('class')` rather than `.className`: on an SVG element `className` is an
+    // `SVGAnimatedString`, not a string, so the property reads as an object and the assertion fails.
+    act(() => {
+      useStudio.setState({ zoom: 'fit' })
+    })
+    const { container, rerender } = render(
+      <I18nProvider initialLocale="en">
+        <Stage concept={aConcept()} errorKey={null} errorDetail={null} />
+      </I18nProvider>
+    )
+    // `getAttribute('class')` rather than `.className`: on an SVG element `className` is an
+    // `SVGAnimatedString`, not a string, so the property reads as an object and the assertion fails.
+    const svg = container.querySelector('svg')
+    expect(svg?.getAttribute('class')).toContain('h-full')
+    expect(svg?.getAttribute('class')).toContain('w-full')
+
+    // Away from fit the SVG is sized as a percentage of the stage, so it can grow past the sheet.
+    act(() => {
+      useStudio.setState({ zoom: 2 })
+    })
+    rerender(
+      <I18nProvider initialLocale="en">
+        <Stage concept={aConcept()} errorKey={null} errorDetail={null} />
+      </I18nProvider>
+    )
+    const zoomed = container.querySelector('svg')
+    expect(zoomed?.getAttribute('class')).toContain('max-h-none')
+    expect(zoomed?.style.width).toBe('200%')
+  })
+
   it('explains itself instead of showing a mark when there is none', () => {
     render(
       <I18nProvider initialLocale="en">

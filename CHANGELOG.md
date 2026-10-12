@@ -40,6 +40,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **A `scale` animation letterboxed the mark in fit mode.** The stage's cross-fade wrapper initialised at
+  `scale: 0.985` and animated to `1`, which shrank the SVG's rendered box below the size its `viewBox`
+  expected — so the content was letterboxed inside the sheet rather than filling it. Measured: the SVG
+  element rendered at 788×634.9 (a 1.24:1 box for a 1:1 viewBox). The image this replaced never scaled;
+  the cross-fade reads fine on opacity alone, so the scale is gone.
+- **A hidden part was emitted rather than dropped.** `applyEdits` treated an absent edit entry as "skip
+  this part", so an unedited concept exported as an empty document — the one case that must survive byte
+  for byte. Only an explicit `hidden` now drops a part; an absent entry means untouched and passes through.
 - **The letter `S` was not an `S`.** Every one of the eighteen families drew two C-shaped hooks that
   met at a single point — reading as a mirrored `S` with a step down its right side. The cause was not
   an angle or a winding but the construction: both bowls were ellipses `cap / 4` tall on centres
