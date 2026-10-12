@@ -40,6 +40,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **The stage's sheet was not square, and the mark was not centred.** Two defects that read as one.
+
+  The sheet is meant to be a square that fits whichever axis runs out first. It was `aspect-square
+max-h-full w-full max-w-full`, and neither half of that works: `width: 100%` only ever resolves
+  against the width, and `aspect-ratio` is ignored once both axes are constrained — on top of which a
+  flex item's width is settled by the flex algorithm before `aspect-ratio` runs at all. Measured on a
+  1440×900 window, the "square" sheet came out 1376×635, so the mark was letterboxed at fit and every
+  zoom level was measured against a rectangle. The sheet is now sized `min(100cqw, 100cqh)`, which is
+  `min(width, height)` of the stage's content box. Verified by measurement rather than by eye, on both
+  limit axes: 1200×400 → 400×400, 300×800 → 300×300, 600×600 → 600×600, each centred to the pixel.
+
+  The container-query units need a container to resolve against, and the stage has to be a size
+  container in _both_ axes to measure its own height — `container-type: inline-size` only contains the
+  inline axis, and `cqh` then silently falls back to the small viewport. The sheet came out the height
+  of the window rather than the height of the stage (900 rather than 635) until the stage was declared
+  `container-type: size`.
+
+  Separately, zooming out left the mark hugging the left edge of the sheet: below fit the SVG is
+  smaller than the sheet, and it was a block child of a non-flex wrapper. Measured at 75% zoom against a
+  391×391 sheet: 293×293 (ratio 0.749), centred to the pixel.
+
 - **A `scale` animation letterboxed the mark in fit mode.** The stage's cross-fade wrapper initialised at
   `scale: 0.985` and animated to `1`, which shrank the SVG's rendered box below the size its `viewBox`
   expected — so the content was letterboxed inside the sheet rather than filling it. Measured: the SVG

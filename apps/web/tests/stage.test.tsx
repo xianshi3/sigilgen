@@ -155,6 +155,52 @@ describe('Stage', () => {
     expect(zoomed?.style.width).toBe('200%')
   })
 
+  it('sizes the sheet as min(width, height) so it stays square', () => {
+    // The sheet has to be a square that fits whichever axis runs out first. Neither `aspect-square`
+    // nor a percentage can express that: `width: 100%` only ever resolves against the width, and
+    // `aspect-ratio` is ignored once both axes are constrained — and a flex item's width is settled by
+    // the flex algorithm before aspect-ratio runs at all. `w-full max-h-full` therefore produced a
+    // 1376x635 "square" on a wide stage, which letterboxed the mark at fit and broke zoom centring.
+    //
+    // jsdom resolves no layout, so this guards the declaration rather than the rendered box; the
+    // rendered box was confirmed by measuring the live stage at each limit (1200x400 -> 400,
+    // 300x800 -> 300, 600x600 -> 600, each centred to the pixel).
+    const { container } = render(
+      <I18nProvider initialLocale="en">
+        <Stage concept={aConcept()} errorKey={null} errorDetail={null} />
+      </I18nProvider>
+    )
+    const sheet = container.querySelector('.rounded-panel')
+    expect(sheet?.className).toContain('w-[min(100cqw,100cqh)]')
+    // The units resolve against the stage, which must therefore be a size container in both axes.
+    // `container-type: inline-size` only contains the inline axis, and `cqh` silently falls back to
+    // the small viewport — the sheet then came out the height of the window rather than the stage.
+    expect(container.firstElementChild?.className).toContain('[container-type:size]')
+  })
+
+  it('centres the mark inside the sheet at every zoom', () => {
+    // Away from fit the SVG is smaller than the sheet, and a block child of a non-flex wrapper hugs
+    // the left edge — so zooming out visibly threw the mark off-centre. The wrapper has to centre it.
+    const { container, rerender } = render(
+      <I18nProvider initialLocale="en">
+        <Stage concept={aConcept()} errorKey={null} errorDetail={null} />
+      </I18nProvider>
+    )
+    const wrapper = container.querySelector('svg')?.parentElement
+    expect(wrapper?.className).toContain('items-center')
+    expect(wrapper?.className).toContain('justify-center')
+
+    act(() => {
+      useStudio.setState({ zoom: 0.75 })
+    })
+    rerender(
+      <I18nProvider initialLocale="en">
+        <Stage concept={aConcept()} errorKey={null} errorDetail={null} />
+      </I18nProvider>
+    )
+    expect(container.querySelector('svg')?.style.width).toBe('75%')
+  })
+
   it('explains itself instead of showing a mark when there is none', () => {
     render(
       <I18nProvider initialLocale="en">

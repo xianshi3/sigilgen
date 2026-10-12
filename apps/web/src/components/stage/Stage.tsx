@@ -110,9 +110,15 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
   }
 
   return (
-    <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[var(--stage)] p-5 sm:p-8">
+    <div className="[container-type:size] relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[var(--stage)] p-5 sm:p-8">
       <div
-        className={`relative flex aspect-square max-h-full w-full max-w-full items-center justify-center
+        // Sized as a square that fits whichever axis runs out first: `min(100cqw, 100cqh)` is
+        // `min(width, height)` of the stage's content box. Percentage widths cannot express this —
+        // `width: 100%` only ever resolves against the width — and `aspect-square` does not help
+        // either: it is ignored once both axes are constrained, and a flex item's width is settled by
+        // the flex algorithm before aspect-ratio ever runs. That combination left a 1376x635
+        // "square" on a wide stage, which letterboxed the mark at "fit" and broke zoom centring.
+        className={`relative flex aspect-square w-[min(100cqw,100cqh)] items-center justify-center
           overflow-hidden rounded-panel ${BACKDROP_STYLE[backdrop]} shadow-[var(--shadow-lift)]`}
         style={
           backdrop === 'board'
@@ -150,7 +156,10 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: DURATION_BASE, ease: EASE_APPLE }}
-            className="h-full w-full"
+            // `flex items-center justify-center` so a mark smaller than the sheet (any zoom below fit)
+            // stays centred in it. Without this the SVG is a block child of a non-flex container and
+            // hugs the left edge, which reads as a jump the first time the reader zooms out.
+            className="flex h-full w-full items-center justify-center"
           >
             <svg
               ref={svgRef}
