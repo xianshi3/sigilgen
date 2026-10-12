@@ -10,6 +10,39 @@ import { pathBounds, transformPath } from './path'
 import type { FontEntry } from './types'
 
 /**
+ * Combining marks left behind by an NFD decomposition, `U+0300`–`U+036F`.
+ *
+ * Split out so the range is written once. Stripping these is what turns `é` back into `e` after
+ * decomposition; leaving them would produce a letter the brain has no outline for.
+ */
+const COMBINING_MARKS = /[̀-ͯ]/g
+
+/**
+ * Letters that carry a diacritic no matter how they are decomposed.
+ *
+ * Unicode has no canonical decomposition for these, so `NFD` leaves them whole and folding alone would
+ * drop them — which is how `Æther` became `THER` and `Øster` became `STER`, a different name rather than
+ * a different spelling. They are few, they are stable, and there is nothing to derive them from.
+ */
+const UNDECOMPOSABLE = new Map<string, string>([
+  ['Æ', 'AE'],
+  ['æ', 'AE'],
+  ['Œ', 'OE'],
+  ['œ', 'OE'],
+  ['Ø', 'O'],
+  ['ø', 'O'],
+  ['Ł', 'L'],
+  ['ł', 'L'],
+  ['Đ', 'D'],
+  ['đ', 'D'],
+  ['Ð', 'D'],
+  ['ð', 'D'],
+  ['Þ', 'TH'],
+  ['þ', 'TH'],
+  ['ẞ', 'SS'],
+])
+
+/**
  * Reduces arbitrary text to the letters a mark can actually draw.
  *
  * Every stage that turns user text into geometry funnels through this one rule: uppercase `A`–`Z` and
@@ -17,11 +50,28 @@ import type { FontEntry } from './types'
  * monogram initials, wordmark words — from drifting apart and silently disagreeing about which
  * letters a logo is allowed to draw.
  *
+ * ## Accented letters are folded, not deleted
+ *
+ * The brain carries 26 outlines, so a letter it cannot draw has to become one it can. Filtering straight
+ * to `A`–`Z` dropped the *letter* along with the accent: `Café` became `CAF`, `Über` became `BER` and
+ * `Növa` became `NVA` — a mark reading a different word, from a name the reader typed correctly.
+ *
+ * Decomposing first and dropping only the marks keeps the letter. `ß` is handled by `toUpperCase`, which
+ * expands it to `SS` on its own. The handful of letters Unicode will not decompose are mapped explicitly.
+ *
+ * Neither step is locale-sensitive, which is what determinism requires: `toUpperCase` and `NFD` are
+ * defined by Unicode rather than by the user's regional settings, unlike their `toLocale…` counterparts.
+ *
  * @param value - Arbitrary text.
- * @returns Only `A`–`Z`, uppercased.
+ * @returns Only `A`–`Z`, uppercased, with accents folded away.
  */
 export function normaliseLetters(value: string): string {
-  return value.toUpperCase().replace(/[^A-Z]/g, '')
+  return value
+    .toUpperCase()
+    .replace(/[ÆŒØŁĐÐÞßẞ]/g, character => UNDECOMPOSABLE.get(character) ?? character)
+    .normalize('NFD')
+    .replace(COMBINING_MARKS, '')
+    .replace(/[^A-Z]/g, '')
 }
 
 /** Advance assumed for a glyph the font does not define. */

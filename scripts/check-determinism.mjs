@@ -75,6 +75,11 @@ const CASES = [
   { name: 'QB', keywords: 'developer tools, cli', seed: 1, size: 256 },
   { name: 'Northwind Coffee Roasters', keywords: 'coffee, artisan', seed: 2, size: 512 },
   { name: 'Internationale', keywords: 'luxury, boutique', seed: 3, size: 300 },
+  // Accented input. The manifest is the only thing that notices when a change to how letters are
+  // derived moves real output, and none of the cases above contain a character outside A–Z — so a
+  // change to `normaliseLetters` passed this check untouched while quietly redrawing every accented
+  // name. This case is here so that it cannot happen again.
+  { name: 'Café Über', keywords: 'cafe, european', seed: 11, size: 300 },
   { name: 'Vela', keywords: 'marine, travel', variations: 6, seed: 4, size: 512 },
   { name: 'Ironbark', keywords: 'construction, manufacturing', variations: 6, seed: 5, size: 512 },
   { name: 'Ember', keywords: 'coffee', palette: '#2B1B12,cream,rust', seed: 6, size: 512 },

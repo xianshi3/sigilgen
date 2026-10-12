@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { letterAdvance, measureText, textPath } from '../src/text'
+import { letterAdvance, measureText, normaliseLetters, textPath } from '../src/text'
 import { findFont, FONTS } from '../src/brain/index'
 import { fitText, naturalWidth, opticalTracking } from '../src/engines/metrics'
 import { pathBounds } from '../src/path'
@@ -318,5 +318,76 @@ describe('fitText integration', () => {
     expect(d).not.toBe('')
     const numbers = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number)
     expect(Math.max(...numbers)).toBeLessThanOrEqual(fitted.left + fitted.width + 1)
+  })
+})
+
+describe('normaliseLetters', () => {
+  it('keeps only the letters the brain has an outline for', () => {
+    expect(normaliseLetters('Northwind Coffee')).toBe('NORTHWINDCOFFEE')
+    expect(normaliseLetters('Studio 99')).toBe('STUDIO')
+    expect(normaliseLetters("O'Brien")).toBe('OBRIEN')
+  })
+
+  it('folds an accent away without losing the letter under it', () => {
+    // The bug this guards: filtering straight to A-Z removed the *letter* along with the accent, so a
+    // brand called Café drew "CAF", Über drew "BER" and Növa drew "NVA" — a mark reading a different
+    // word, from a name the reader had typed correctly.
+    expect(normaliseLetters('Café')).toBe('CAFE')
+    expect(normaliseLetters('Über')).toBe('UBER')
+    expect(normaliseLetters('Növa')).toBe('NOVA')
+    expect(normaliseLetters('Åland')).toBe('ALAND')
+    expect(normaliseLetters('Curaçao')).toBe('CURACAO')
+  })
+
+  it('maps the letters Unicode will not decompose', () => {
+    // `NFD` leaves these whole, so folding alone drops them and the name loses its first letter.
+    expect(normaliseLetters('Æther')).toBe('AETHER')
+    expect(normaliseLetters('Øster')).toBe('OSTER')
+    expect(normaliseLetters('Łódź')).toBe('LODZ')
+  })
+
+  it('expands a ligature-like letter rather than dropping it', () => {
+    // `toUpperCase` expands this one on its own, which is why it is not in the table.
+    expect(normaliseLetters('Straße')).toBe('STRASSE')
+  })
+
+  it('is case-insensitive about which form it is given', () => {
+    expect(normaliseLetters('café')).toBe(normaliseLetters('CAFÉ'))
+    expect(normaliseLetters('æther')).toBe(normaliseLetters('ÆTHER'))
+  })
+
+  it('agrees with itself whatever order the case arrives in', () => {
+    // Folding after `toUpperCase` rather than before: an uppercase Å decomposes, a lowercase one only
+    // decomposes once it has been raised.
+    expect(normaliseLetters('å')).toBe('A')
+    expect(normaliseLetters('Å')).toBe('A')
+  })
+
+  it('draws a folded name as its folded letters, and no fewer', () => {
+    // The property that matters: the outline emitted matches the letters. Comparing against
+    // `naturalWidth` would mix units — that is font units, `pathBounds` is scaled user units — so the
+    // comparison is made between two runs at the same scale instead.
+    const font = FONTS[0] as FontEntry
+    const folded = normaliseLetters('Café Über')
+    expect(folded).toBe('CAFEUBER')
+    const scale = 100 / font.metrics.capHeight
+
+    const widthOf = (letters: string): number =>
+      pathBounds(textPath(font, letters, 0, 0, scale, 0))?.maxX ?? 0
+
+    // The letters folding recovered are really drawn: 'CAFEUBER' is wider than the 'CAFE' the old
+    // behaviour produced, by more than the three recovered glyphs themselves account for.
+    expect(widthOf('CAFEUBER')).toBeGreaterThan(
+      widthOf('CAFE') + naturalWidth(font, 'UBER') * scale
+    )
+    // And every letter contributes, so a run cannot silently collapse to fewer outlines than it has.
+    expect(widthOf('CAFEUBER')).toBeGreaterThan(widthOf('CAFEUBE'))
+  })
+
+  it('returns nothing for a name with nothing to draw, rather than a placeholder', () => {
+    // The brain is an English uppercase set. A name with no drawable letter is rejected by config
+    // validation with a message saying so, which is honest; emitting a substitute glyph would not be.
+    expect(normaliseLetters('北京')).toBe('')
+    expect(normaliseLetters('123')).toBe('')
   })
 })

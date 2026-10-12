@@ -117,10 +117,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Accented letters were deleted rather than folded.** `normaliseLetters` filtered straight to `A`–`Z`,
+  which removes the _letter_ along with the accent: `Café` drew `CAF`, `Über` drew `BER`, `Növa` drew
+  `NVA` — a mark reading a different word, from a name the reader had typed correctly. Names are now
+  decomposed and only the combining marks are dropped, so the letter survives. The handful of letters
+  Unicode will not decompose (`Æ`, `Ø`, `Ł`, `Ð`, `Þ`) are mapped explicitly, and `ß` is expanded by
+  `toUpperCase` on its own. Neither step is locale-sensitive, so determinism is unaffected.
+
+  This is the same defect as the studio's `fileStem` dropping the letter under an accent, found in the
+  core this time, and it had been there for the whole project.
+
 - **`generate()` threw when `preferences` was omitted.** `StudioConfig` declares the field as required,
   which is right for the store's state, but the implementation assumed it: `Object.keys(undefined)` raises a
   `TypeError` that says nothing about which field was wrong. The app never hit it because the store always
   carries the key; any caller assembling a configuration by hand did.
+
+### Added
+
+- **An accented name in the determinism manifest.** None of its ten cases contained a character outside
+  `A`–`Z`, which is why the fix above changed the manifest's fingerprint from nothing at all — a change
+  to how letters are derived passed that check untouched while quietly redrawing every accented name.
+  The eleventh case is `Café Über`, so this cannot recur silently.
 
 ### Added
 
