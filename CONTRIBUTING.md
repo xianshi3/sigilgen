@@ -33,11 +33,21 @@ pnpm install        # install dependencies
 pnpm run links      # create AI tool symlinks (AGENTS.md is the source)
 pnpm test           # run the test suite
 pnpm run check      # lint + format check + typecheck + tests
+
+pnpm --dir apps/web install   # the studio is a separate package
+pnpm --dir apps/web run check # its own gate: lint, format, typecheck, tests, build
+pnpm --dir apps/web dev       # the studio on http://localhost:5173
 ```
 
 `pnpm run links` creates `CLAUDE.md`, `.cursorrules`, `.windsurfrules` and
 `.github/copilot-instructions.md` as symlinks to `AGENTS.md`. Never edit those files directly —
 edit `AGENTS.md` instead.
+
+`apps/web` is a separate package with its own `package.json`, its own lockfile and its own gate. The
+root `pnpm run check` does not cover it, so a change that touches the studio has to pass
+`pnpm --dir apps/web run check` as well. The studio imports `@sigilgen/*` from the library's TypeScript
+source rather than its build output, so a change in the library is a change in the studio with no
+rebuild in between.
 
 ## Everyday Commands
 
@@ -75,6 +85,7 @@ edit `AGENTS.md` instead.
 | New decision resolver      | `src/resolvers/`                                             |
 | New or edited curated data | `src/brain/` (generated fonts via `scripts/build-brain.mjs`) |
 | New test                   | `tests/<module-name>.test.ts`                                |
+| Studio test                | `apps/web/tests/<area>.test.ts`                              |
 | New CLI flag               | `src/cli.ts` plus the README CLI table                       |
 | Public API change          | JSDoc in `src/` plus the README API section                  |
 

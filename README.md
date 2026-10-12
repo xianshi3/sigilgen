@@ -124,9 +124,11 @@ generator itself by `pnpm run docs:images`; this one cannot be, because it is a 
 cd apps/web
 pnpm install
 pnpm dev        # http://localhost:5173
+pnpm run check  # its own gate: lint, format, typecheck, tests, build
 ```
 
-It imports the generator's source directly, so editing an engine in `src/` hot-reloads the app. See
+It imports the generator's source directly, so editing an engine in `src/` hot-reloads the app. It is a
+separate package with its own gate — the root `pnpm run check` does not cover it. See
 [apps/web/README.md](apps/web/README.md).
 
 ## Five engines
@@ -429,6 +431,9 @@ pnpm install
 pnpm run links    # create the AI tool symlinks
 pnpm run check    # lint, format check, typecheck, tests
 ```
+
+The studio is a separate package with its own gate, so a change that touches `apps/web` also needs
+`pnpm --dir apps/web run check`.
 
 ## Security
 

@@ -8,6 +8,9 @@ directly, so there is no published package to install and no API to keep in sync
 
 ## Running it
 
+This is a **separate package**: its own `package.json`, its own lockfile, its own gate. The root
+`pnpm run check` does not build it, so a change that touches the studio also needs this gate.
+
 ```bash
 pnpm install
 pnpm dev        # http://localhost:5173
@@ -15,11 +18,39 @@ pnpm dev        # http://localhost:5173
 
 Other scripts:
 
-| Command        | Purpose                                  |
-| -------------- | ---------------------------------------- |
-| `pnpm build`   | Type-check, then bundle to `dist/`       |
-| `pnpm preview` | Serve the built bundle                   |
-| `pnpm check`   | Lint, format-check, type-check and build |
+| Command                  | Purpose                                     |
+| ------------------------ | ------------------------------------------- |
+| `pnpm build`             | Type-check, then bundle to `dist/`          |
+| `pnpm preview`           | Serve the built bundle                      |
+| `pnpm test`              | Run the Vitest suite once                   |
+| `pnpm run test:watch`    | Run Vitest in watch mode                    |
+| `pnpm run test:coverage` | Run Vitest with V8 coverage                 |
+| `pnpm check`             | Lint, format-check, type-check, test, build |
+
+## Tests
+
+`tests/` runs in `jsdom`, which is the only way the browser-only surface is testable at all: persistence
+and its rehydration, the clipboard fallbacks, locale detection and switching.
+
+| File                 | What it holds                                           |
+| -------------------- | ------------------------------------------------------- |
+| `dimensions.test.ts` | the dictionaries agree, and every offered value is real |
+| `studio.test.ts`     | the store, persistence, generation and file naming      |
+| `i18n.test.tsx`      | the provider, rendered rather than merely imported      |
+
+Three assertions are worth keeping an eye on, because each catches a way this app can quietly break:
+
+- **Placeholders must match across languages.** A `{count}` present in one language and not the other
+  leaves the reader staring at the literal placeholder. The types do not catch this — both dictionaries
+  are hand-written.
+- **`app.title` is not a language probe.** It is the product name and reads the same in both
+  dictionaries, so a test asserting that switching changes it would assert a difference that is
+  correctly absent.
+- **Storage holding rubbish must not stop the app opening.** Hand-edited state, or state from an older
+  build, has to survive rehydration.
+
+`vitest.config.ts` declares the `@sigilgen/*` aliases a second time, because the test runner resolves
+modules separately from `tsc`. Keep the two in step with `tsconfig.json` when an entry point is added.
 
 ## How it is put together
 
@@ -101,6 +132,14 @@ something to mark as chosen.
 
 **Translations are compile-time checked.** `en.ts` is typed as `Record<MessageKey, string>` against
 `zh.ts`, so a key that exists in only one language is a build failure rather than a hole found in review.
+Placeholder _sets_ are not covered by that type, which is why `tests/dimensions.test.ts` compares them
+between the two dictionaries.
+
+**File names fold diacritics rather than dropping them.** `fileStem` normalises to ASCII before slugging,
+so "Café Über" downloads as `cafe-uber` and not `caf-ber`. Replacing every non-ASCII character outright
+removed the accent _and_ the letter carrying it, which both mangled the name and let two different brands
+collapse onto one file. Folding still converges "Café" and "Cafe", which is correct — they are the same
+brand to a reader.
 
 ## Not in this package
 

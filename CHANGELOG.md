@@ -66,6 +66,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   gradients and shadows are banned; and every mode is measured rather than eyeballed — a mark that cannot
   be centred by measurement is a mode that does not get added.
 
+### Fixed
+
+- **`fileStem` dropped the letter a diacritic was on.** The slug was built by replacing every character
+  outside `[a-z0-9]` with a hyphen, which removed accents _and_ the vowels carrying them: "Café Über"
+  became `caf-ber`. The name now normalises to ASCII first, so it becomes `cafe-uber` and only the marks
+  are lost. Folding still converges "Café" and "Cafe" on purpose — they are the same brand to a reader —
+  but two genuinely different names no longer collide.
+
+### Added
+
+- **A test suite for the studio.** `apps/web` had roughly two thousand lines of React and TypeScript, a
+  stateful store with persistence, and a hand-rolled i18n layer, and not one test — while `pnpm run check`
+  only linted, formatted and typechecked it. It has its own Vitest configuration, its own gate, and 45
+  tests across three files.
+- **`apps/web/README.md`.** The studio had no documentation of its own, so the things a contributor has to
+  know before touching it — that it is a separate package the root gate does not cover, that it imports
+  the library's _source_ so its aliases are declared twice and must agree, and that it stores absence
+  rather than a sentinel — were only discoverable by reading it.
+
 Three more centring defects, found the same way as the four below: by generating across a wide input
 space and measuring the ink bounding box of every result against the canvas. All three share one cause
 — a layout was centred on the **room reserved** for its contents rather than on the **ink those

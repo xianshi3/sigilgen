@@ -41,17 +41,31 @@ reviewed like code. Adding a mood rule is how you add a design language, not cha
 pattern, image, text or script reaches a user's SVG. `src/serializer.ts` is the only place markup is
 produced, and it allow-lists elements and attributes rather than trying to sanitise.
 
+**Winding is part of the output contract.** With no `mask` and no `clipPath`, the only way a hole is cut
+is a sub-path wound against its parent — so the orientation of every contour is load-bearing. Two shapes
+that wind alike merge; two that wind against each other erase one another under `fill-rule: nonzero`.
+Every primitive therefore pins its winding rather than inheriting it from the order its caller happened to
+ask for, because the resulting defect is always a seam, a gap or a notch that no bounding box can see.
+This has bitten the glyph compiler and the geometry helpers in turn; see
+[design/001 §6](design/001-logo-engine-architecture.md).
+
+**A mark is centred on its ink, not on the box or the geometry that built it.** All three are different
+things, and only the first is what a reader sees. Centring on the layout box leaves a bearing's width of
+slack on one side; centring on the construction leaves an orbit whose satellites happen to fall one way
+pushed off to one side.
+
 ## Where things live
 
-| Path                                    | Purpose                                             |
-| --------------------------------------- | --------------------------------------------------- |
-| `src/types.ts`                          | Every interface the pipeline speaks                 |
-| `src/generate.ts`                       | Configuration validation and the pipeline           |
-| `src/seed-resolver.ts`, `src/sha256.ts` | Reproducible randomness                             |
-| `src/mood-resolver.ts`                  | Keywords and brief to a design direction            |
-| `src/engine-router.ts`                  | Which engine draws                                  |
-| `src/resolvers/`                        | Palette, typeface and pictogram selection           |
-| `src/engines/`                          | The five renderers, plus shared drawing helpers     |
-| `src/serializer.ts`                     | The trust boundary                                  |
-| `src/brain/`                            | Curated JSON data and its loader                    |
-| `scripts/build-brain.mjs`               | Compiles glyph outlines into `src/brain/fonts.json` |
+| Path                                    | Purpose                                                    |
+| --------------------------------------- | ---------------------------------------------------------- |
+| `src/types.ts`                          | Every interface the pipeline speaks                        |
+| `src/generate.ts`                       | Configuration validation and the pipeline                  |
+| `src/seed-resolver.ts`, `src/sha256.ts` | Reproducible randomness                                    |
+| `src/mood-resolver.ts`                  | Keywords and brief to a design direction                   |
+| `src/engine-router.ts`                  | Which engine draws                                         |
+| `src/resolvers/`                        | Palette, typeface and pictogram selection                  |
+| `src/engines/`                          | The five renderers, plus shared drawing helpers            |
+| `src/serializer.ts`                     | The trust boundary                                         |
+| `src/brain/`                            | Curated JSON data and its loader                           |
+| `scripts/build-brain.mjs`               | Compiles glyph outlines into `src/brain/fonts.json`        |
+| `apps/web/`                             | The bilingual studio: a separate package with its own gate |

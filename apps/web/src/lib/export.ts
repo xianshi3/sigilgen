@@ -55,9 +55,22 @@ export function download(filename: string, blob: Blob): void {
   }, 0)
 }
 
-/** A file stem safe on every platform, derived from the brand name. */
+/**
+ * A file stem safe on every platform, derived from the brand name.
+ *
+ * Diacritics are folded rather than dropped. Stripping every non-ASCII character turned "Café Über" into
+ * `caf-ber`, which is not a slug of the name a reader typed — the accent and the letter it was on both
+ * vanish, and two different names can collapse to the same file. Normalising to ASCII first keeps the
+ * letters and loses only the marks.
+ *
+ * @param name - The brand name as entered.
+ * @returns A lowercase, hyphen-separated stem, or `logo` when nothing usable remains.
+ */
 export function fileStem(name: string): string {
   const slug = name
+    .normalize('NFKD')
+    // Combining marks are what `NFKD` splits the diacritics into, so removing them leaves the base letter.
+    .replace(/[̀-ͯ]/g, '')
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
