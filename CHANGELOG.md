@@ -9,6 +9,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`author` in the manifest**, and the release link in the changelog footer pointed at
+  `github.com/sigilgen/sigilgen` — a placeholder that has never existed — rather than this repository.
+- **A guard on the build's version substitution.** See "Fixed" below.
 - **`LogoConfig.preferences`.** Holds a design decision still across every concept while the rest keep
   varying: `container`, `layout`, `treatment`, `accent`, `frame`, `mode`. Every dimension is optional,
   an absent one behaves exactly as before, and a value the engine does not offer is ignored rather
@@ -19,6 +22,30 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`sigilgen --version` reported `1.0.0` forever.** `VERSION` was a literal in `src/cli.ts` carrying a
+  comment saying it was "read from the manifest at build time by tsup's `define`" — there was no
+  `define` anywhere in the project. The number existed in two places, so bumping `package.json` changed
+  what npm published and not what the binary printed, through every release after the first, with a
+  comment that read as though the problem had been handled. tsup now substitutes `__SIGILGEN_VERSION__`
+  from the manifest, which is the only copy; running from source reports `0.0.0`, because unbuilt source
+  is not a release. Asserting the _wiring_ rather than the value is what makes it a guard — since the
+  substitution reads the manifest at config-load time, a test comparing the two numbers would pass even
+  with the `define` deleted.
+- **Every small control in the studio lost its shadow in dark mode.** The segmented pill, the toggle knob
+  and the slider thumb each inlined `oklch(0.22 0.01 260 / …)` — the light-mode ink. In dark mode that
+  is lightness 0.22 shadowing a lightness 0.215 surface, so the shadows were not subtle, they were
+  absent. They are now `--shadow-control` and `--shadow-knob`, with dark variants, which is what the
+  token sheet's own claim that "components never hard-code a colour, radius or duration" was asserting
+  all along.
+- **Firefox slider thumbs had no ring, no shadow and no hover state.** Only `::-webkit-slider-thumb` was
+  styled; `::-moz-range-thumb` got size and fill colour and nothing else, so the control looked different
+  in the one browser where it looked different.
+- **A colour swatch and the concept tile were unnamed sizes.** `rounded-[4px]` and `w-[4.25rem]` are now
+  `--radius-swatch` and `--spacing-tile`, and the button's press depth is `--scale-press`, so all three
+  are adjustable from the one place the rest of the scale lives.
+- **The motion curve was written out three times.** `[0.32, 0.72, 0, 1]` appeared inline at all three
+  framer-motion call sites, while every CSS transition read `--ease-apple`. Changing the curve reached the
+  transitions and silently missed the animated ones. Both values now live in `lib/motion.ts`.
 - **A ring erased the stroke laid across its band.** A ring is a filled outer ellipse with an inner one
   punched back out of it, so the two wind against each other on purpose — which makes the outer contour
   a hazard to anything drawn across the band. `Q`'s tail crosses it, and wound the other way the pair
@@ -402,4 +429,4 @@ First stable release.
 - Input length is bounded for names, keywords, briefs, word counts and canvas sizes, so hostile input
   cannot stall the pipeline.
 
-[1.0.0]: https://github.com/sigilgen/sigilgen/releases/tag/v1.0.0
+[1.0.0]: https://github.com/xianshi3/sigilgen/releases/tag/v1.0.0

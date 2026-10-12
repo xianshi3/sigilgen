@@ -367,18 +367,20 @@ describe('normaliseLetters', () => {
     // The property that matters: the outline emitted matches the letters. Comparing against
     // `naturalWidth` would mix units — that is font units, `pathBounds` is scaled user units — so the
     // comparison is made between two runs at the same scale instead.
-    const font = FONTS[0] as FontEntry
+    // `FONTS[0]` rather than the module-level `font`, to say the property holds for any family and not
+    // for one that happens to be in scope. Named `sample` because the module already has a `font`.
+    const sample = FONTS[0] as FontEntry
     const folded = normaliseLetters('Café Über')
     expect(folded).toBe('CAFEUBER')
-    const scale = 100 / font.metrics.capHeight
+    const scale = 100 / sample.metrics.capHeight
 
     const widthOf = (letters: string): number =>
-      pathBounds(textPath(font, letters, 0, 0, scale, 0))?.maxX ?? 0
+      pathBounds(textPath(sample, letters, 0, 0, scale, 0))?.maxX ?? 0
 
     // The letters folding recovered are really drawn: 'CAFEUBER' is wider than the 'CAFE' the old
     // behaviour produced, by more than the three recovered glyphs themselves account for.
     expect(widthOf('CAFEUBER')).toBeGreaterThan(
-      widthOf('CAFE') + naturalWidth(font, 'UBER') * scale
+      widthOf('CAFE') + naturalWidth(sample, 'UBER') * scale
     )
     // And every letter contributes, so a run cannot silently collapse to fewer outlines than it has.
     expect(widthOf('CAFEUBER')).toBeGreaterThan(widthOf('CAFEUBE'))
