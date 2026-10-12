@@ -2,9 +2,33 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { DesignDimension } from '@sigilgen/types'
 import type { StudioConfig } from '../lib/generate'
+import { emptyEdit, type PartEdit } from '../lib/svgParts'
 
 /** How the stage is backed, so a mark can be judged against light and dark grounds. */
 export type Backdrop = 'light' | 'dark' | 'board'
+
+/**
+ * Edits to one concept's parts, keyed by the concept's seed fingerprint.
+ *
+ * The seed is the key rather than the concept's index because the index is positional and shifts when
+ * the variation count changes, while the fingerprint identifies the same mark wherever it appears. An
+ * absent key means the concept is untouched, so an unedited concept exports byte-identically to the
+ * generator.
+ */
+export type ConceptEdits = Record<string, PartEdit[]>
+
+/**
+ * One step of the edit history: the complete edits map as it was before a gesture.
+ *
+ * The whole map is stored rather than a single part's delta, because a gesture can touch any part and
+ * because undo has to restore the map as it was. Storing the map makes undo a swap.
+ *
+ * Deliberately not the selection: which part is highlighted is not an edit, and undoing one should not
+ * move the reader's attention anywhere.
+ */
+interface HistoryEntry {
+  edits: ConceptEdits
+}
 
 /**
  * What the option controls show as selected.
@@ -33,6 +57,19 @@ export interface StudioState extends StudioConfig {
   leftPanelOpen: boolean
   rightPanelOpen: boolean
 
+  /**
+   * Whether the stage is in edit mode.
+   *
+   * Off by default, because the stage's job is to show the mark the generator made and anything that
+   * makes it look editable undermines that. Turning it on is a deliberate act, and it is what makes the
+   * paths selectable and draggable.
+   */
+  editMode: boolean
+  edits: ConceptEdits
+  selectedPart: number | null
+  past: HistoryEntry[]
+  future: HistoryEntry[]
+
   setField: <K extends keyof StudioConfig>(key: K, value: StudioConfig[K]) => void
   setActiveConcept: (index: number) => void
   setBackdrop: (backdrop: Backdrop) => void
@@ -52,6 +89,28 @@ export interface StudioState extends StudioConfig {
   /** Pins a dimension, or releases it back to the seed. */
   setPreference: (dimension: DesignDimension, value: PinnedValue) => void
   reroll: () => void
+
+  setEditMode: (on: boolean) => void
+  selectPart: (index: number | null) => void
+  /**
+   * Snapshots the current edits so the next change can be undone.
+   *
+   * Called once at the start of a gesture — a pointer-down on the stage, a pointer-down on a slider, a
+   * button press — and never per pointer-move. A drag sends dozens of patches, and recording each one
+   * would make undo step back a pixel at a time.
+   */
+  beginEdit: () => void
+  /**
+   * Applies a patch to one part of one concept.
+   *
+   * The patch is merged into the existing edit rather than replacing it, so a drag can send many small
+   * patches without each one discarding the last. Does not touch history; see {@link beginEdit}.
+   */
+  updatePart: (conceptSeed: string, index: number, patch: Partial<PartEdit>) => void
+  undo: () => void
+  redo: () => void
+  /** Discards every edit to one concept, returning it to the generator's output. */
+  resetEdits: (conceptSeed: string) => void
 }
 
 /**
@@ -96,6 +155,7 @@ type PersistedStudio = Pick<
   | 'theme'
   | 'backdrop'
   | 'preferences'
+  | 'edits'
 >
 
 /**
@@ -121,6 +181,9 @@ function persisted(state: StudioState): PersistedStudio {
     theme: state.theme,
     backdrop: state.backdrop,
     preferences: state.preferences,
+    // The reader's edits are their work, so they survive a reload like the design does. The undo
+    // history is deliberately left out: it is transient, and restoring it would put the app back mid-gesture.
+    edits: state.edits,
   }
 }
 
@@ -135,6 +198,12 @@ export const useStudio = create<StudioState>()(
       zoom: 'fit',
       leftPanelOpen: true,
       rightPanelOpen: true,
+
+      editMode: false,
+      edits: {},
+      selectedPart: null,
+      past: [],
+      future: [],
 
       setField: (key, value) => set({ [key]: value } as Partial<StudioState>),
 
@@ -186,6 +255,77 @@ export const useStudio = create<StudioState>()(
           seed: state.seed + 1,
           activeConcept: 0,
         })),
+
+      // --- Part editing -------------------------------------------------------------------------
+      //
+      // Edits are keyed by the concept's seed fingerprint and stored as one entry per part, so an
+      // unedited concept has no entry at all and exports byte-identically to the generator.
+
+      setEditMode: on =>
+        set(state => ({
+          editMode: on,
+          // Leaving edit mode drops the selection, because a highlight on a part that can no longer be
+          // edited reads as a promise the interface is not keeping.
+          selectedPart: on ? state.selectedPart : null,
+        })),
+
+      selectPart: index => set({ selectedPart: index }),
+
+      beginEdit: () =>
+        set(state => ({
+          past: [...state.past, { edits: state.edits }],
+          // Any new gesture invalidates the redo branch: the reader has gone somewhere the stored
+          // future no longer describes.
+          future: [],
+        })),
+
+      updatePart: (conceptSeed, index, patch) =>
+        set(state => {
+          const conceptEdits = state.edits[conceptSeed] ?? []
+          const current = conceptEdits[index] ?? emptyEdit()
+          const next = { ...current, ...patch }
+          const updated = [...conceptEdits]
+          updated[index] = next
+          return { edits: { ...state.edits, [conceptSeed]: updated } }
+        }),
+
+      undo: () =>
+        set(state => {
+          const previous = state.past.at(-1)
+          if (previous === undefined) {
+            return state
+          }
+          return {
+            edits: previous.edits,
+            past: state.past.slice(0, -1),
+            future: [...state.future, { edits: state.edits }],
+          }
+        }),
+
+      redo: () =>
+        set(state => {
+          const next = state.future.at(-1)
+          if (next === undefined) {
+            return state
+          }
+          return {
+            edits: next.edits,
+            future: state.future.slice(0, -1),
+            past: [...state.past, { edits: state.edits }],
+          }
+        }),
+
+      resetEdits: conceptSeed =>
+        set(state => {
+          const next = { ...state.edits }
+          delete next[conceptSeed]
+          return {
+            edits: next,
+            selectedPart: null,
+            past: [...state.past, { edits: state.edits }],
+            future: [],
+          }
+        }),
     }),
     {
       name: 'sigilgen.studio',

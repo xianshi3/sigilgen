@@ -9,6 +9,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Part editing in the studio.** Each concept's SVG is now rendered inline rather than as an image, so
+  every top-level path is a selectable, editable part. Click a shape on the canvas — or its entry in the
+  inspector — to select it, then drag to move it, or use the rotate, scale and fill controls. Parts can
+  be hidden, and every gesture is undoable. Edits are keyed by the concept's seed fingerprint, so they
+  follow the mark across regenerations, and an unedited concept still exports byte-identically to the
+  generator.
+
+  The stage used to render the mark as a data URL in an `<img>`, which is the right way to show a finished
+  document and the wrong way to edit one — an image has no parts. Rendering the paths inline is what makes
+  each shape selectable, and it costs nothing: the document is a handful of paths either way. The generator
+  forbids script and event handlers in its output, so putting that markup in the DOM is safe by construction
+  rather than by sanitising it on the way in.
+
+  A "part" is a top-level `<path>`, which is the granularity the generator's flat output gives. For an
+  abstract mark that is every shape in the composition; for a wordmark it is the pictogram and the word as
+  a whole, because the word is compiled into a single path by the glyph compiler — splitting it back into
+  letters would mean re-parsing the outline, which the project forbids at runtime.
+
 - **`author` in the manifest**, and the release link in the changelog footer pointed at
   `github.com/sigilgen/sigilgen` — a placeholder that has never existed — rather than this repository.
 - **A guard on the build's version substitution.** See "Fixed" below.
@@ -26,17 +44,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   met at a single point — reading as a mirrored `S` with a step down its right side. The cause was not
   an angle or a winding but the construction: both bowls were ellipses `cap / 4` tall on centres
   `cap / 4` and `3 * cap / 4` from the cap line, which places the upper bowl's lowest point and the lower
-  bowl's highest point at *exactly* the same y. Two filled regions meeting on a line share no area, and
+  bowl's highest point at _exactly_ the same y. Two filled regions meeting on a line share no area, and
   the only place they touched at all was the single point where each ellipse sits at its extreme. No
   choice of sweep angles could produce overlap under that geometry. Each ellipse is now taller than half
   the cap, with the outer envelope still pinned to the cap line and the baseline, so the two bowls share
-  real area across the waist; measured, samples falling inside *both* bowls went from 0 to ~200 per
+  real area across the waist; measured, samples falling inside _both_ bowls went from 0 to ~200 per
   family.
 
   The lower bowl also swept the wrong way round — `40` to `270` walks left and bottom, putting its
-  terminal at the lower *right*, where an `S` has none. It is now `150` to `-100`, which is the upper
+  terminal at the lower _right_, where an `S` has none. It is now `150` to `-100`, which is the upper
   bowl's exact half-turn, so the letter is point-symmetric and its spine crosses the waist on the
   diagonal an `S` does.
+
 - **`sigilgen --version` reported `1.0.0` forever.** `VERSION` was a literal in `src/cli.ts` carrying a
   comment saying it was "read from the manifest at build time by tsup's `define`" — there was no
   `define` anywhere in the project. The number existed in two places, so bumping `package.json` changed

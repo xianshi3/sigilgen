@@ -3,8 +3,10 @@ import type { LogoResult } from '@sigilgen/types'
 import { useI18n } from '../../i18n/I18nProvider'
 import { ENGINE_LABEL } from '../../lib/engines'
 import { copyText, downloadSvg, fileStem } from '../../lib/export'
+import { applyEdits, emptyEdit, parseSvgParts } from '../../lib/svgParts'
 import { useStudio } from '../../store/useStudio'
 import { Button } from '../primitives/Button'
+import { RangeField } from '../primitives/RangeField'
 import { Section } from '../primitives/Section'
 
 export interface InspectorPanelProps {
@@ -28,11 +30,29 @@ function Row({ label, value }: { label: string; value: string }) {
  *
  * The notes are the point of the panel: the generator can produce a mark a reader likes without
  * understanding why, but cannot be iterated on without knowing which decision to push on.
+ *
+ * The edit controls sit above the notes because they are the more frequent reason to open this panel:
+ * a reader who wants to nudge a shape is not usually also reading about why the palette was chosen.
  */
 export function InspectorPanel({ concept }: InspectorPanelProps) {
   const { t } = useI18n()
   const name = useStudio(state => state.name)
   const [copied, setCopied] = useState(false)
+
+  const editMode = useStudio(state => state.editMode)
+  const setEditMode = useStudio(state => state.setEditMode)
+  const selectedPart = useStudio(state => state.selectedPart)
+  const selectPart = useStudio(state => state.selectPart)
+  const beginEdit = useStudio(state => state.beginEdit)
+  const updatePart = useStudio(state => state.updatePart)
+  const undo = useStudio(state => state.undo)
+  const redo = useStudio(state => state.redo)
+  const resetEdits = useStudio(state => state.resetEdits)
+  const canUndo = useStudio(state => state.past.length > 0)
+  const canRedo = useStudio(state => state.future.length > 0)
+
+  const parts = concept === undefined ? null : parseSvgParts(concept.svg)
+  const edits = useStudio(state => (concept === undefined ? undefined : state.edits[concept.seed]))
 
   if (concept === undefined) {
     return (
@@ -43,9 +63,152 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
   }
 
   const stem = fileStem(name)
+  const selected = selectedPart === null ? null : (edits?.[selectedPart] ?? emptyEdit())
+  const selectedPath = selectedPart === null ? null : (parts?.parts[selectedPart] ?? null)
 
   return (
     <>
+      <Section
+        title={t('edit.title')}
+        action={
+          editMode ? (
+            <div className="flex gap-1">
+              <Button size="sm" variant="secondary" disabled={!canUndo} onClick={undo}>
+                ↩
+              </Button>
+              <Button size="sm" variant="secondary" disabled={!canRedo} onClick={redo}>
+                ↪
+              </Button>
+            </div>
+          ) : undefined
+        }
+      >
+        <Button
+          size="sm"
+          variant={editMode ? 'primary' : 'secondary'}
+          className="w-full"
+          onClick={() => setEditMode(!editMode)}
+        >
+          {editMode ? t('edit.done') : t('edit.start')}
+        </Button>
+
+        {editMode ? (
+          <>
+            {/* The parts, so one can be picked without hitting it on the canvas — which is hard when a
+                part is small or sits behind another. */}
+            <div className="flex flex-col gap-1">
+              {parts?.parts.map((part, index) => {
+                const edit = edits?.[index]
+                const active = selectedPart === index
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => selectPart(index)}
+                    aria-pressed={active}
+                    className={`flex items-center gap-2 rounded-control px-2 py-1.5 text-left transition-colors
+                      ${active ? 'bg-[var(--accent-soft)]' : 'hover:bg-[var(--surface-sunken)]'}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="h-3.5 w-3.5 shrink-0 rounded-swatch shadow-[0_0_0_0.5px_var(--hairline)]"
+                      style={{ background: edit?.fill ?? part.fill ?? 'transparent' }}
+                    />
+                    <span className="type-caption min-w-0 flex-1 truncate text-ink-soft">
+                      {t('edit.part', { index: index + 1 })}
+                    </span>
+                    {edit?.hidden === true ? (
+                      <span className="type-caption text-ink-faint">{t('edit.hidden')}</span>
+                    ) : null}
+                  </button>
+                )
+              })}
+            </div>
+
+            {selectedPart !== null && selected !== null && selectedPath !== null ? (
+              <>
+                {/* The slider wrapper takes the pointer-down so a whole drag is one undo step. Without it
+                    every intermediate value would be recorded and undo would step back a pixel at a time. */}
+                <div onPointerDown={beginEdit}>
+                  <RangeField
+                    label={t('edit.rotate')}
+                    value={selected.rotate}
+                    min={-180}
+                    max={180}
+                    step={1}
+                    format={value => `${value}°`}
+                    onChange={value => updatePart(concept.seed, selectedPart, { rotate: value })}
+                  />
+                </div>
+                <div onPointerDown={beginEdit}>
+                  <RangeField
+                    label={t('edit.scale')}
+                    value={selected.scale}
+                    min={0.25}
+                    max={4}
+                    step={0.05}
+                    format={value => `${Math.round(value * 100)}%`}
+                    onChange={value => updatePart(concept.seed, selectedPart, { scale: value })}
+                  />
+                </div>
+
+                <label className="flex items-center justify-between gap-2">
+                  <span className="type-caption text-ink-soft">{t('edit.fill')}</span>
+                  <span className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={selected.fill ?? selectedPath.fill ?? '#000000'}
+                      onChange={event => {
+                        beginEdit()
+                        updatePart(concept.seed, selectedPart, { fill: event.currentTarget.value })
+                      }}
+                      className="h-6 w-10 cursor-pointer rounded-control border-0 bg-transparent p-0"
+                      aria-label={t('edit.fill')}
+                    />
+                    {selected.fill !== null ? (
+                      <button
+                        type="button"
+                        className="type-caption text-ink-faint underline-offset-2 hover:underline"
+                        onClick={() => {
+                          beginEdit()
+                          updatePart(concept.seed, selectedPart, { fill: null })
+                        }}
+                      >
+                        {t('edit.resetFill')}
+                      </button>
+                    ) : null}
+                  </span>
+                </label>
+
+                <div className="flex gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={() => {
+                      beginEdit()
+                      updatePart(concept.seed, selectedPart, { hidden: selected.hidden !== true })
+                    }}
+                  >
+                    {selected.hidden === true ? t('edit.show') : t('edit.hide')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={() => resetEdits(concept.seed)}
+                  >
+                    {t('edit.resetAll')}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <p className="type-caption text-ink-faint">{t('edit.pick')}</p>
+            )}
+          </>
+        ) : null}
+      </Section>
+
       <Section title={t('concept.title')}>
         <dl className="flex flex-col gap-1.5">
           <Row label={t('concept.engine')} value={t(ENGINE_LABEL[concept.engine])} />
@@ -99,7 +262,7 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
             variant="secondary"
             className="flex-1"
             onClick={() => {
-              downloadSvg(concept, stem)
+              downloadSvg(concept, stem, applyEdits(concept.svg, edits ?? []))
             }}
           >
             {t('action.downloadSvg')}

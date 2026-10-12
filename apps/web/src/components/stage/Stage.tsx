@@ -1,8 +1,9 @@
+import { useMemo, useRef } from 'react'
 import { motion } from 'motion/react'
 import type { LogoResult } from '@sigilgen/types'
 import type { MessageKey } from '../../i18n/locales/zh'
 import { useI18n } from '../../i18n/I18nProvider'
-import { svgToDataUrl } from '../../lib/generate'
+import { emptyEdit, parseSvgParts, partTransform } from '../../lib/svgParts'
 import { DURATION_BASE, EASE_APPLE } from '../../lib/motion'
 import { useStudio, type Backdrop } from '../../store/useStudio'
 
@@ -32,13 +33,81 @@ const BACKDROP_STYLE: Record<Backdrop, string> = {
  * The sheet is the surface the palette's colours were chosen against, so it keeps its fixed paper colours
  * in both themes — see `--paper-light` in the token sheet.
  *
- * Deliberately contains nothing but the mark: every control that would otherwise sit over the artwork
- * lives in the bar beneath it, so nothing can obscure the thing being judged.
+ * ## The mark is inline SVG, not an image
+ *
+ * It used to be a data URL in an `<img>`, which is the right way to show a finished document and the wrong
+ * way to edit one: an image has no parts. Rendering the paths inline is what makes each shape selectable
+ * and draggable, and it costs nothing — the document is a handful of paths either way.
+ *
+ * The generator forbids script and event handlers in its output, so putting that markup in the DOM is
+ * safe by construction rather than by sanitising it on the way in.
  */
 export function Stage({ concept, errorKey, errorDetail }: StageProps) {
   const { t } = useI18n()
   const backdrop = useStudio(state => state.backdrop)
   const zoom = useStudio(state => state.zoom)
+  const editMode = useStudio(state => state.editMode)
+  const selectedPart = useStudio(state => state.selectedPart)
+  const selectPart = useStudio(state => state.selectPart)
+  const beginEdit = useStudio(state => state.beginEdit)
+  const updatePart = useStudio(state => state.updatePart)
+
+  const svgRef = useRef<SVGSVGElement>(null)
+  // Where the current drag started, in user units, plus the part's transform at that moment. Stored in a
+  // ref rather than state because a drag fires dozens of moves a second and none of them need a render.
+  const drag = useRef<{ x: number; y: number; dx: number; dy: number } | null>(null)
+
+  const parts = useMemo(
+    () => (concept === undefined ? null : parseSvgParts(concept.svg)),
+    [concept]
+  )
+  const edits = useStudio(state => (concept === undefined ? undefined : state.edits[concept.seed]))
+
+  /** Converts a pointer position to the SVG's own user units, so a drag means the same thing at any zoom. */
+  const toUserUnits = (clientX: number, clientY: number): { x: number; y: number } => {
+    const svg = svgRef.current
+    if (svg === null || parts === null) {
+      return { x: 0, y: 0 }
+    }
+    const rect = svg.getBoundingClientRect()
+    return {
+      x: ((clientX - rect.left) / rect.width) * parts.viewBox[2],
+      y: ((clientY - rect.top) / rect.height) * parts.viewBox[3],
+    }
+  }
+
+  const onPointerDown =
+    (index: number) =>
+    (event: React.PointerEvent): void => {
+      if (!editMode || concept === undefined || parts === null) {
+        return
+      }
+      event.stopPropagation()
+      selectPart(index)
+      // One snapshot for the whole drag, so undo restores the position the part was in before it moved
+      // rather than one pixel into the move.
+      beginEdit()
+      const point = toUserUnits(event.clientX, event.clientY)
+      const edit = edits?.[index] ?? emptyEdit()
+      drag.current = { x: point.x, y: point.y, dx: edit.dx, dy: edit.dy }
+      svgRef.current?.setPointerCapture(event.pointerId)
+    }
+
+  const onPointerMove = (event: React.PointerEvent): void => {
+    const active = drag.current
+    if (active === null || concept === undefined || selectedPart === null) {
+      return
+    }
+    const point = toUserUnits(event.clientX, event.clientY)
+    updatePart(concept.seed, selectedPart, {
+      dx: Math.round((active.dx + point.x - active.x) * 100) / 100,
+      dy: Math.round((active.dy + point.y - active.y) * 100) / 100,
+    })
+  }
+
+  const endDrag = (): void => {
+    drag.current = null
+  }
 
   return (
     <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[var(--stage)] p-5 sm:p-8">
@@ -70,24 +139,62 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
               {errorKey === null ? t('empty.suggestion') : errorDetail}
             </p>
           </div>
-        ) : (
-          <motion.img
+        ) : parts === null ? null : (
+          <motion.div
             // Keyed by the concept's own seed fingerprint, so switching concepts cross-fades while
             // retyping the name swaps the image without a flash.
             key={concept.seed}
-            src={svgToDataUrl(concept.svg)}
-            alt={`${concept.engine} — ${concept.palette.id}`}
             initial={{ opacity: 0, scale: 0.985 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: DURATION_BASE, ease: EASE_APPLE }}
-            className={
-              zoom === 'fit'
-                ? 'max-h-full max-w-full object-contain'
-                : 'max-h-none max-w-none object-contain'
-            }
-            style={zoom === 'fit' ? undefined : { width: `${zoom * 100}%` }}
-            draggable={false}
-          />
+            className="h-full w-full"
+          >
+            <svg
+              ref={svgRef}
+              viewBox={parts.viewBox.join(' ')}
+              className={zoom === 'fit' ? 'h-full w-full' : 'max-h-none max-w-none'}
+              // Away from "fit" the sheet is sized as a percentage of the stage, so zooming in grows the mark
+              // past the sheet and the stage clips it — the same behaviour the image had.
+              style={zoom === 'fit' ? undefined : { width: `${zoom * 100}%` }}
+              // Clicking the sheet rather than a part clears the selection, which is the only way to
+              // deselect that does not involve hunting for a control.
+              onClick={() => {
+                if (editMode) {
+                  selectPart(null)
+                }
+              }}
+              onPointerMove={onPointerMove}
+              onPointerUp={endDrag}
+              onPointerCancel={endDrag}
+              role="img"
+              aria-label={`${concept.engine} — ${concept.palette.id}`}
+            >
+              {parts.parts.map((part, index) => {
+                const edit = edits?.[index]
+                if (edit?.hidden === true) {
+                  return null
+                }
+                const selected = editMode && selectedPart === index
+                const transform = edit === undefined ? null : partTransform(part.d, edit)
+                return (
+                  <g key={index} transform={transform ?? undefined}>
+                    <path
+                      d={part.d}
+                      fill={edit?.fill ?? part.fill ?? 'none'}
+                      // The highlight is a stroke on a copy rather than on the part itself, so the part's
+                      // own fill and geometry are untouched and the outline reads as a selection rather
+                      // than as a different shape.
+                      stroke={selected ? 'var(--accent)' : 'none'}
+                      strokeWidth={selected ? 3 : 0}
+                      strokeLinejoin="round"
+                      className={editMode ? 'cursor-move' : undefined}
+                      onPointerDown={onPointerDown(index)}
+                    />
+                  </g>
+                )
+              })}
+            </svg>
+          </motion.div>
         )}
       </div>
     </div>

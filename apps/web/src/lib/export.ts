@@ -79,6 +79,6 @@ export function fileStem(name: string): string {
 }
 
 /** Triggers a download of a concept's SVG. */
-export function downloadSvg(concept: LogoResult, stem: string): void {
-  download(`${stem}.svg`, new Blob([concept.svg], { type: 'image/svg+xml' }))
+export function downloadSvg(concept: LogoResult, stem: string, svg?: string): void {
+  download(`${stem}.svg`, new Blob([svg ?? concept.svg], { type: 'image/svg+xml' }))
 }

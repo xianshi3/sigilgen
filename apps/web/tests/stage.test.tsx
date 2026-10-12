@@ -112,8 +112,10 @@ describe('Stage', () => {
       </I18nProvider>
     )
     const image = screen.getByRole('img')
-    expect(image.getAttribute('alt')).toContain(concept?.engine ?? '')
-    expect(image.getAttribute('alt')).toContain(concept?.palette.id ?? '')
+    // An `<svg>` names itself with `aria-label`, not `alt` — `alt` is an `<img>` attribute and would be
+    // invalid markup on a container element.
+    expect(image.getAttribute('aria-label')).toContain(concept?.engine ?? '')
+    expect(image.getAttribute('aria-label')).toContain(concept?.palette.id ?? '')
   })
 
   it('explains itself instead of showing a mark when there is none', () => {

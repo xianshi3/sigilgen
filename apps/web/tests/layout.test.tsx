@@ -150,10 +150,12 @@ describe('narrow viewports', () => {
     setViewport(true)
     renderApp()
     // Before the fix the stage was squeezed to zero width by the two fixed panels. It has to be present
-    // and holding an image.
+    // and holding the mark.
     const canvas = stage()
     expect(canvas).not.toBeNull()
-    expect(canvas?.querySelector('img')).not.toBeNull()
+    // An inline `<svg>` rather than an `<img>`: the mark is rendered as real paths so each shape can be
+    // selected and edited, which is the whole point of the editor.
+    expect(canvas?.querySelector('svg')).not.toBeNull()
   })
 
   it('asks the browser about the breakpoint through one named query', () => {
