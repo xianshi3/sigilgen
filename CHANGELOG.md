@@ -9,6 +9,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Keyboard shortcuts in the studio.** `Cmd/Ctrl+Z` and `Cmd/Ctrl+Shift+Z` undo and redo; `1`–`9` pick a
+  concept directly; `,` and `.` step between them; `-` and `=` zoom, `0` returns to fitting the window;
+  `R` rerolls; `E` toggles edit mode; `Escape` closes a drawer, or clears a part selection once no drawer
+  is in the way. Each is also reachable by pointer, so nothing becomes reachable only by keyboard.
+
+  Keys pressed inside a field belong to the field. `Cmd/Ctrl+Z` in the brand-name box is undo-my-typing
+  rather than undo-my-last-edit, and a digit typed into a field is a digit rather than a concept index —
+  without that guard a single keystroke silently rewrites the design.
+
 - **Part editing in the studio.** Each concept's SVG is now rendered inline rather than as an image, so
   every top-level path is a selectable, editable part. Click a shape on the canvas — or its entry in the
   inspector — to select it, then drag to move it, or use the rotate, scale and fill controls. Parts can

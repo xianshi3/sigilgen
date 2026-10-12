@@ -11,6 +11,7 @@ import { Stage } from './components/stage/Stage'
 import { StageBar } from './components/stage/StageBar'
 import { useI18n } from './i18n/I18nProvider'
 import { useIsNarrow } from './hooks/useMediaQuery'
+import { useHotkeys } from './hooks/useHotkeys'
 import { useThemeEffect } from './hooks/useThemeEffect'
 import { generate } from './lib/generate'
 import { PANEL_WIDTH_LEFT, PANEL_WIDTH_RIGHT } from './lib/layout'
@@ -78,6 +79,7 @@ export default function App() {
   const waiting = name.trim() === ''
 
   useThemeEffect()
+  useHotkeys(concepts.length)
 
   // Below this width the two panels cannot sit beside the stage — they are fixed width and do not shrink,
   // so between them they consumed the entire viewport and left the canvas nothing. Past that width they
