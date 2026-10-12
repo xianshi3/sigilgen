@@ -13,12 +13,13 @@ import { useI18n } from './i18n/I18nProvider'
 import { useIsNarrow } from './hooks/useMediaQuery'
 import { useThemeEffect } from './hooks/useThemeEffect'
 import { generate } from './lib/generate'
+import { PANEL_WIDTH_LEFT, PANEL_WIDTH_RIGHT } from './lib/layout'
 import { DURATION_PANEL, EASE_APPLE } from './lib/motion'
 import { useStudio } from './store/useStudio'
 
 /** Panel widths, shared by the animation and the inner scroller so the two cannot disagree. */
-const LEFT_WIDTH = 288
-const RIGHT_WIDTH = 300
+const LEFT_WIDTH = PANEL_WIDTH_LEFT
+const RIGHT_WIDTH = PANEL_WIDTH_RIGHT
 
 export default function App() {
   const { t } = useI18n()
@@ -97,18 +98,40 @@ export default function App() {
   // panels open over the mark — which is the case that matters most.
   const wasNarrow = useRef<boolean | null>(null)
 
+  // The store's panels are open or closed according to the viewport the store was created in, so the
+  // first render is already right and nothing has to be corrected after it.
+  const leftOpen = studio.leftPanelOpen
+  const rightOpen = studio.rightPanelOpen
+
+  // Whether a drawer is covering the stage, which is the only situation a scrim is for. On a wide
+  // viewport the panels sit beside the canvas and dimming it would be wrong.
+  const drawerOpen = narrow && (leftOpen || rightOpen)
+
+  /** Closes whichever drawer is open. Used by the scrim and by Escape. */
+  const closeDrawers = (): void => {
+    setLeftPanelOpen(false)
+    setRightPanelOpen(false)
+  }
+
   useEffect(() => {
     const before = wasNarrow.current
     wasNarrow.current = narrow
 
     if (narrow) {
       if (before !== true) {
-        // Either the first run — the page was loaded on a phone, and the panels were open only because
-        // that is the default — or a real transition from a wide window. Both need a restore point; only
-        // a re-run while already narrow does not, or it would overwrite the record with the state the
-        // layout itself just forced.
+        // Either the first run — the page was loaded on a phone — or a real transition from a wide
+        // window. Both need a restore point; only a re-run while already narrow does not, or it would
+        // overwrite the record with the state the layout itself just forced.
+        //
+        // On the first run the store's own value is not what to restore: it starts closed precisely
+        // because the page loaded narrow, so recording it would mean a reader who widened the window
+        // once never got their panels back. What they had before the narrowing is the wide default. A
+        // real transition records what the reader last chose, which is the more useful answer.
         const { leftPanelOpen, rightPanelOpen } = useStudio.getState()
-        restore.current = { left: leftPanelOpen, right: rightPanelOpen }
+        restore.current =
+          before === null
+            ? { left: true, right: true }
+            : { left: leftPanelOpen, right: rightPanelOpen }
       }
       setLeftPanelOpen(false)
       setRightPanelOpen(false)
@@ -150,7 +173,7 @@ export default function App() {
 
       <div className="relative flex min-h-0 flex-1">
         <AnimatePresence initial={false}>
-          {studio.leftPanelOpen ? (
+          {leftOpen ? (
             <motion.aside
               key="left"
               initial={{ width: 0, opacity: 0 }}
@@ -187,7 +210,7 @@ export default function App() {
         </main>
 
         <AnimatePresence initial={false}>
-          {studio.rightPanelOpen ? (
+          {rightOpen ? (
             <motion.aside
               key="right"
               initial={{ width: 0, opacity: 0 }}
@@ -203,6 +226,33 @@ export default function App() {
                 </div>
               </div>
             </motion.aside>
+          ) : null}
+        </AnimatePresence>
+
+        {/* Scrim for the drawer overlays, and the only way out of one that does not involve finding
+            the 16px-wide chevron at the edge of the window.
+
+            A drawer covers the mark outright, and the app exists to show the mark, so the overlay has to
+            read as "something is on top" and has to be dismissible by tapping the part of the screen
+            that is not covered. A real `<button>` rather than a div, so it is reachable from the keyboard
+            and announced, not merely clickable.
+
+            Below the drawer (z-30) so the panel stays readable, and below the toggles (z-40) so the
+            chevron that opened it can still be pressed. */}
+        <AnimatePresence>
+          {drawerOpen ? (
+            <motion.button
+              key="scrim"
+              type="button"
+              tabIndex={-1}
+              aria-label={t('panel.dismiss')}
+              onClick={closeDrawers}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: DURATION_PANEL, ease: EASE_APPLE }}
+              className="absolute inset-0 z-20 cursor-default bg-[var(--scrim)]"
+            />
           ) : null}
         </AnimatePresence>
 

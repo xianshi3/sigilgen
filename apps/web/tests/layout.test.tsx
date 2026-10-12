@@ -3,8 +3,9 @@ import { act, render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../src/App'
 import { I18nProvider } from '../src/i18n/I18nProvider'
-import { useStudio } from '../src/store/useStudio'
+import { useStudio, panelsOpenByDefault } from '../src/store/useStudio'
 import { NARROW_QUERY } from '../src/hooks/useMediaQuery'
+import { MIN_STAGE_WIDTH, NARROW_BREAKPOINT, PANELS_TOTAL_WIDTH } from '../src/lib/layout'
 
 /**
  * The layout at narrow viewports.
@@ -111,6 +112,18 @@ function toggles(): { left: HTMLElement; right: HTMLElement } {
   return { left, right }
 }
 
+/**
+ * The scrim that dims the stage under an open drawer.
+ *
+ * Found by the scrim token rather than by role, because the drawer's own close affordance is a toggle
+ * button and a role search would return one of those instead.
+ *
+ * @returns The scrim, or `null` when none is rendered.
+ */
+function scrim(): HTMLElement | null {
+  return document.querySelector<HTMLElement>('button[class*="var(--scrim)"]')
+}
+
 beforeEach(() => {
   localStorage.clear()
   act(() => {
@@ -158,10 +171,45 @@ describe('narrow viewports', () => {
     expect(canvas?.querySelector('svg')).not.toBeNull()
   })
 
+  it('starts with the panels closed on a narrow viewport, before anything is painted', () => {
+    // The flash this guards against was never in the layout effect — it ran after the browser had
+    // already painted, so a store defaulting to open committed two drawers over the mark and then took
+    // them away again. The fix is upstream: the store asks the viewport what to do when it is created.
+    setViewport(true)
+    expect(panelsOpenByDefault()).toBe(false)
+  })
+
+  it('starts with the panels open on a wide viewport', () => {
+    setViewport(false)
+    expect(panelsOpenByDefault()).toBe(true)
+  })
+
+  it('still lets a drawer be opened deliberately while narrow', () => {
+    // Suppressing the *default* on a phone is not the same as forbidding drawers there.
+    setViewport(true)
+    renderApp()
+    act(() => {
+      useStudio.getState().setLeftPanelOpen(true)
+    })
+    expect(document.querySelector('aside')).not.toBeNull()
+    expect(scrim()).not.toBeNull()
+  })
+
   it('asks the browser about the breakpoint through one named query', () => {
     const { queries } = setViewport(true)
     renderApp()
     expect(queries).toContain(NARROW_QUERY)
+  })
+
+  it('puts the breakpoint where the panels leave room for a usable stage', () => {
+    // The boundary is not a free parameter, so it is not asserted as a literal. It is asserted as the
+    // relationship that makes it correct: the panels plus a stage worth judging. A literal here would
+    // pass unchanged after someone widened a panel, which is exactly how the old 900px boundary came to
+    // leave a 180px stage at 768 — both panels fitted, and the canvas was still unusable.
+    expect(NARROW_BREAKPOINT).toBe(PANELS_TOTAL_WIDTH + MIN_STAGE_WIDTH)
+    expect(NARROW_QUERY).toBe(`(max-width: ${NARROW_BREAKPOINT - 1}px)`)
+    // And the thing it was wrong about: 768 fits both panels comfortably and must still read as narrow.
+    expect(768).toBeLessThan(NARROW_BREAKPOINT)
   })
 
   it('gives a wide viewport the three-column layout with both panels open', () => {
@@ -200,6 +248,43 @@ describe('narrow viewports', () => {
     const container = toggle.parentElement
     const toggleZ = Number(/z-(\d+)/.exec(container?.className ?? '')?.[1] ?? '0')
     expect(toggleZ).toBeGreaterThan(asideZ)
+  })
+
+  it('dims the stage behind an open drawer', () => {
+    // A drawer covers the mark outright. Without a scrim the overlay reads as part of the layout rather
+    // than as something on top, and there is no way out of it except a 16px chevron at the window edge.
+    setViewport(true)
+    renderApp()
+    act(() => {
+      useStudio.getState().setLeftPanelOpen(true)
+    })
+    const dimmed = scrim()
+    expect(dimmed).not.toBeNull()
+    // Below the drawer, so the panel it covers is still readable, and above the stage.
+    const asideZ = Number(
+      /z-(\d+)/.exec(document.querySelector('aside')?.className ?? '')?.[1] ?? '0'
+    )
+    const scrimZ = Number(/z-(\d+)/.exec(dimmed?.className ?? '')?.[1] ?? '0')
+    expect(scrimZ).toBeLessThan(asideZ)
+  })
+
+  it('closes the drawer when the scrim is pressed', async () => {
+    setViewport(true)
+    renderApp()
+    const user = userEvent.setup()
+    act(() => {
+      useStudio.getState().setLeftPanelOpen(true)
+    })
+    await user.click(scrim() as HTMLElement)
+    expect(useStudio.getState().leftPanelOpen).toBe(false)
+  })
+
+  it('puts no scrim over the stage when the panels sit beside it', () => {
+    // On a wide viewport the panels are columns, not overlays. Dimming the canvas there would be a lie
+    // about what is covering it.
+    setViewport(false)
+    renderApp()
+    expect(scrim()).toBeNull()
   })
 })
 

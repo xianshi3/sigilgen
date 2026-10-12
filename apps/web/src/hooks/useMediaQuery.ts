@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react'
+import { NARROW_QUERY } from '../lib/layout'
 
 /**
  * Width below which the studio stops trying to be three columns.
  *
- * The panels are 288 and 300 user units wide and do not shrink, so past this width they leave the canvas
- * too little to judge a mark in. Measured rather than guessed: at 390 CSS pixels the two panels consumed
- * every pixel of the viewport and the stage was squeezed to nothing, with the right-hand panel's text
- * cut off mid-word.
- *
- * A single named constant so the layout and its tests cannot disagree about where the boundary is.
+ * Re-exported rather than declared here, because the boundary is not a free parameter: it is the sum of
+ * the two panel widths and the narrowest stage worth showing. See `lib/layout` for the measured numbers
+ * behind it.
  */
-export const NARROW_QUERY = '(max-width: 900px)'
+export { NARROW_QUERY }
 
 /**
  * Tracks a CSS media query.

@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import type { DesignDimension } from '@sigilgen/types'
 import type { StudioConfig } from '../lib/generate'
 import { emptyEdit, type PartEdit } from '../lib/svgParts'
+import { NARROW_QUERY } from '../lib/layout'
 
 /** How the stage is backed, so a mark can be judged against light and dark grounds. */
 export type Backdrop = 'light' | 'dark' | 'board'
@@ -114,6 +115,34 @@ export interface StudioState extends StudioConfig {
 }
 
 /**
+ * Whether the panels should be open before the reader has touched anything.
+ *
+ * Open on a wide viewport, closed on a narrow one, and the reason is the first paint. The panels are
+ * fixed-width columns beside the stage when there is room, and fixed-width *drawers over* it when there
+ * is not — so a store that defaulted to open painted two drawers across the mark on a phone and then let
+ * the layout effect animate them away, and every load began with a flash of the thing it had just
+ * closed. Nothing downstream can prevent that: the effect that corrects it runs after the browser has
+ * already painted.
+ *
+ * Reading the viewport here, at store creation, is the only point where the answer is available before
+ * anything is rendered. It is also the honest place for it — "should the panels be open" is a question
+ * about the environment the app was started in, and the viewport is part of that.
+ *
+ * @returns `false` when the viewport is too narrow for the panels to sit beside the stage.
+ */
+export function panelsOpenByDefault(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    // No viewport to ask — server rendering, or a test environment without the API. Open, because that
+    // is the layout the design was drawn for.
+    return true
+  }
+  return !window.matchMedia(NARROW_QUERY).matches
+}
+
+/** Panel state at startup, before anything is drawn. */
+const INITIAL_PANELS_OPEN = panelsOpenByDefault()
+
+/**
  * Starting point.
  *
  * The brief is pre-filled with keywords rather than the name so that a first-time visitor sees a real
@@ -196,8 +225,8 @@ export const useStudio = create<StudioState>()(
       backdrop: 'light',
       theme: 'auto',
       zoom: 'fit',
-      leftPanelOpen: true,
-      rightPanelOpen: true,
+      leftPanelOpen: INITIAL_PANELS_OPEN,
+      rightPanelOpen: INITIAL_PANELS_OPEN,
 
       editMode: false,
       edits: {},

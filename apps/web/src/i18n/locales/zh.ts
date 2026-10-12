@@ -28,6 +28,7 @@ export const zh = {
   'panel.expandLeft': '展开左侧栏',
   'panel.collapseRight': '收起右侧栏',
   'panel.expandRight': '展开右侧栏',
+  'panel.dismiss': '关闭面板',
 
   'field.name': '品牌名',
   'field.nameHint': '仅使用 A–Z 字母，其他字符会被忽略',

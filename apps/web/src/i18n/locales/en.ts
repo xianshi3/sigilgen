@@ -27,6 +27,7 @@ export const en: Record<MessageKey, string> = {
   'panel.expandLeft': 'Expand sidebar',
   'panel.collapseRight': 'Collapse inspector',
   'panel.expandRight': 'Expand inspector',
+  'panel.dismiss': 'Close the panel',
 
   'field.name': 'Brand name',
   'field.nameHint': 'Only A–Z are used; other characters are ignored',

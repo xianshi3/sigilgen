@@ -40,6 +40,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **A tablet got a 116px logo preview.** The layout stopped trying to be three columns below 900px, but the
+  two panels are 288 and 300 units wide and do not shrink — so at 768px both panels fitted comfortably and
+  the stage was left **180px** wide, with the mark rendering at **116px**. The question a breakpoint has to
+  answer is not "does the panel fit" but "is there room left for the thing the reader came to look at", and
+  the old boundary only answered the first. It is now derived from the panel widths plus a minimum stage
+  width rather than typed as a literal, so widening a panel moves the boundary with it instead of quietly
+  reintroducing the same defect. The query is `(max-width: 1007px)`.
+
+- **A phone painted its drawers over the mark on every load.** The store's panels defaulted to open,
+  which is right for a desktop and wrong for a phone, where they are overlays. The layout effect that
+  corrects them runs _after_ the browser has painted, so every load began with a flash of two drawers
+  across the artwork and then animated them away. No amount of care downstream can prevent that, so the
+  store now reads the viewport when it is created — the only point where the answer exists before anything
+  is rendered.
+
+- **A drawer had no scrim and no way out of it.** Overlaid panels sat on the mark with nothing to say they
+  were on top, and the only way to close one was a 16px chevron at the edge of the window. Opening a
+  drawer now dims the stage and tapping anywhere outside it closes the drawer.
+
 - **The stage's sheet was not square, and the mark was not centred.** Two defects that read as one.
 
   The sheet is meant to be a square that fits whichever axis runs out first. It was `aspect-square
