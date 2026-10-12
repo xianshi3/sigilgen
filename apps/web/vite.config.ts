@@ -17,5 +17,18 @@ export default defineConfig({
     // The core lives outside this package's root, so the dev server has to be allowed to read it.
     fs: { allow: [repoRoot] },
   },
-  build: { outDir: 'dist', emptyOutDir: true },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    rolldownOptions: {
+      output: {
+        advancedChunks: {
+          groups: [
+            { name: 'motion', test: /node_modules[\\/](motion|framer-motion)[\\/]/ },
+            { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+          ],
+        },
+      },
+    },
+  },
 })

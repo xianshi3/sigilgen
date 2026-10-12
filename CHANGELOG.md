@@ -9,6 +9,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Vendor chunks in the studio build.** React and the animation library are emitted as their own chunks
+  instead of one 671 kB file, so editing studio code no longer invalidates 345 kB of cache on every visit,
+  and the browser can fetch the three in parallel over HTTP/2. This is a build-config change with no
+  runtime effect — measured after the split: react 210.6 kB, motion 134.3 kB, app and generated brain data
+  342.9 kB.
+
+  The generation itself was measured rather than assumed: `generate()` runs on every keystroke and costs
+  2.5 ms at the median and 3.8 ms at the 95th percentile for six concepts, so it is not the thing making
+  typing feel slow.
+
 - **Keyboard shortcuts in the studio.** `Cmd/Ctrl+Z` and `Cmd/Ctrl+Shift+Z` undo and redo; `1`–`9` pick a
   concept directly; `,` and `.` step between them; `-` and `=` zoom, `0` returns to fitting the window;
   `R` rerolls; `E` toggles edit mode; `Escape` closes a drawer, or clears a part selection once no drawer
