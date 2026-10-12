@@ -32,7 +32,7 @@ export function Disclosure({
   const bodyId = useId()
 
   return (
-    <section className="flex flex-col gap-2.5">
+    <section className="flex flex-col gap-2">
       <button
         type="button"
         aria-expanded={enabled && open}
@@ -41,22 +41,26 @@ export function Disclosure({
         onClick={() => {
           setOpen(previous => !previous)
         }}
-        className="group flex items-baseline justify-between gap-2 text-left disabled:cursor-default"
+        // Negative margins let the row's own breathing room extend past the gutter to the panel edge,
+        // so widening the touch target costs the layout no horizontal space.
+        className="group -mx-2 flex min-h-8 items-center justify-between gap-2 rounded-control px-2
+          text-left transition-colors duration-fast hover:bg-[var(--surface-sunken)]
+          disabled:cursor-default disabled:hover:bg-transparent"
       >
-        <span className="flex items-baseline gap-1">
+        <span className="flex min-w-0 items-center gap-1.5">
           <span
             aria-hidden="true"
-            className={`text-micro leading-none text-ink-faint transition-transform duration-base ease-apple
-              ${open ? 'rotate-90' : ''} ${enabled ? 'group-hover:text-ink-soft' : ''}`}
+            className={`text-caption leading-none text-ink-faint transition-transform duration-base
+              ease-apple ${open ? 'rotate-90' : ''} ${enabled ? 'group-hover:text-ink-soft' : ''}`}
           >
             ›
           </span>
-          <span className={`type-caps ${enabled ? 'text-ink-faint' : 'text-ink-faint/50'}`}>
+          <span className={`type-caps ${enabled ? 'text-ink-faint' : 'text-ink-faint/40'}`}>
             {title}
           </span>
         </span>
         {summary === undefined ? null : (
-          <span className="truncate type-caption text-ink-faint">{summary}</span>
+          <span className="min-w-0 truncate type-caption text-ink-soft">{summary}</span>
         )}
       </button>
       {/* Kept mounted when open and unmounted when closed rather than hidden, so the icon grid's

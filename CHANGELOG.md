@@ -102,6 +102,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   failed only under test. The test config now derives its aliases from `tsconfig.json`, which makes that
   class of drift impossible rather than merely unlikely.
 
+### Changed
+
+- **The mark sits on a sheet.** The stage was an edge-to-edge fill, which puts the artwork in the middle
+  of a large undifferentiated rectangle and reads as an unfinished canvas rather than a presentation. The
+  paper is now a square, inset, rounded and lifted — an artboard on a desk, the way macOS presents a photo
+  or a document. The backdrop options moved onto the sheet, which is the surface the palette's colours
+  were chosen against.
+- **The disclosure row was 20px tall.** Beside 32–35px controls, and the only route to 121 resources, it
+  was both hard to hit and visually inconsistent. It is now a full 32px row with hover and focus
+  treatment, using negative margins so the extra room costs the layout no horizontal space.
+- **The concept strip reads as a sequence.** Tiles are 68px with more air and a slightly stronger resting
+  opacity; the selected tile keeps its number visible and the others reveal theirs on hover.
+
+### Fixed
+
+- **`generate()` threw when `preferences` was omitted.** `StudioConfig` declares the field as required,
+  which is right for the store's state, but the implementation assumed it: `Object.keys(undefined)` raises a
+  `TypeError` that says nothing about which field was wrong. The app never hit it because the store always
+  carries the key; any caller assembling a configuration by hand did.
+
 ### Added
 
 - **A test suite for the studio.** `apps/web` had roughly two thousand lines of React and TypeScript, a

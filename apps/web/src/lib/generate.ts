@@ -70,7 +70,12 @@ export function generate(config: StudioConfig): GenerationResult {
   // palette called `auto`, which the resolver would fail to find and quietly ignore anyway — better to
   // say what is meant by leaving the field out, so an invalid id and an absent one stay distinguishable
   // in the notes.
-  const preferences = config.preferences
+  //
+  // Defaulted rather than trusted. `StudioConfig` declares `preferences` as required, which is right for
+  // the store's state, but a caller assembling a config by hand can legitimately leave it out — and
+  // `Object.keys(undefined)` throws a TypeError that says nothing about which field was wrong. The app
+  // never hit it because the store always carries the key.
+  const preferences = config.preferences ?? {}
   const preferencesField = Object.keys(preferences).length === 0 ? {} : { preferences }
 
   try {

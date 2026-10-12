@@ -35,9 +35,9 @@ export function ConceptStrip({ concepts }: ConceptStripProps) {
   }
 
   return (
-    // Scrolls sideways rather than compressing: six 64px tiles plus gutters need about 440px, so on a
-    // narrow viewport they either overflowed the page or shrank past being clickable.
-    <div className="flex items-stretch gap-2.5 overflow-x-auto px-gutter py-3">
+    // Scrolls sideways rather than compressing: six tiles plus gutters need more than a phone is wide,
+    // so on a narrow viewport they either overflowed the page or shrank past being clickable.
+    <div className="flex items-stretch gap-3 overflow-x-auto px-gutter py-4">
       {concepts.map((concept, index) => {
         const selected = index === active
         return (
@@ -50,25 +50,27 @@ export function ConceptStrip({ concepts }: ConceptStripProps) {
             aria-current={selected}
             aria-label={t('concept.position', { index: index + 1, total: concepts.length })}
             title={`${concept.engine} · ${concept.palette.id}`}
-            className={`group relative flex aspect-square w-16 shrink-0 items-center justify-center
+            className={`group relative flex aspect-square w-[4.25rem] shrink-0 items-center justify-center
               overflow-hidden rounded-card transition-all duration-base ease-apple
               ${
                 selected
                   ? 'shadow-[var(--shadow-lift)] ring-2 ring-[var(--accent)]'
-                  : 'opacity-65 shadow-[var(--shadow-card)] hover:opacity-100 hover:shadow-[var(--shadow-lift)]'
+                  : 'opacity-70 shadow-[var(--shadow-card)] hover:opacity-100 hover:shadow-[var(--shadow-lift)]'
               }`}
             style={{ background: paper(concept.palette.background) }}
           >
             <img
               src={svgToDataUrl(concept.svg)}
               alt=""
-              className="h-full w-full object-contain p-1.5"
+              className="h-full w-full object-contain p-2"
               draggable={false}
             />
+            {/* The index is always visible on the selected tile and fades in on hover otherwise, so the
+                strip reads as a sequence rather than as a row of identical squares. */}
             <span
               aria-hidden="true"
-              className={`absolute inset-x-0 bottom-0 bg-[oklch(0_0_0/0.55)] py-px text-center
-                text-[10px] leading-4 text-white/90 transition-opacity duration-fast
+              className={`absolute inset-x-0 bottom-0 bg-[oklch(0_0_0/0.5)] py-px text-center
+                text-[10px] leading-4 text-white/90 tabular-nums transition-opacity duration-fast
                 ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
             >
               {index + 1}
