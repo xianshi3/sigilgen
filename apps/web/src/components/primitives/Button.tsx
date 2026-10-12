@@ -38,7 +38,7 @@ export function Button({
       type={type}
       className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control font-medium
         transition-[transform,background-color,filter,opacity] duration-fast ease-apple
-        active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40
+        active:scale-[var(--scale-press)] disabled:pointer-events-none disabled:opacity-40
         ${VARIANT[variant]} ${SIZE[size]} ${className}`}
       {...rest}
     />

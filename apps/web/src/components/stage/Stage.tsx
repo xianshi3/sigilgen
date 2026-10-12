@@ -3,6 +3,7 @@ import type { LogoResult } from '@sigilgen/types'
 import type { MessageKey } from '../../i18n/locales/zh'
 import { useI18n } from '../../i18n/I18nProvider'
 import { svgToDataUrl } from '../../lib/generate'
+import { DURATION_BASE, EASE_APPLE } from '../../lib/motion'
 import { useStudio, type Backdrop } from '../../store/useStudio'
 
 export interface StageProps {
@@ -78,7 +79,7 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
             alt={`${concept.engine} — ${concept.palette.id}`}
             initial={{ opacity: 0, scale: 0.985 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.24, ease: [0.32, 0.72, 0, 1] }}
+            transition={{ duration: DURATION_BASE, ease: EASE_APPLE }}
             className={
               zoom === 'fit'
                 ? 'max-h-full max-w-full object-contain'

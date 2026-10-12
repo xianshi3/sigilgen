@@ -103,8 +103,8 @@ export function Segmented<T extends string>({
       {activeIndex >= 0 ? (
         <span
           aria-hidden="true"
-          className="absolute top-0.5 bottom-0.5 rounded-[calc(var(--radius-control)-2px)] bg-[var(--surface-raised)]
-            shadow-[0_1px_2px_oklch(0.22_0.01_260/0.10),0_0_0_0.5px_var(--hairline)]
+          className="absolute top-0.5 bottom-0.5 rounded-[calc(var(--radius-control)-0.125rem)]
+            bg-[var(--surface-raised)] shadow-[var(--shadow-control)]
             transition-transform duration-base ease-apple"
           style={{
             width: `calc((100% - 0.25rem) / ${options.length})`,
@@ -141,7 +141,8 @@ export function Segmented<T extends string>({
             }}
             // `shrink-0` rather than truncating: these labels change length between languages, and a
             // fixed track would clip "System" or "跟随系统" in one of them.
-            className={`relative z-1 shrink-0 whitespace-nowrap rounded-[calc(var(--radius-control)-2px)]
+            className={`relative z-1 shrink-0 whitespace-nowrap
+              rounded-[calc(var(--radius-control)-0.125rem)]
               px-2.5 py-1 text-caption font-medium transition-colors duration-fast
               ${selected ? 'text-ink' : 'text-ink-soft hover:text-ink'}`}
           >

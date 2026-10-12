@@ -13,6 +13,7 @@ import { useI18n } from './i18n/I18nProvider'
 import { useIsNarrow } from './hooks/useMediaQuery'
 import { useThemeEffect } from './hooks/useThemeEffect'
 import { generate } from './lib/generate'
+import { DURATION_PANEL, EASE_APPLE } from './lib/motion'
 import { useStudio } from './store/useStudio'
 
 /** Panel widths, shared by the animation and the inner scroller so the two cannot disagree. */
@@ -155,7 +156,7 @@ export default function App() {
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: LEFT_WIDTH, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+              transition={{ duration: DURATION_PANEL, ease: EASE_APPLE }}
               className={`material z-30 shrink-0 overflow-hidden hairline-r shadow-[var(--shadow-card)]
                 ${narrow ? 'absolute inset-y-0 left-0' : ''}`}
             >
@@ -192,7 +193,7 @@ export default function App() {
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: RIGHT_WIDTH, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+              transition={{ duration: DURATION_PANEL, ease: EASE_APPLE }}
               className={`material z-30 shrink-0 overflow-hidden hairline-l shadow-[var(--shadow-card)]
                 ${narrow ? 'absolute inset-y-0 right-0' : ''}`}
             >

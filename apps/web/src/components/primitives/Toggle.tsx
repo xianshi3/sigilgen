@@ -30,8 +30,8 @@ export function Toggle({ checked, onChange, label, disabled = false }: TogglePro
         />
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white
-            shadow-[0_1px_3px_oklch(0.22_0.01_260/0.3)]
+          className="pointer-events-none absolute top-0.5 left-0.5 h-4 w-4 rounded-full
+            bg-[var(--knob-face)] shadow-[var(--shadow-knob)]
             transition-transform duration-base ease-apple peer-checked:translate-x-4"
         />
       </span>

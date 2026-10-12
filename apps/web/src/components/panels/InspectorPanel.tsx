@@ -70,7 +70,7 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
             <span
               key={`${colour}-${index}`}
               title={colour}
-              className="h-5 flex-1 rounded-[4px] shadow-[0_0_0_0.5px_var(--hairline)]"
+              className="h-5 flex-1 rounded-swatch shadow-[0_0_0_0.5px_var(--hairline)]"
               style={{ background: colour }}
             />
           ))}

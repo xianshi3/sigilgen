@@ -49,11 +49,14 @@ export function RangeField({
           [&::-webkit-slider-thumb]:mt-[-5px] [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3
           [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full
           [&::-webkit-slider-thumb]:bg-[var(--surface-raised)]
-          [&::-webkit-slider-thumb]:shadow-[0_0_0_0.5px_var(--hairline-strong),0_1px_3px_oklch(0.22_0.01_260/0.25)]
+          [&::-webkit-slider-thumb]:shadow-[var(--shadow-knob)]
           [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:duration-fast
           hover:[&::-webkit-slider-thumb]:scale-110
           [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full
-          [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-[var(--surface-raised)]"
+          [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-[var(--surface-raised)]
+          [&::-moz-range-thumb]:shadow-[var(--shadow-knob)] [&::-moz-range-thumb]:appearance-none
+          [&::-moz-range-thumb]:transition-transform [&::-moz-range-thumb]:duration-fast
+          hover:[&::-moz-range-thumb]:scale-110"
         style={{
           // The filled portion of the track is drawn with a gradient so the control needs no extra
           // element behind it.

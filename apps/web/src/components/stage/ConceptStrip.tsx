@@ -50,7 +50,7 @@ export function ConceptStrip({ concepts }: ConceptStripProps) {
             aria-current={selected}
             aria-label={t('concept.position', { index: index + 1, total: concepts.length })}
             title={`${concept.engine} · ${concept.palette.id}`}
-            className={`group relative flex aspect-square w-[4.25rem] shrink-0 items-center justify-center
+            className={`group relative flex aspect-square w-tile shrink-0 items-center justify-center
               overflow-hidden rounded-card transition-all duration-base ease-apple
               ${
                 selected
@@ -69,8 +69,9 @@ export function ConceptStrip({ concepts }: ConceptStripProps) {
                 strip reads as a sequence rather than as a row of identical squares. */}
             <span
               aria-hidden="true"
-              className={`absolute inset-x-0 bottom-0 bg-[oklch(0_0_0/0.5)] py-px text-center
-                text-[10px] leading-4 text-white/90 tabular-nums transition-opacity duration-fast
+              className={`absolute inset-x-0 bottom-0 bg-[var(--scrim)] py-px text-center
+                text-micro leading-4 text-[var(--scrim-ink)] tabular-nums transition-opacity
+                duration-fast
                 ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
             >
               {index + 1}
