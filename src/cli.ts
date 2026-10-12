@@ -21,8 +21,26 @@ import { generateLogos, normaliseConfig } from './generate'
 import { hasRasterSupport, rasterise } from './rasterize'
 import { ENGINE_NAMES, type GenerateOptions, type LogoResult } from './types'
 
-/** Package version, read from the manifest at build time by tsup's `define`. */
-const VERSION = '1.0.0'
+/**
+ * Injected by tsup from `package.json` at build time. Declared rather than imported so that reading
+ * source directly has nothing to resolve; see `VERSION` below.
+ */
+// oxlint-disable-next-line no-underscore-dangle -- the name comes from tsup's `define` and is not ours to choose
+declare const __SIGILGEN_VERSION__: string
+
+/**
+ * Package version, substituted from `package.json` by tsup's `define`.
+ *
+ * The manifest is the only copy of this number. It used to be written here as well, with a comment
+ * claiming it was read from the manifest — it was not, and no `define` existed to do so. `sigilgen
+ * --version` therefore reported `1.0.0` forever, through every release after the first, and the
+ * comment told the next maintainer the problem was already solved.
+ *
+ * Running from source — the test suite, a contributor invoking the TypeScript directly — has no build
+ * step and so no substitution. The fallback reports `0.0.0`: unbuilt source is not a release, and
+ * saying so beats copying the manifest by hand, which is the drift this exists to prevent.
+ */
+const VERSION = typeof __SIGILGEN_VERSION__ === 'string' ? __SIGILGEN_VERSION__ : '0.0.0'
 
 /** Extension used for SVG output. */
 const SVG_EXTENSION = '.svg'

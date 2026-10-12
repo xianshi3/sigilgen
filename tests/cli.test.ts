@@ -353,3 +353,35 @@ describe('png output', () => {
     expect([...bytes.subarray(0, 4)]).toEqual([137, 80, 78, 71])
   })
 })
+
+describe('VERSION', () => {
+  it('is substituted from the manifest by the build, not written down in the source', async () => {
+    // The guard for a defect that had been invisible: `VERSION` was a literal `1.0.0` carrying a
+    // comment saying it was read from the manifest, and no `define` existed to make that true. The
+    // number was duplicated, so bumping `package.json` left `sigilgen --version` reporting the old
+    // release — silently, and through a comment that read as though the problem had been handled.
+    //
+    // Asserting the wiring is what matters, not the value: because `define` reads `pkg.version` at
+    // config-load time it follows the manifest on its own, so a test comparing the two would pass
+    // even if the `define` were deleted. This fails if it is.
+    const { default: config } = await import('../tsup.config')
+    const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
+      version: string
+    }
+
+    // Typed as a record, so the key is reached by index below: `noPropertyAccessFromIndexSignature`
+    // is on, and it is the right rule here — the shape really is "whatever the build injected", not
+    // a known set of names.
+    const { define } = config as { define?: Record<string, string> }
+    // oxlint-disable-next-line no-underscore-dangle -- the name comes from tsup's `define`
+    expect(define?.['__SIGILGEN_VERSION__']).toBe(JSON.stringify(pkg.version))
+  })
+
+  it('reports a plain semver when running from unbuilt source', async () => {
+    // The fallback path. `package.json` forbids prerelease and build metadata in `version`, so `0.0.0`
+    // is the honest answer for source that has never been through a build, and keeping it bare means
+    // the `--version` contract test above does not have to know the fallback exists.
+    const { VERSION } = await import('../src/cli')
+    expect(VERSION).toMatch(/^\d+\.\d+\.\d+$/)
+  })
+})
