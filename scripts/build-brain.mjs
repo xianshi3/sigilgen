@@ -1424,19 +1424,43 @@ function buildGlyphs(font) {
   {
     const width = font.width * 0.98
     const cx = width / 2
-    const radius = cap * 0.25
+    /*
+     * Each bowl is an elliptical band, and the two have to meet to make a stroke.
+     *
+     * They used to be `cap / 4` tall on centres `cap / 4` and `3 * cap / 4` from the cap line, which
+     * put the upper bowl's lowest point and the lower bowl's highest point at *exactly* the same y —
+     * the middle of the letter. The bands could therefore only touch, on a line, and in fact touched
+     * at the single point where each ellipse is at its extreme. Two filled regions meeting at a point
+     * is not a joint: the S rendered as two C-shaped hooks, touching at the waist, which read as a
+     * mirrored S with a step down its right side rather than as an S at all. No choice of sweep angles
+     * can fix it, because the geometry forbids the overlap.
+     *
+     * So each ellipse is taller than half the cap, and the outer envelope is still pinned to the cap
+     * line and the baseline by hanging each one off that end: `cy = ry` above and `cy = cap - ry`
+     * below. The factor is the smallest that overlaps by more than the band is thick — below about
+     * 1.10 the two bands miss each other again, above 1.18 they cross so far that the outer edge of
+     * one has already climbed back out of the waist before the other reaches it.
+     */
+    const overlap = 1.12
+    const radius = cap * 0.25 * overlap
     const thickness = Math.min(w, radius * 0.44)
-    // Two overlapping C-shapes that meet at the waist. Both sweeps run counter-clockwise so the two
-    // bands share a winding and merge instead of cutting a hole where they overlap.
+
+    // Both sweeps are 250 degrees and the two bands are exact half-turns of one another, so the letter
+    // is point-symmetric about its waist and the stroke crosses the middle on a diagonal — lower left
+    // to upper right — the way an S does.
     //
-    // The lower bowl sweeps 230 degrees, from the right-hand terminal down through the bottom of its own
-    // ellipse, round to the upper left. It used to sweep 130, from 40 to -90, which is the short way:
-    // that never passes the bottom, so the letter's lowest point was the terminal on the lower right and
-    // S stopped 9% of cap height above the baseline. `arcBand` walks its angles literally, so the sweep
-    // that reaches the baseline is the one where `to` is greater than `from`.
+    // The upper bowl runs from its terminal at the upper right, over the top and down the left, and
+    // stops past the waist on the left. The lower bowl starts at its terminal at the lower left,
+    // rounds the bottom and up the right side, and stops past the waist on the left. Both are walked
+    // with decreasing angle because `arcBand` pins the winding that way: the two overlap heavily at
+    // the waist, and opposite windings would cancel there and cut a hole straight through the letter.
+    //
+    // `arcBand` always begins at the larger angle, so the lower bowl's far end is written as -100:
+    // the same place as 260, and saying 260 would sweep the short way round through the left instead
+    // of the long way round through the bottom.
     emit('S', width, [
-      arcBand({ cx, cy: cap * 0.25, rx: width / 2, ry: radius }, thickness, 330, 80),
-      arcBand({ cx, cy: cap * 0.75, rx: width / 2, ry: radius }, thickness, 40, 270),
+      arcBand({ cx, cy: radius, rx: width / 2, ry: radius }, thickness, 330, 80),
+      arcBand({ cx, cy: cap - radius, rx: width / 2, ry: radius }, thickness, 150, -100),
     ])
   }
 

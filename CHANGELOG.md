@@ -22,6 +22,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **The letter `S` was not an `S`.** Every one of the eighteen families drew two C-shaped hooks that
+  met at a single point — reading as a mirrored `S` with a step down its right side. The cause was not
+  an angle or a winding but the construction: both bowls were ellipses `cap / 4` tall on centres
+  `cap / 4` and `3 * cap / 4` from the cap line, which places the upper bowl's lowest point and the lower
+  bowl's highest point at *exactly* the same y. Two filled regions meeting on a line share no area, and
+  the only place they touched at all was the single point where each ellipse sits at its extreme. No
+  choice of sweep angles could produce overlap under that geometry. Each ellipse is now taller than half
+  the cap, with the outer envelope still pinned to the cap line and the baseline, so the two bowls share
+  real area across the waist; measured, samples falling inside *both* bowls went from 0 to ~200 per
+  family.
+
+  The lower bowl also swept the wrong way round — `40` to `270` walks left and bottom, putting its
+  terminal at the lower *right*, where an `S` has none. It is now `150` to `-100`, which is the upper
+  bowl's exact half-turn, so the letter is point-symmetric and its spine crosses the waist on the
+  diagonal an `S` does.
 - **`sigilgen --version` reported `1.0.0` forever.** `VERSION` was a literal in `src/cli.ts` carrying a
   comment saying it was "read from the manifest at build time by tsup's `define`" — there was no
   `define` anywhere in the project. The number existed in two places, so bumping `package.json` changed

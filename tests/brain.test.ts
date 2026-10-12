@@ -408,6 +408,40 @@ describe('the winding sampler these glyph tests rely on', () => {
 })
 
 describe('glyph geometry', () => {
+  it('overlaps the two bowls of an S, so the waist is a joint rather than a touch', () => {
+    // The defect this guards was not an angle and not a winding — it was that the two bowls could not
+    // overlap at all. Both ellipses were `cap / 4` tall on centres `cap / 4` and `3 * cap / 4` from the
+    // cap line, so the upper bowl's lowest point and the lower bowl's highest point were the *same* y.
+    // Two filled regions that meet on a line share no area, and the only place they touched at all was
+    // the single point where each ellipse sits at its extreme. Rendered, that is not an S: it is two
+    // C-shaped hooks pinned together, reading as a mirrored S with a step down its right side.
+    //
+    // No choice of sweep angles can produce overlap under that geometry, which is why this is measured
+    // as shared area rather than as a bounding box — the hooks together still spanned the cap height
+    // exactly, so every existing bounds check passed on the broken glyph.
+    for (const font of FONTS) {
+      const bowls = (font.glyphs['S'] as string)
+        .split(/(?=M)/)
+        .filter(piece => piece.trim() !== '')
+        .map(piece => flatten(piece))
+      expect(bowls, `${font.id}/S: expected two bowls`).toHaveLength(2)
+
+      const [upper, lower] = bowls as [Edge[], Edge[]]
+      const cap = font.metrics.capHeight
+      let shared = 0
+      // The waist band only. Overlap anywhere else would be a defect of a different kind.
+      for (let row = 0.35; row <= 0.65; row += 0.005) {
+        for (let column = 0; column <= 1; column += 0.005) {
+          const x = column * cap
+          const y = row * cap
+          if (isPainted(upper, x, y) && isPainted(lower, x, y)) {
+            shared++
+          }
+        }
+      }
+      expect(shared, `${font.id}/S: the two bowls never overlap`).toBeGreaterThan(0)
+    }
+  })
   // Letters whose design includes enclosed negative space. A filled counter reads as a blob rather than
   // a letter, which is a defect rather than a stylistic choice.
   const COUNTERED = ['A', 'B', 'D', 'O', 'P', 'Q', 'R'] as const
@@ -714,7 +748,13 @@ describe('letterform extent', () => {
     // not a hole any contour encloses, so nothing there needs the opposite winding. Only the ring letters
     // are exempt, and they are exempt because their outer ellipse and inner one are wound against each
     // other on purpose.
-    const RINGED = 'COQSG'
+    //
+    // `S` used to be exempt too, on the reasoning that its two bowls were two arcs meeting rather than
+    // two pieces of one stroke. They did not overlap then, so their windings never mattered and the
+    // exemption cost nothing but also hid both bowls. They overlap heavily now — by design, see the
+    // overlap test below — so opposed windings would cancel a hole straight through the waist, and `S`
+    // belongs under the same rule as every other stroke letter.
+    const RINGED = 'COQG'
     for (const font of FONTS) {
       for (const [letter, outline] of Object.entries(font.glyphs)) {
         if (RINGED.includes(letter)) {
