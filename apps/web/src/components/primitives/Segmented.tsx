@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 export interface SegmentedOption<T extends string> {
   value: T
@@ -42,6 +42,57 @@ export function Segmented<T extends string>({
 }: SegmentedProps<T>) {
   const activeIndex = options.findIndex(option => option.value === value)
   const buttons = useRef<(HTMLButtonElement | null)[]>([])
+  const group = useRef<HTMLDivElement>(null)
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null)
+
+  // The highlight is positioned from the selected button's *measured* box, not from arithmetic on the
+  // option count.
+  //
+  // Every segment here has a different width — "中文" is two Han glyphs and "English" is seven Latin
+  // ones, "Light" is shorter than "Checkerboard" — and they are separated by a gap. Dividing the track
+  // by the number of options assumes equal columns that do not exist, so the pill drifted further from
+  // its label the further right the selection went. The previous `translateX(index * 100%)` over a
+  // `calc((100% - 0.25rem) / n)` width was wrong twice over: the track is inset by the container's own
+  // padding, which is twice that, and the segments are not equal to begin with.
+  //
+  // Measured instead of derived, because nothing in the markup can predict the result: the labels change
+  // length between languages, and the webfont arrives after the first paint.
+  useLayoutEffect(() => {
+    const container = group.current
+    const button = activeIndex < 0 ? null : (buttons.current[activeIndex] ?? null)
+    if (container === null || button === null) {
+      setPill(null)
+      return
+    }
+
+    const measure = (): void => {
+      const from = container.getBoundingClientRect()
+      const to = button.getBoundingClientRect()
+      setPill({ left: to.left - from.left, width: to.width })
+    }
+    measure()
+
+    // Observing both ends of the comparison: the container for a window resize, the button for a label
+    // that changes length — a language switch, or a webfont swapping in and reflowing the text. Both are
+    // things the effect's own dependencies cannot see, which is why they are watched rather than listed.
+    //
+    // Guarded because jsdom has no `ResizeObserver`. The first measurement has already run by then, so
+    // the control is still correctly positioned there — it just will not follow a later resize.
+    if (typeof ResizeObserver === 'undefined') {
+      return
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(container)
+    observer.observe(button)
+    return () => {
+      observer.disconnect()
+    }
+    // `activeIndex` alone, and that is the whole story: the effect reads the *selected button*, not the
+    // option list, so it re-runs exactly when that button changes. Growing or shrinking the list either
+    // changes the index or leaves the selected button untouched — and if it is untouched, its measured box
+    // is still the right one. Listing `options` would re-measure on every render, because it is an array
+    // literal at every call site.
+  }, [activeIndex])
 
   /**
    * Moves the selection, and the focus with it.
@@ -96,23 +147,26 @@ export function Segmented<T extends string>({
 
   return (
     <div
+      ref={group}
       role="radiogroup"
       className={`relative flex w-fit gap-0.5 rounded-control bg-[var(--surface-sunken)] p-0.5 ${className}`}
       {...rest}
     >
-      {activeIndex >= 0 ? (
+      {pill === null ? null : (
         <span
           aria-hidden="true"
-          className="absolute top-0.5 bottom-0.5 rounded-[calc(var(--radius-control)-0.125rem)]
+          className="pointer-events-none absolute top-0.5 bottom-0.5 left-0 rounded-[calc(var(--radius-control)-0.125rem)]
             bg-[var(--surface-raised)] shadow-[var(--shadow-control)]
-            transition-transform duration-base ease-apple"
+            transition-[transform,width] duration-base ease-apple"
           style={{
-            width: `calc((100% - 0.25rem) / ${options.length})`,
-            transform: `translateX(calc(${activeIndex} * 100%))`,
-            left: '0.125rem',
+            width: `${pill.width}px`,
+            // Only the transform is transitioned between selections; `width` rides along so a move
+            // between segments of different widths reads as the pill resizing, which is what the native
+            // control does.
+            transform: `translateX(${pill.left}px)`,
           }}
         />
-      ) : null}
+      )}
       {options.map((option, index) => {
         const selected = option.value === value
         // One tab stop for the whole group, the selected option keeping it. Everything else is reachable

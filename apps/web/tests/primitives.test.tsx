@@ -137,6 +137,35 @@ describe('Segmented', () => {
     await user.click(screen.getByRole('radio', { name: 'Gamma' }))
     expect(changed).toEqual(['c'])
   })
+
+  it('anchors the highlight at the padding box rather than its static position', () => {
+    // An absolutely positioned element with no `left` sits at its *static* position, which inside a
+    // padded flex container is the content box — the container's own padding to the right. The highlight
+    // is then offset by exactly that padding and never lands on its label, however carefully it is
+    // measured. `left-0` is what makes the measured offset mean what it says.
+    const { container } = render(<Harness initial="a" options={OPTIONS} />)
+    const pill = container.querySelector('span[aria-hidden="true"]')
+    expect(pill?.className).toContain('left-0')
+  })
+
+  it('never derives the highlight from the option count', () => {
+    // The segments are not equal width — "中文" is two Han glyphs and "English" is seven Latin ones, and
+    // the gap between them is not zero either — so dividing the track by the number of options puts the
+    // highlight somewhere other than its label, further off the further right the selection goes. The
+    // old `translateX(index * 100%)` over `calc((100% - 0.25rem) / n)` was wrong twice over: the track is
+    // inset by the container's padding, which is twice that, and the columns are not equal to begin with.
+    //
+    // jsdom resolves no layout, so this cannot compare the boxes. It can assert that the position comes
+    // from a measurement of the selected button rather than from arithmetic — which is what was reverted
+    // when this was measured in a browser and found 6.5px wide and 6.5px off at the second segment.
+    const { container } = render(<Harness initial="c" options={OPTIONS} />)
+    const pill = container.querySelector('span[aria-hidden="true"]') as HTMLElement | null
+    expect(pill).not.toBeNull()
+    // Measured pixels, not a percentage of anything.
+    expect(pill?.style.width).toMatch(/px$/)
+    expect(pill?.style.transform ?? '').toMatch(/translateX\(\d/)
+    expect(pill?.style.transform ?? '').not.toContain('%')
+  })
 })
 
 describe('TextField', () => {

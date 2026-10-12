@@ -59,6 +59,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **The selected segment's highlight sat in the wrong place, everywhere it was used.** The moving pill
+  behind the active option was sized `calc((100% - 0.25rem) / n)` and moved by `translateX(index * 100%)`,
+  which assumes the segments are equal columns and flush with the container's edge. Neither is true: the
+  labels have different lengths in every control — "中文" is two Han glyphs, "English" seven Latin, "Light"
+  far shorter than "Checkerboard" — and the track is inset by the container's own 2px padding, twice what
+  the divisor subtracted. Measured on the second segment of the language control, the highlight was 54.5px
+  wide against a 61px label and 6.5px off it, drifting further the further right the selection went.
+
+  It is now positioned from the selected button's measured box, and a `ResizeObserver` follows it through
+  a window resize, a language switch, and a webfont arriving after the first paint — none of which the
+  effect's own dependencies can see. Verified at dx = 0.00, dw = 0.00 against the live element, and
+  visually across all three options of the backdrop control.
+
+  A second, separate 2px offset came from the highlight having no `left` at all: an absolutely positioned
+  element with `left: auto` sits at its _static_ position, which inside a padded container is the content
+  box. `left-0` is what makes the measured offset mean what it says.
+
 - **A tablet got a 116px logo preview.** The layout stopped trying to be three columns below 900px, but the
   two panels are 288 and 300 units wide and do not shrink — so at 768px both panels fitted comfortably and
   the stage was left **180px** wide, with the mark rendering at **116px**. The question a breakpoint has to
