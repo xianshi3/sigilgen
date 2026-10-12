@@ -196,8 +196,12 @@ export function ringPath(cx: number, cy: number, rx: number, ry: number, weight:
 /**
  * Builds an annular sector, i.e. the stroke of an elliptical arc.
  *
- * The contour is always wound positively, whichever way the arc runs, so overlapping bands merge
- * instead of cancelling.
+ * The band winds positively whichever way the caller sweeps, so overlapping bands merge instead of
+ * cancelling. Pinning the winding is not cosmetic: a band crosses the disc it is drawn over, and under
+ * `fill-rule: nonzero` an overlap only stays filled when the two wind alike. Sweeping +180° came out at
+ * +3036 square units and −180° at −3036, so the direction chose the winding and half the sweeps erased
+ * the shape underneath instead of merging with it — 21 of 42 sweep/size combinations, and which ones
+ * failed depended only on the sign the caller happened to pass.
  *
  * @param cx - Ellipse centre x.
  * @param cy - Ellipse centre y.
@@ -231,23 +235,20 @@ export function arcBandPath(
     return { x: cx + innerRx * Math.cos(rad), y: cy + innerRy * Math.sin(rad) }
   }
 
-  const start = outerAt(from)
-  const innerEnd = innerAt(to)
+  // Walk the outer edge with increasing angle and the inner edge back the other way, whichever way the
+  // caller asked for. Emitting the arcs in the order they were requested lets the sweep sign decide the
+  // winding, which is what made a band erase a shape it overlapped whenever the sweep ran backwards.
+  const rising = to <= from
+  const outerFrom = rising ? to : from
+  const outerTo = rising ? from : to
+  const innerEnd = innerAt(outerTo)
+  const outerStart = outerAt(outerFrom)
 
-  if (to - from < 0) {
-    return join([
-      `M ${fmt(innerEnd.x)} ${fmt(innerEnd.y)}`,
-      arcPath(cx, cy, innerRx, innerRy, to, from),
-      `L ${fmt(start.x)} ${fmt(start.y)}`,
-      arcPath(cx, cy, outerRx, outerRy, from, to),
-      'Z',
-    ])
-  }
   return join([
-    `M ${fmt(start.x)} ${fmt(start.y)}`,
-    arcPath(cx, cy, outerRx, outerRy, from, to),
-    `L ${fmt(innerEnd.x)} ${fmt(innerEnd.y)}`,
-    arcPath(cx, cy, innerRx, innerRy, to, from),
+    `M ${fmt(innerEnd.x)} ${fmt(innerEnd.y)}`,
+    arcPath(cx, cy, innerRx, innerRy, outerTo, outerFrom),
+    `L ${fmt(outerStart.x)} ${fmt(outerStart.y)}`,
+    arcPath(cx, cy, outerRx, outerRy, outerFrom, outerTo),
     'Z',
   ])
 }

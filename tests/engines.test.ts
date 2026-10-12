@@ -6,8 +6,10 @@ import { findFont, findIcon, findPalette } from '../src/brain/index'
 import { normaliseConfig } from '../src/generate'
 import { CONTAINERS, containerPath, placeIcon, wordmarkLetters } from '../src/engines/shared'
 import { frameHalfWidth } from '../src/engines/emblem'
+import { MODES } from '../src/engines/abstract'
 import { discPath } from '../src/geometry'
 import { isSafePathData, pathBounds } from '../src/path'
+import { PRECISION } from '../src/format'
 import {
   ENGINE_NAMES,
   type EngineInput,
@@ -585,6 +587,136 @@ describe('abstract', () => {
       )
     }
     expect(shapes.size).toBeGreaterThan(4)
+  })
+
+  it('offers every mode in its published list, and draws each one', () => {
+    // `MODES` is the list the studio offers and the router picks from, so a mode that is not reachable
+    // through it is dead code however good it looks on its own.
+    for (const mode of MODES) {
+      const elements = ENGINES.abstract(
+        makeInput({
+          engine: 'abstract',
+          seed: new SeedResolver('mode', mode),
+          request: normaliseConfig({
+            name: 'Acme Labs',
+            keywords: 'tech',
+            preferences: { mode },
+          }),
+        })
+      )
+      expect(elements.length, `mode ${mode} drew nothing`).toBeGreaterThan(0)
+      expect(
+        elements.every(element => element.tag === 'path'),
+        `mode ${mode} drew something other than a path`
+      ).toBe(true)
+    }
+  })
+
+  it('centres every mode on its own ink', () => {
+    // The modes construct their geometry around the canvas centre, but that is only nominal: a lattice
+    // that fades along a diagonal, arcs that sweep one side, a polygon rotated off its own symmetry axis
+    // and a satellite arc starting at a random tilt all bias the ink. Measured before the centring pass,
+    // the worst was 69.6 units off on a 512 canvas — about 14% of the width, which reads as loose rather
+    // than as wrong.
+    //
+    // The check is on the union of the mark's ink, because that is what the eye centres on. It cannot be
+    // a bounding-box assertion per element: several modes are a ring with satellites around it, and each
+    // element on its own is nowhere near the middle.
+    //
+    // The tolerance is one coordinate rounding step rather than zero, because the centring is exact in
+    // real arithmetic but the emitted path is rounded to `PRECISION` decimals on the way out. Half a unit
+    // in the last place is 0.005 here, and averaging two rounded coordinates doubles it — still a hundred
+    // times tighter than the 69.6-unit defect this guards.
+    const rounding = 0.5 * 10 ** -PRECISION
+    for (const mode of MODES) {
+      for (const round of [0, 1, 2, 3, 4, 5, 6, 7]) {
+        const elements = ENGINES.abstract(
+          makeInput({
+            engine: 'abstract',
+            seed: new SeedResolver('centre', round),
+            request: normaliseConfig({ name: 'Acme Labs', preferences: { mode } }),
+          })
+        )
+        let minX = Infinity
+        let minY = Infinity
+        let maxX = -Infinity
+        let maxY = -Infinity
+        for (const element of elements) {
+          const { d } = element.attrs
+          if (typeof d !== 'string') {
+            continue
+          }
+          const bounds = pathBounds(d)
+          if (bounds === null) {
+            continue
+          }
+          minX = Math.min(minX, bounds.minX)
+          minY = Math.min(minY, bounds.minY)
+          maxX = Math.max(maxX, bounds.maxX)
+          maxY = Math.max(maxY, bounds.maxY)
+        }
+        expect(Number.isFinite(minX), `mode ${mode} drew no ink`).toBe(true)
+        expect(
+          Math.abs((minX + maxX) / 2 - 256),
+          `${mode} is off centre horizontally`
+        ).toBeLessThanOrEqual(rounding)
+        expect(
+          Math.abs((minY + maxY) / 2 - 256),
+          `${mode} is off centre vertically`
+        ).toBeLessThanOrEqual(rounding)
+      }
+    }
+  })
+
+  it('keeps a mark on the canvas for every mode and size', () => {
+    for (const mode of MODES) {
+      for (const size of [16, 64, 512, 4096]) {
+        const elements = ENGINES.abstract(
+          makeInput({
+            engine: 'abstract',
+            size,
+            seed: new SeedResolver('bounds', size),
+            request: normaliseConfig({ name: 'Acme Labs', preferences: { mode } }),
+          })
+        )
+        for (const element of elements) {
+          const bounds = pathBounds(element.attrs['d'] as string)
+          if (bounds === null) {
+            continue
+          }
+          expect(bounds.minX, `${mode} at ${size} runs off the left`).toBeGreaterThan(-0.5)
+          expect(bounds.minY, `${mode} at ${size} runs off the top`).toBeGreaterThan(-0.5)
+          expect(bounds.maxX, `${mode} at ${size} runs off the right`).toBeLessThan(size + 0.5)
+          expect(bounds.maxY, `${mode} at ${size} runs off the bottom`).toBeLessThan(size + 0.5)
+        }
+      }
+    }
+  })
+
+  it('does not collapse its three fill roles onto one colour', () => {
+    // Roles were resolved one at a time, each falling back to the one before it, which meant a palette
+    // whose accent equals its background pushed `second` onto `lead` and then `third` onto both. On
+    // `azure-current` every mark came out a single flat tone — and the modes that build depth out of
+    // layered tones lost exactly the thing they are for.
+    //
+    // `azure-current` is the palette that reproduces it: its accent is literally the background colour.
+    const palette = findPalette('azure-current')!
+    expect(palette.accent).toBe(palette.background)
+    for (const mode of MODES) {
+      const distinct = new Set(
+        fills(
+          ENGINES.abstract(
+            makeInput({
+              engine: 'abstract',
+              palette,
+              seed: new SeedResolver('roles', mode),
+              request: normaliseConfig({ name: 'Acme Labs', preferences: { mode } }),
+            })
+          )
+        )
+      )
+      expect(distinct.size, `${mode} came out in one colour on azure-current`).toBeGreaterThan(1)
+    }
   })
 })
 

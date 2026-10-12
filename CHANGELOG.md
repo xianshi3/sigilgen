@@ -34,6 +34,38 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   junction actually leaves a notch — which is why it read as a quirk of two typefaces rather than as a
   rule with a sign in it.
 
+- **An arc band's winding must be pinned, and it must match the strokes.** `arcBandPath` documented that
+  its contour was always wound positively; measured, a +180° sweep came out at +3036 square units and
+  −180° at −3036. A band crosses whatever it is drawn over, so under `nonzero` the sign of the sweep
+  decided whether the two merged or cancelled — 21 of 42 sweep and size combinations erased the shape
+  underneath. The outer arc is now walked with increasing angle whichever way the caller sweeps, so the
+  winding is pinned without the geometry moving. A test that asserted the old flip was _intended_, on the
+  grounds that reversing the trace keeps a gauge's counter filled, has been replaced: counters come from
+  `ringPath` opposing its two ellipses, and one band's orientation has no bearing on them.
+- **Abstract marks were centred on their construction rather than on their ink.** This was deliberate and
+  recorded in the architecture doc — an orbit is centred on a circle, not on a square. It was the wrong
+  trade. A mark centred on the wrong thing reads as _loose_ rather than as designed, and nobody can say
+  why. Measured across the original five modes, the worst sat 69.6 units off centre on a 512 canvas,
+  14% of its width, with `orbit` at 35.0, `arcs` at 31.5 and `waves` at 23.4. The engine now measures its
+  ink and translates the composition to centre it. Geometry is unchanged, so a mark still reads as an
+  orbit; it now also sits centred.
+- **The abstract engine collapsed its three fill roles onto one colour.** Roles were resolved one at a
+  time, each falling back to the role before it, so a palette whose accent equals its background pushed
+  `second` onto `lead` and `third` onto both. On `azure-current` — whose accent is literally `#f0f9ff` on
+  an `#f0f9ff` background — every mark came out a single flat tone, and the modes that build depth from
+  layered tones lost the one thing they are for. Roles are now drawn from the palette as a set, rejecting
+  a candidate that is illegible _or_ already spoken for.
+
+### Added
+
+- **Ten abstract modes, for space and technology briefs.** `lattice` (a dot grid filling along a
+  diagonal), `gridframe` (a coordinate crosshair), `portal` (one-sided signal arcs), `helix` (two
+  interleaved strands joined by rungs), `aperture` (an iris), `prism` (nested polygons), `scatter` (a
+  tidy `orbit`), `meridian` (a globe), `chevrons` (a signal stack) and `stacked` (nested squares). Two
+  rules keep the set coherent rather than merely larger: depth is built from layered tone, because
+  gradients and shadows are banned; and every mode is measured rather than eyeballed — a mark that cannot
+  be centred by measurement is a mode that does not get added.
+
 Three more centring defects, found the same way as the four below: by generating across a wide input
 space and measuring the ink bounding box of every result against the canvas. All three share one cause
 — a layout was centred on the **room reserved** for its contents rather than on the **ink those

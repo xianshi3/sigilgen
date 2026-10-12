@@ -71,6 +71,11 @@ every one of them is reported back to you in words. That buys three things an im
   the structural reason for the engine it chose.
 - **Five engines.** `monogram`, `wordmark`, `lettermark`, `abstract` and `emblem` — each a different
   structural reading of the same input, not a recolouring.
+- **Fifteen abstract modes.** The abstract engine draws seed-driven geometry with no type at all, grouped
+  as orbital (`orbit`, `scatter`), interference (`venn`, `lattice`), radiating (`arcs`, `portal`,
+  `burst`), continuous (`waves`, `helix`), faceted (`aperture`, `prism`, `stacked`) and instrument
+  (`gridframe`, `meridian`, `chevrons`). Every one is centred on measured ink and kept on the canvas at
+  any output size.
 - **Flat SVG only.** No gradients, filters, masks, clips, patterns, images, text or scripts. A `viewBox`
   is always present, so output scales cleanly.
 - **One to six concepts per call.** Variations differ in engine, palette, typeface and composition.
@@ -258,7 +263,22 @@ interface LogoConfig {
     treatment?: 'plain' | 'badge' | 'rule'
     accent?: 'none' | 'rule' | 'dot' | 'corner-frame'
     frame?: 'shield' | 'hexagon' | 'circle' | 'banner'
-    mode?: 'orbit' | 'venn' | 'arcs' | 'burst' | 'waves'
+    mode?:
+      | 'orbit'
+      | 'venn'
+      | 'arcs'
+      | 'burst'
+      | 'waves'
+      | 'lattice'
+      | 'gridframe'
+      | 'portal'
+      | 'helix'
+      | 'aperture'
+      | 'prism'
+      | 'scatter'
+      | 'meridian'
+      | 'chevrons'
+      | 'stacked'
   }
 }
 ```

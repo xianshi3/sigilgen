@@ -20,6 +20,117 @@ import {
   superellipsePath,
 } from '../src/geometry'
 
+/** One flattened edge. */
+interface Edge {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
+
+/**
+ * Flattens path data to edges, closing every sub-path.
+ *
+ * `Z` records its closing edge before the cursor returns to the start, so a contour is closed whether or
+ * not it was drawn closed — an unclosed contour silently changes the winding.
+ *
+ * @param d - Path data.
+ * @returns The flattened edges.
+ */
+function flatten(d: string): Edge[] {
+  const edges: Edge[] = []
+  let cx = 0
+  let cy = 0
+  let startX = 0
+  let startY = 0
+  const line = (x: number, y: number): void => {
+    edges.push({ x1: cx, y1: cy, x2: x, y2: y })
+    cx = x
+    cy = y
+  }
+  for (const segment of parsePath(d)) {
+    if (segment.cmd === 'M') {
+      if (cx !== startX || cy !== startY) line(startX, startY)
+      const [x, y] = segment.values
+      cx = x as number
+      cy = y as number
+      startX = cx
+      startY = cy
+      continue
+    }
+    if (segment.cmd === 'Z') {
+      line(startX, startY)
+      cx = startX
+      cy = startY
+      continue
+    }
+    if (segment.cmd === 'L') {
+      line(segment.values[0] as number, segment.values[1] as number)
+      continue
+    }
+    if (segment.cmd !== 'C') {
+      continue
+    }
+    const [x1 = cx, y1 = cy, x2 = cx, y2 = cy, ex = cx, ey = cy] = segment.values
+    for (let step = 1; step <= 16; step++) {
+      const t = step / 16
+      const u = 1 - t
+      line(
+        u * u * u * cx + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * ex,
+        u * u * u * cy + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * ey
+      )
+    }
+    cx = ex
+    cy = ey
+  }
+  return edges
+}
+
+/**
+ * Whether a point is painted under `fill-rule: nonzero`, decided by winding number.
+ *
+ * @param edges - The flattened outline.
+ * @param px - Sample x.
+ * @param py - Sample y.
+ * @returns `true` when the winding is not zero.
+ */
+function isPainted(edges: readonly Edge[], px: number, py: number): boolean {
+  let winding = 0
+  for (const edge of edges) {
+    if (edge.y1 <= py) {
+      if (
+        edge.y2 > py &&
+        (edge.x2 - edge.x1) * (py - edge.y1) - (px - edge.x1) * (edge.y2 - edge.y1) > 0
+      ) {
+        winding += edge.y2 > edge.y1 ? 1 : -1
+      }
+    } else if (
+      edge.y2 <= py &&
+      (edge.x2 - edge.x1) * (py - edge.y1) - (px - edge.x1) * (edge.y2 - edge.y1) < 0
+    ) {
+      winding += edge.y2 > edge.y1 ? 1 : -1
+    }
+  }
+  return winding !== 0
+}
+
+/**
+ * Signed area of a flattened outline, by the shoelace formula.
+ *
+ * Reads a contour's orientation directly, which is how the winding is asserted without sampling points
+ * inside a shape that a bug may have hollowed out.
+ *
+ * @param edges - The flattened outline.
+ * @returns A positive area for one orientation and a negative one for the other.
+ */
+function signedArea(edges: readonly Edge[]): number {
+  let twice = 0
+  for (const edge of edges) {
+    twice += edge.x1 * edge.y2 - edge.x2 * edge.y1
+  }
+  return twice / 2
+}
+
 describe('parsePath', () => {
   it('keeps absolute commands as they are', () => {
     expect(parsePath('M 1 2 L 3 4 Z')).toEqual([
@@ -357,16 +468,59 @@ describe('geometry helpers', () => {
     expect(roundedRectPath(0, 0, 10, 10, 0)).not.toContain('C')
   })
 
-  it('reverses the winding of an arc band swept backwards', () => {
-    // The band is traced from the inner edge when the sweep decreases, which is what keeps the
-    // counters of a gauge or a progress mark filled when the value goes down as well as up.
-    const forwards = arcBandPath(50, 50, 30, 20, 6, 0, 140)
-    const backwards = arcBandPath(50, 50, 30, 20, 6, 140, 0)
-    expect(backwards.startsWith('M')).toBe(true)
-    expect(backwards.trimEnd().endsWith('Z')).toBe(true)
-    expect(backwards).not.toBe(forwards)
-    // Same two radii either way: the reversal is a change of direction, not of shape.
-    expect((backwards.match(/C/g) ?? []).length).toBe((forwards.match(/C/g) ?? []).length)
+  it('winds an arc band the same way whichever direction it is swept', () => {
+    // A band crosses whatever it is drawn over, so its winding is not a matter of taste. Swept forwards
+    // it came out at +3036 square units and swept backwards at −3036, and under `nonzero` a band that
+    // winds against the shape beneath it erases it instead of merging with it — 21 of 42 sweep and size
+    // combinations did exactly that, and which ones failed depended only on the sign the caller passed.
+    //
+    // Note this replaces a test that asserted the flip was intended, on the grounds that reversing the
+    // trace keeps a gauge's counter filled. Counters come from `ringPath` pinning its two ellipses
+    // against each other; a single band's orientation has no bearing on them.
+    const sweeps: [number, number][] = [
+      [0, 140],
+      [140, 0],
+      [0, -90],
+      [-90, 0],
+      [30, 260],
+      [260, 30],
+    ]
+    for (const [from, to] of sweeps) {
+      const band = arcBandPath(50, 50, 30, 20, 6, from, to)
+      expect(signedArea(flatten(band)), `swept ${from} to ${to}`).toBeGreaterThan(0)
+    }
+    // Same shape either way: reversing the sweep is a change of direction, not of geometry.
+    const forwards = pathBounds(arcBandPath(50, 50, 30, 20, 6, 0, 140))!
+    const backwards = pathBounds(arcBandPath(50, 50, 30, 20, 6, 140, 0))!
+    expect(backwards).toEqual(forwards)
+  })
+
+  it('keeps a band merged with the shape it is drawn over', () => {
+    // The property the winding exists for, stated as output rather than as geometry: a band and a disc
+    // overlapping must stay solid where they meet. Sampling the overlap directly is what distinguishes
+    // this from a bounding-box or segment-count assertion, neither of which can see a hole.
+    const disc = discPath(50, 50, 26)
+    const discEdges = flatten(disc)
+    const sweeps: [number, number][] = [
+      [0, 200],
+      [200, 0],
+      [-80, 120],
+      [120, -80],
+      [0, -260],
+      [260, 0],
+    ]
+    for (const [from, to] of sweeps) {
+      const band = arcBandPath(50, 50, 30, 22, 7, from, to)
+      for (const x of [30, 40, 50, 60, 70]) {
+        for (const y of [40, 50, 60]) {
+          const bandEdges = flatten(band)
+          expect(
+            isPainted([...bandEdges, ...discEdges], x, y),
+            `band ${from}..${to} at ${x},${y} is filled as a union but not as one path`
+          ).toBe(isPainted(bandEdges, x, y) || isPainted(discEdges, x, y))
+        }
+      }
+    }
   })
 
   it('draws a segment in the direction it is given', () => {

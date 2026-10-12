@@ -179,7 +179,7 @@ ones it has candidates for:
 | `treatment` | wordmark   | `plain`, `badge`, `rule`                          |
 | `accent`    | lettermark | `none`, `rule`, `dot`, `corner-frame`             |
 | `frame`     | emblem     | `shield`, `hexagon`, `circle`, `banner`           |
-| `mode`      | abstract   | `orbit`, `venn`, `arcs`, `burst`, `waves`         |
+| `mode`      | abstract   | 15 modes, `orbit` … `stacked`                     |
 
 Three rules keep it safe, and all three are enforced by tests:
 
@@ -222,14 +222,27 @@ visible defect:
    know its left edge until the name has been fitted, because the name's width is what the lockup's
    width is. Anything that pins one element to the margin and centres the rest in the leftover space
    collects all its slack on one side.
+4. **A shape is centred on its ink, not on the geometry that built it.** Centring on the construction is
+   the same error as centring on a layout box, one level up: an orbit whose satellites happen to fall on
+   one side is centred on the _circle_, not on the mark. Measured over the original five abstract modes,
+   the worst sat 14% of the canvas width off centre.
 
 `tests/text.test.ts` asserts the first two directly against all 18 typefaces: it measures the ink of a
 fitted run and requires it to sit within 0.25% of the canvas of where `fitText` was told to centre it.
 That guard is worth more than the fixes that prompted it — it fails at 2.6% against the previous code.
 
-The abstract engine is the deliberate exception. Its marks are built from arcs, orbits and lobes
-placed by angle, so their ink bounding box is not symmetric by construction. Forcing it square would
-mean not orbiting; the composition is centred on a circle, and the drawing is judged against that.
+The abstract engine was the deliberate exception for a long time. Its marks are built from arcs, orbits
+and lobes placed by angle, so their ink bounding box is not symmetric by construction, and the reasoning
+was that forcing it square would mean not orbiting — the composition is centred on a circle and judged
+against that.
+
+That was the wrong trade. A mark centred on its construction rather than on its ink reads as _loose_, not
+as designed, and nobody can say why. Measured across the five original modes, the worst sat 69.6 units off
+centre on a 512 canvas — 14% of the width — with `orbit` at 35.0, `arcs` at 31.5 and `waves` at 23.4.
+
+So the engine now centres on measured ink: the whole composition is measured and translated so its ink
+box is centred on the canvas. The geometry is unchanged, so a mark still _reads_ as an orbit, and it now
+also _sits_ centred. Every mode measures 0.0 for every seed and every canvas size.
 
 ### Monogram
 
@@ -258,7 +271,37 @@ which puts two of the four outside the square.
 
 ### Abstract
 
-Five seed-driven modes with no type at all: `orbit`, `venn`, `arcs`, `burst`, `waves`.
+Fifteen seed-driven modes with no type at all.
+
+| Group        | Modes                               | Reads as                                                   |
+| ------------ | ----------------------------------- | ---------------------------------------------------------- |
+| Orbital      | `orbit`, `scatter`                  | a body with satellites; systems, orbits, planets           |
+| Interference | `venn`, `lattice`                   | overlapping fields; collaboration, data, grids             |
+| Radiating    | `arcs`, `portal`, `burst`           | nested crescents and rays; signal, energy, launch          |
+| Continuous   | `waves`, `helix`                    | a smooth ribbon or a double strand; flow, sound, molecules |
+| Faceted      | `aperture`, `prism`, `stacked`      | blades and nested polygons; optics, depth, gems            |
+| Instrument   | `gridframe`, `meridian`, `chevrons` | a frame, a globe, a signal bar; precision                  |
+
+Ten of these were added for space and technology briefs, where the library was thin. Two rules keep the
+set coherent rather than merely larger:
+
+- **Depth comes from layered tone, not from perspective.** With gradients and shadows banned, depth has
+  to be built from nested shapes in descending tones, which is why the faceted and orbital groups read as
+  receding. This only works if the engine actually has three distinct tones to hand — see below.
+- **Every mode is measured, never eyeballed.** All fifteen are centred on measured ink and kept on the
+  canvas across every size, both asserted in `tests/engines.test.ts`.
+
+The three fill roles are resolved as a _set_ rather than a chain. Resolving each with the previous as its
+fallback — which is what the engine used to do — means a palette whose accent equals its background
+pushes `second` onto `lead` and `third` onto both. On `azure-current`, whose accent is literally
+`#f0f9ff` on an `#f0f9ff` background, every mark came out one flat tone, and the layered modes lost the
+depth that is the whole point of them. Measured across the brain: 2 palettes offer three legible tones,
+26 offer two, and 5 are genuinely monochrome.
+
+A palette that is dark-background will still come out flat when rendered transparent, because a
+transparent mark is judged against an assumed white and only one of its tones clears the floor there.
+That is `applyBackground` working as designed; passing `background: true` restores the tones and takes
+`neon-synth` from 1.00 distinct fills per mark to 2.87.
 
 ### Emblem
 
@@ -284,6 +327,31 @@ Emitted SVG contains no `<linearGradient>`, `<radialGradient>`, `<filter>`, `<ma
 `<pattern>`, `<image>`, `<foreignObject>`, `<script>` or `<use>`, and no `on*` attributes. Only `fill`,
 `stroke`, `stroke-width`, `stroke-linecap`, `stroke-linejoin`, `opacity`, `fill-rule`, geometry
 attributes and `viewBox` are emitted. A `viewBox` is always used so the output scales.
+
+### Winding is part of the output contract
+
+Flat output has no `mask` and no `clipPath`, so the only way a hole is cut is a sub-path wound against
+its parent. That makes the _orientation_ of every emitted contour load-bearing: two overlapping shapes
+that wind alike merge, and two that wind against each other erase one another under `fill-rule: nonzero`.
+
+Every primitive therefore pins its winding rather than inheriting it from the order its caller happened to
+ask for. `arcBandPath` walks its outer arc with increasing angle and its inner one back, whichever
+direction the sweep runs; `ringPath` walks its outer ellipse the way strokes wind and its inner one
+against it; the glyph compiler's bands, rings and apex wedges all do the same. Each of these was wrong at
+some point and the symptom was always the same shape — a seam, a gap, or a notch — that no bounding box
+could see, because the geometry around the hole was perfectly correct.
+
+Two tests hold the rule. `tests/path.test.ts` requires a band's signed area to be positive for all six
+sweep signs, and separately requires a band drawn over a disc to stay solid. `tests/brain.test.ts`
+requires every contour of a stroke-only letter to wind the same way, which is the only check that reaches
+an apex wedge — a wedge is _designed_ to overlap its arms by barely more than a hair, so no grid samples
+its overlap reliably.
+
+- **An arc band's winding must be pinned, and it must match the strokes.** See the winding contract in
+  section 6. Measured, a +180° sweep wound the opposite way from a −180° one, and 21 of 42 sweep and size
+  combinations erased the shape underneath the band.
+- **A shape is centred on its ink, not on the geometry that built it.** Rule 4 in the centring section.
+- **Fill roles are resolved as a set, not as a chain.** See the abstract engine section.
 
 ### Escaping contract
 
