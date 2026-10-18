@@ -98,6 +98,26 @@ describe('the readability notice', () => {
     expect(screen.queryByRole('status')).toBeNull()
   })
 
+  it('keeps the notice off the artwork', () => {
+    // The first version was on the sheet, which is the one place it must not be: at a 242px sheet it
+    // covered 45.8% of the mark it was reporting on, and the smaller the sheet the worse the share. How
+    // much it covers is layout and cannot be asserted here, but *which element contains it* is structure,
+    // and structure is the part that was wrong.
+    const { container } = render(
+      <I18nProvider initialLocale="en">
+        <Stage concept={darkInkConcept()} errorKey={null} errorDetail={null} />
+      </I18nProvider>
+    )
+    act(() => {
+      useStudio.setState({ backdrop: 'dark' })
+    })
+
+    const notice = screen.getByRole('status')
+    const sheet = container.querySelector('[class*="aspect-square"]')
+    expect(sheet).not.toBeNull()
+    expect(sheet?.contains(notice)).toBe(false)
+  })
+
   it('says so when the mark cannot be seen, and shows the measured ratio', () => {
     const concept = darkInkConcept()
     act(() => {

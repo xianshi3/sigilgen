@@ -33,8 +33,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   pale one — so choosing both left dark ink on a near-black sheet, an empty-looking square with nothing to
   explain it and no way back except guessing which palette would work. The stage now measures the contrast
   between the colours the mark is actually painted in and the sheet it is actually on, and when the worst
-  of them falls below 3:1 it says so at the foot of the sheet with the measured ratio and offers the
-  palette that reads best there.
+  of them falls below 2:1 it says so in the stage's gutter below the sheet, with the measured ratio, and
+  offers the palette that reads best there.
+
+  It sits in the gutter rather than on the sheet because the first version was on the sheet, which is the
+  one place it must not be: at a 242px sheet it covered 45.8% of the artwork, hiding the very thing it was
+  reporting on, and the smaller the sheet the worse the share. Measured after the move: 0%.
 
   It offers rather than applies: the backdrop is a viewing choice and the palette is a design decision, so
   recolouring the mark because of where the reader chose to look would be a larger surprise than the one

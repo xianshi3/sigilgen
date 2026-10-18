@@ -247,17 +247,19 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
             </svg>
           </motion.div>
         )}
-
-        {notice === null ? null : (
-          <ReadabilityNotice
-            ratio={notice.ratio}
-            palette={notice.palette}
-            onUsePalette={id => {
-              setField('palette', id)
-            }}
-          />
-        )}
       </div>
+
+      {/* Outside the sheet, in the stage's own gutter. It is about the mark, but it must not be on top of
+          it — see the note in the component. */}
+      {notice === null ? null : (
+        <ReadabilityNotice
+          ratio={notice.ratio}
+          palette={notice.palette}
+          onUsePalette={id => {
+            setField('palette', id)
+          }}
+        />
+      )}
     </div>
   )
 }
