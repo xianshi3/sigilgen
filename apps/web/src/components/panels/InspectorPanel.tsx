@@ -162,7 +162,8 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
                         beginEdit()
                         updatePart(concept.seed, selectedPart, { fill: event.currentTarget.value })
                       }}
-                      className="h-6 w-10 cursor-pointer rounded-control border-0 bg-transparent p-0"
+                      className="h-[var(--control-h)] w-12 cursor-pointer rounded-control border-0
+                        bg-transparent p-0"
                       aria-label={t('edit.fill')}
                     />
                     {selected.fill !== null ? (

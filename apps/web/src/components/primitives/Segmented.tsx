@@ -195,9 +195,12 @@ export function Segmented<T extends string>({
             }}
             // `shrink-0` rather than truncating: these labels change length between languages, and a
             // fixed track would clip "System" or "跟随系统" in one of them.
-            className={`relative z-1 shrink-0 whitespace-nowrap
-              rounded-[calc(var(--radius-control)-0.125rem)]
-              px-2.5 py-1 text-caption font-medium transition-colors duration-fast
+            // `py-1` around a caption line came to 31px: a tier below the buttons this control sits next
+            // to, and one that changed with the locale, because Han and Latin lines are different
+            // heights. The height comes from the one token now, so the group stops being its own size.
+            className={`relative z-1 inline-flex h-[var(--control-h)] shrink-0 items-center
+              justify-center whitespace-nowrap rounded-[calc(var(--radius-control)-0.125rem)]
+              px-2.5 text-caption font-medium transition-colors duration-fast
               ${selected ? 'text-ink' : 'text-ink-soft hover:text-ink'}`}
           >
             {option.label}

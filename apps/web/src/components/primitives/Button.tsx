@@ -21,9 +21,15 @@ const VARIANT: Record<ButtonVariant, string> = {
   ghost: 'text-ink-soft hover:text-ink hover:bg-[var(--accent-soft)]',
 }
 
+/**
+ * `size` no longer sets the height. Both tiers sit on `--control-h`, because a control shorter than its
+ * neighbour is a control harder to hit than its neighbour — and a 28px button next to a 32px input is a
+ * difference nobody can name and everybody can feel. What separates the tiers is the horizontal padding
+ * and the type size, which is what the names were really about.
+ */
 const SIZE: Record<ButtonSize, string> = {
-  sm: 'h-7 px-2.5 text-caption',
-  md: 'h-8 px-3.5 text-body',
+  sm: 'h-[var(--control-h)] px-2.5 text-caption',
+  md: 'h-[var(--control-h)] px-3.5 text-body',
 }
 
 export function Button({

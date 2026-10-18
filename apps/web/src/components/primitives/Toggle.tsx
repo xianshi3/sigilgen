@@ -8,8 +8,12 @@ export interface ToggleProps {
 /** A switch. Uses a real checkbox so keyboard and form behaviour come for free. */
 export function Toggle({ checked, onChange, label, disabled = false }: ToggleProps) {
   return (
+    // `min-h` rather than `h`: the switch stays 20px because that is what a switch looks like, but the
+    // label is what is actually being hit, so the row is what has to clear the floor.
     <label
-      className={`flex cursor-pointer items-center justify-between gap-3 ${disabled ? 'opacity-40' : ''}`}
+      className={`flex min-h-[var(--control-h)] cursor-pointer items-center justify-between gap-3 ${
+        disabled ? 'opacity-40' : ''
+      }`}
     >
       <span className="type-caption text-ink-soft">{label}</span>
       <span className="relative shrink-0">

@@ -44,15 +44,19 @@ export function RangeField({
         onChange={event => {
           onChange(Number(event.currentTarget.value))
         }}
-        className="h-4 w-full cursor-pointer appearance-none bg-transparent
+        // `h-4` made the whole control 16px tall with a 12px thumb: draggable with a mouse and a miss with
+        // a thumb, over a track 238px wide. The box is the hit area, so it takes the control height; the
+        // track stays 4px in the middle of it and the thumb grows to 16px, which is where the -6px offset
+        // comes from — half the difference between the two.
+        className="h-[var(--control-h)] w-full cursor-pointer appearance-none bg-transparent
           [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full
-          [&::-webkit-slider-thumb]:mt-[-5px] [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3
+          [&::-webkit-slider-thumb]:mt-[-6px] [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4
           [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full
           [&::-webkit-slider-thumb]:bg-[var(--surface-raised)]
           [&::-webkit-slider-thumb]:shadow-[var(--shadow-knob)]
           [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:duration-fast
           hover:[&::-webkit-slider-thumb]:scale-110
-          [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full
+          [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full
           [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-[var(--surface-raised)]
           [&::-moz-range-thumb]:shadow-[var(--shadow-knob)] [&::-moz-range-thumb]:appearance-none
           [&::-moz-range-thumb]:transition-transform [&::-moz-range-thumb]:duration-fast

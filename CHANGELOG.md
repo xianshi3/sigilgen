@@ -85,6 +85,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Controls that were harder to hit than the controls beside them.** The studio had four control heights
+  and no reason for any of them: `Button`'s small tier was 28px, a segmented control came to 31px — and to
+  a _different_ 31px in each locale, because a Han caption line and a Latin one are not the same height —
+  while the text inputs and the disclosure rows were 32px. The zoom buttons and the reroll button shared a
+  row with a segmented control and disagreed with it by three pixels.
+
+  There is one number now, `--control-h`, and everything a pointer or a finger lands on sits on it. The
+  worst of them was the slider: **16px tall with a 12px thumb** over a 238px track, which a mouse could drag
+  and a thumb could not. The box is the hit area, so it takes the control height; the track stays 4px in the
+  middle of it and the thumb grows to 16px. The switch keeps its 20px track — that is what a switch looks
+  like — and puts the floor on the label, which is what is actually being hit. The panel handle, the only
+  control that opens a drawer, was a **16px-wide** target and is now 24px, which is WCAG 2.2's minimum.
+
+  Measured after: of 68 interactive elements, the only ones under 32px on their short side are two
+  icon-only zoom buttons at 30×32, the two panel handles at 24×44, and the 1×1 checkbox that a `Toggle`'s
+  label wraps. `tests/targets.test.tsx` holds the floor and checks the controls still reach for it.
+
 - **Text the design system had quietly made unreadable.** Two token values failed AA, and neither was
   visible by inspection, because in each case the pairing that matched looked fine.
 

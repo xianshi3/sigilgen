@@ -33,6 +33,14 @@
   /* Edge length of a concept tile in the strip. Square by construction, so one dimension is enough. */
   --spacing-tile: 4.25rem;
 
+  /* The interactive floor: the shortest anything a pointer or a finger has to land on may be.
+     0.5rem below this is 28px, and at 28px the stage bar's zoom buttons and its reroll button sat a tier
+     under the text inputs and the disclosure rows beside them — a difference a reader notices without
+     being able to name it. 2rem is also what those inputs already used, so this names the taller value
+     rather than inventing one. It clears WCAG 2.2's 24px minimum by a whole tier, which is the part that
+     matters for a thumb rather than a mouse. */
+  --control-h: 2rem;
+
   /* Radii. Large values stand in for iOS's continuous corners; the difference only shows at
      very large radii on very large shapes. */
   --radius-chip: 0.5rem;

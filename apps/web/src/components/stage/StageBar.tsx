@@ -49,8 +49,9 @@ export function StageBar() {
             setZoom(zoom === 'fit' ? 1 : 'fit')
           }}
           title={zoom === 'fit' ? t('stage.zoomActual') : t('stage.zoomFit')}
-          className="type-caption min-w-16 rounded-control px-2 py-1 text-ink-soft tabular-nums
-            transition-colors duration-fast hover:bg-[var(--accent-soft)] hover:text-ink"
+          className="type-caption inline-flex h-[var(--control-h)] min-w-16 items-center justify-center
+            rounded-control px-2 text-ink-soft tabular-nums transition-colors duration-fast
+            hover:bg-[var(--accent-soft)] hover:text-ink"
         >
           {zoom === 'fit' ? t('stage.zoomFit') : `${Math.round(zoom * 100)}%`}
         </button>

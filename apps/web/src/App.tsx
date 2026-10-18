@@ -299,7 +299,9 @@ function PanelToggle({ open, onClick, label, glyph }: PanelToggleProps) {
       title={label}
       aria-label={label}
       aria-expanded={open}
-      className="material pointer-events-auto flex h-11 w-4 items-center justify-center rounded-control
+      // `w-4` was a 16px target on the only control that opens a drawer, which is the one control a reader
+      // on a touch screen has to find. Still slim, and it floats, so the extra 8px costs the stage nothing.
+      className="material pointer-events-auto flex h-11 w-6 items-center justify-center rounded-control
         text-ink-faint shadow-[var(--shadow-card)] transition-colors duration-fast hover:text-ink"
     >
       <span className="text-caption leading-none">{glyph}</span>
