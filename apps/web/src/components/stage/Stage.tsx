@@ -3,9 +3,12 @@ import { motion } from 'motion/react'
 import type { LogoResult } from '@sigilgen/types'
 import type { MessageKey } from '../../i18n/locales/zh'
 import { useI18n } from '../../i18n/I18nProvider'
+import { MIN_CONTRAST, readPaper, worstContrast } from '../../lib/contrast'
+import { bestPaletteFor } from '../../lib/resources'
 import { emptyEdit, parseSvgParts, partTransform } from '../../lib/svgParts'
 import { DURATION_BASE, EASE_APPLE } from '../../lib/motion'
 import { useStudio, type Backdrop } from '../../store/useStudio'
+import { ReadabilityNotice } from './ReadabilityNotice'
 
 export interface StageProps {
   concept: LogoResult | undefined
@@ -51,6 +54,8 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
   const selectPart = useStudio(state => state.selectPart)
   const beginEdit = useStudio(state => state.beginEdit)
   const updatePart = useStudio(state => state.updatePart)
+  const setField = useStudio(state => state.setField)
+  const pinnedPalette = useStudio(state => state.palette)
 
   const svgRef = useRef<SVGSVGElement>(null)
   // Where the current drag started, in user units, plus the part's transform at that moment. Stored in a
@@ -62,6 +67,40 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
     [concept]
   )
   const edits = useStudio(state => (concept === undefined ? undefined : state.edits[concept.seed]))
+
+  // Whether the mark can be seen where it has been put.
+  //
+  // The backdrop is a viewing choice, so the reader is free to make it — but most of the curated palettes
+  // are drawn for a pale sheet, and choosing the dark one leaves dark ink on a near-black ground with no
+  // clue as to why. Nothing is broken in that case; the mark is exactly as designed. It is simply not
+  // where it was designed to be, and only the studio can say so, because only the studio knows both the
+  // ink and the sheet.
+  const paper = useMemo(() => readPaper(backdrop), [backdrop])
+  const legibility = useMemo(() => {
+    if (parts === null) {
+      return null
+    }
+    return worstContrast(
+      parts.parts
+        .map(part => part.fill)
+        .filter((fill): fill is string => fill !== null && fill !== 'none'),
+      paper
+    )
+  }, [parts, paper])
+
+  // Offered rather than applied. Recolouring the mark because of where the reader chose to look at it
+  // would be a larger surprise than the one being fixed, and the palette is a design decision.
+  //
+  // The offer is withdrawn when it names the palette already in use: at that point the sheet is the
+  // problem, not the palette, and a button that changes nothing is worse than no button. The backdrop is
+  // the control next to the notice, so the reader still has somewhere to go.
+  const notice =
+    legibility !== null && legibility < MIN_CONTRAST
+      ? {
+          ratio: legibility,
+          palette: bestPaletteFor(paper)?.id === pinnedPalette ? null : bestPaletteFor(paper),
+        }
+      : null
 
   /** Converts a pointer position to the SVG's own user units, so a drag means the same thing at any zoom. */
   const toUserUnits = (clientX: number, clientY: number): { x: number; y: number } => {
@@ -207,6 +246,16 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
               })}
             </svg>
           </motion.div>
+        )}
+
+        {notice === null ? null : (
+          <ReadabilityNotice
+            ratio={notice.ratio}
+            palette={notice.palette}
+            onUsePalette={id => {
+              setField('palette', id)
+            }}
+          />
         )}
       </div>
     </div>

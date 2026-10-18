@@ -71,6 +71,8 @@ export const zh = {
   'stage.backdropLight': '浅色',
   'stage.backdropDark': '深色',
   'stage.backdropBoard': '棋盘格',
+  'stage.readabilityHint': '这套配色是按另一种底色画的。',
+  'stage.readabilityFix': '换一个看得清的',
 
   'concept.title': '概念',
   'concept.position': '第 {index} 个，共 {total} 个',

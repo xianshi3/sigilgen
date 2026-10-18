@@ -70,6 +70,8 @@ export const en: Record<MessageKey, string> = {
   'stage.backdropLight': 'Light',
   'stage.backdropDark': 'Dark',
   'stage.backdropBoard': 'Checkerboard',
+  'stage.readabilityHint': 'This palette was drawn for a different sheet.',
+  'stage.readabilityFix': 'Pick a readable one',
 
   'concept.title': 'Concepts',
   'concept.position': '{index} of {total}',

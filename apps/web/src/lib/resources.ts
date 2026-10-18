@@ -1,6 +1,7 @@
 import { FONTS, ICONS, PALETTES } from '@sigilgen/brain/index'
 import { paletteFromColours } from '@sigilgen/resolvers/palette-resolver'
 import type { FontCategory, FontEntry, IconEntry, PaletteEntry } from '@sigilgen/types'
+import { contrastRatio } from './contrast'
 
 /**
  * Read-only views over the brain, for the interface to offer as choices.
@@ -82,4 +83,44 @@ export function previewColours(text: string): PaletteEntry | null {
     .split(/[,\s]+/)
     .filter(token => token !== '')
   return paletteFromColours('preview', tokens)
+}
+
+/**
+ * The curated palettes whose dominant ink reads best on a given surface, best first.
+ *
+ * This exists because a mark can be put somewhere it cannot be seen. The palettes are largely drawn for
+ * a pale sheet — that is what a logo is usually printed on — so putting one of them on the dark sheet
+ * leaves dark ink on a near-black ground, and the reader is looking at an empty square with no way back
+ * except to guess which of thirty palettes would work.
+ *
+ * The ranking is by measured contrast between each palette's `primary` and the surface, not by a
+ * hand-kept list of "dark palettes". `primary` is the ink an engine draws a mark with by default, so it
+ * is the right proxy for what will be seen; the alternative, generating all thirty and measuring the
+ * real output, would cost a generation per palette for the same answer.
+ *
+ * @param paper - The surface, as a colour the contrast module can read.
+ * @returns The palettes that could be read there, most legible first; empty when the surface is unknown.
+ */
+export function palettesReadingOn(paper: string): readonly PaletteEntry[] {
+  const scored: { palette: PaletteEntry; ratio: number }[] = []
+  for (const palette of PALETTES) {
+    const ratio = contrastRatio(palette.primary, paper)
+    if (ratio !== null) {
+      scored.push({ palette, ratio })
+    }
+  }
+  // Ties break on the id compared by code unit rather than `localeCompare`: this picks the palette a
+  // reader is offered, so it has to be the same palette in every locale and on every machine.
+  scored.sort((a, b) => b.ratio - a.ratio || (a.palette.id < b.palette.id ? -1 : 1))
+  return scored.map(entry => entry.palette)
+}
+
+/**
+ * The palette to offer when the current one cannot be read on a surface.
+ *
+ * @param paper - The surface, as a colour the contrast module can read.
+ * @returns The most legible palette there, or `null` when the surface is unknown.
+ */
+export function bestPaletteFor(paper: string): PaletteEntry | null {
+  return palettesReadingOn(paper)[0] ?? null
 }

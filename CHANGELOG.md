@@ -28,6 +28,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   rather than undo-my-last-edit, and a digit typed into a field is a digit rather than a concept index —
   without that guard a single keystroke silently rewrites the design.
 
+- **The studio says when a mark cannot be seen on the sheet behind it.** The dark backdrop exists so a mark
+  can be previewed against a dark surface, and twenty-three of the thirty curated palettes are drawn for a
+  pale one — so choosing both left dark ink on a near-black sheet, an empty-looking square with nothing to
+  explain it and no way back except guessing which palette would work. The stage now measures the contrast
+  between the colours the mark is actually painted in and the sheet it is actually on, and when the worst
+  of them falls below 3:1 it says so at the foot of the sheet with the measured ratio and offers the
+  palette that reads best there.
+
+  It offers rather than applies: the backdrop is a viewing choice and the palette is a design decision, so
+  recolouring the mark because of where the reader chose to look would be a larger surprise than the one
+  being fixed. Confirmed against the reported case — a `#451a03` mark at 1.23:1 on `--paper-dark`, and the
+  same mark at 14.72:1 on `--paper-light`; taking the offer moves it to a palette that reads.
+
+  The threshold is 2:1, calibrated against the case rather than borrowed from WCAG. Its 3:1 is the bar for
+  text, where the cost of marginal contrast is fatigue; a mark is looked at, and its failure mode is being
+  absent. The first version used 3 and cried wolf: it kept warning about a green wordmark that is plainly
+  legible at 2.8:1, which would have taught the reader to ignore a notice about invisibility.
+
+  The sheet's colour is read from its own resolved custom property rather than copied into JavaScript, so
+  the measurement cannot drift from what is painted; the `oklch()` conversion that requires is guarded by
+  a test that fails on the token sheet if a paper colour ever moves to a form the measurement cannot read.
+
 - **Part editing in the studio.** Each concept's SVG is now rendered inline rather than as an image, so
   every top-level path is a selectable, editable part. Click a shape on the canvas — or its entry in the
   inspector — to select it, then drag to move it, or use the rotate, scale and fill controls. Parts can
