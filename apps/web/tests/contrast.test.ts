@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { contrastRatio, toRgb, worstContrast } from '../src/lib/contrast'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { contrastRatio, readPaper, toRgb, worstContrast } from '../src/lib/contrast'
 
 /**
  * Contrast measurement.
@@ -48,6 +48,38 @@ describe('toRgb', () => {
   it('says so rather than guessing at a form it does not know', () => {
     expect(toRgb('var(--paper-dark)')).toBeNull()
     expect(toRgb('')).toBeNull()
+  })
+
+  it('reads the percentage forms of oklch as well', () => {
+    // `oklch(20% 0.006 265)` and `oklch(0.2 0.006 265)` are the same colour, and which one a browser
+    // serialises depends on how it was authored. The paper tokens use plain numbers today; this is what
+    // makes that a detail of the token sheet rather than a rule the measurement has come to depend on.
+    expect(toRgb('oklch(20% 0.006 265)')).toEqual(toRgb('oklch(0.2 0.006 265)'))
+    // Chroma's percentage scale is not lightness's: 100% of it is 0.4, which is the whole reason the two
+    // are not parsed alike.
+    expect(toRgb('oklch(0.5 10% 120)')).toEqual(toRgb('oklch(0.5 0.04 120)'))
+  })
+})
+
+describe('readPaper', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('returns nothing when there is no document to read from', () => {
+    // The guard is for a runtime with no DOM at all. It is one line, and an unhandled `getComputedStyle`
+    // in that situation is a crash rather than an absent measurement.
+    vi.stubGlobal('document', null)
+    expect(readPaper('dark')).toBe('')
+  })
+
+  it('returns nothing when the token is not loaded', () => {
+    // Which is also the app's state before the stylesheet applies, or if it never does. Staying quiet is
+    // the only honest answer there: there is no surface to measure against.
+    document.documentElement.style.setProperty('--paper-dark', 'oklch(0.19 0.006 265)')
+    expect(readPaper('dark')).not.toBe('')
+    document.documentElement.style.removeProperty('--paper-dark')
+    expect(readPaper('dark')).toBe('')
   })
 })
 

@@ -79,16 +79,20 @@ function oklchToSrgb(value: string): [number, number, number] | null {
   if (match === null) {
     return null
   }
+  // Destructured with defaults rather than indexed with `??`. The groups are non-optional in the pattern,
+  // so a fallback never runs — and a branch that cannot be taken is a branch that cannot be tested, which
+  // is how it ends up in a coverage report as a gap forever.
+  const [, rawLightness = '0', rawChroma = '0', rawHue = '0'] = match
   // The three components do not share a range: lightness is 0–1, chroma tops out near 0.4 (so `100%`
   // there means 0.4, not 1) and hue is degrees. Treating them alike is how a converter ends up quietly
   // wrong about a colour that looks fine and measures differently.
-  const lightness = match[1]?.endsWith('%')
-    ? Number.parseFloat(match[1]) / 100
-    : Number.parseFloat(match[1] ?? '0')
-  const chroma = match[2]?.endsWith('%')
-    ? (Number.parseFloat(match[2]) / 100) * 0.4
-    : Number.parseFloat(match[2] ?? '0')
-  const hue = (Number.parseFloat(match[3] ?? '0') * Math.PI) / 180
+  const lightness = rawLightness.endsWith('%')
+    ? Number.parseFloat(rawLightness) / 100
+    : Number.parseFloat(rawLightness)
+  const chroma = rawChroma.endsWith('%')
+    ? (Number.parseFloat(rawChroma) / 100) * 0.4
+    : Number.parseFloat(rawChroma)
+  const hue = (Number.parseFloat(rawHue) * Math.PI) / 180
 
   const a = chroma * Math.cos(hue)
   const b = chroma * Math.sin(hue)
@@ -119,7 +123,7 @@ export function toRgb(value: string): [number, number, number] | null {
 
   const hex = /^#([\da-f]{3}|[\da-f]{6})$/i.exec(text)
   if (hex !== null) {
-    const digits = hex[1] ?? ''
+    const [, digits = ''] = hex
     const full =
       digits.length === 3
         ? digits
@@ -136,16 +140,14 @@ export function toRgb(value: string): [number, number, number] | null {
 
   const rgb = /rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i.exec(text)
   if (rgb !== null) {
-    return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])]
+    const [, r = '0', g = '0', b = '0'] = rgb
+    return [Number(r), Number(g), Number(b)]
   }
 
   const srgb = /color\(\s*srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/i.exec(text)
   if (srgb !== null) {
-    return [
-      Math.round(Number(srgb[1]) * 255),
-      Math.round(Number(srgb[2]) * 255),
-      Math.round(Number(srgb[3]) * 255),
-    ]
+    const [, r = '0', g = '0', b = '0'] = srgb
+    return [Math.round(Number(r) * 255), Math.round(Number(g) * 255), Math.round(Number(b) * 255)]
   }
 
   return oklchToSrgb(text)
