@@ -86,11 +86,14 @@ describe('Stage', () => {
 
   it('carries the backdrop onto the sheet, not the stage', () => {
     // The backdrop is the surface the palette's colours were chosen against, so it belongs on the paper
-    // rather than on the desk behind it.
-    for (const [backdrop, expected] of [
-      ['light', 'var(--paper-light)'],
-      ['dark', 'var(--paper-dark)'],
-      ['board', 'var(--paper-checker-b)'],
+    // rather than on the desk behind it. `data-paper` is the second half of the same claim: the sheet's
+    // own ink and its selection outline are chosen from the paper rather than from the theme, so the
+    // element has to say which sort of paper it is. It did not, and the empty state drawn on it measured
+    // 1.45:1 in one theme/backdrop pairing.
+    for (const [backdrop, expected, paper] of [
+      ['light', 'var(--paper-light)', 'light'],
+      ['dark', 'var(--paper-dark)', 'dark'],
+      ['board', 'var(--paper-checker-b)', 'light'],
     ] as const) {
       act(() => {
         useStudio.setState({ backdrop })
@@ -100,7 +103,9 @@ describe('Stage', () => {
           <Stage concept={aConcept()} errorKey={null} errorDetail={null} />
         </I18nProvider>
       )
-      expect(container.querySelector('.rounded-panel')?.className).toContain(expected)
+      const sheet = container.querySelector('.rounded-panel')
+      expect(sheet?.className).toContain(expected)
+      expect(sheet?.getAttribute('data-paper')).toBe(paper)
     }
   })
 

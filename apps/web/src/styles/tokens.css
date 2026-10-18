@@ -110,7 +110,9 @@
 
   --ink: oklch(0.22 0.01 260);
   --ink-soft: oklch(0.44 0.01 260);
-  --ink-faint: oklch(0.62 0.008 260);
+  /* 0.52 rather than 0.62: at caption size on the stage the lighter value measured 3.20:1, under AA's
+     4.5. It looked fine, which is the whole reason it gets measured. */
+  --ink-faint: oklch(0.52 0.008 260);
 
   --surface: oklch(0.995 0 0);
   --surface-raised: oklch(1 0 0);
@@ -163,7 +165,8 @@
 :root[data-theme='dark'] {
   --ink: oklch(0.96 0.005 260);
   --ink-soft: oklch(0.76 0.008 260);
-  --ink-faint: oklch(0.58 0.01 260);
+  /* 0.62 rather than 0.58: on a card the lighter value measured 4.09:1, under AA's 4.5. */
+  --ink-faint: oklch(0.62 0.008 260);
 
   --surface: oklch(0.17 0.008 265);
   --surface-raised: oklch(0.215 0.009 265);
@@ -287,6 +290,29 @@
   --paper-dark: oklch(0.19 0.006 265);
   --paper-checker-a: oklch(0.93 0 0);
   --paper-checker-b: oklch(0.87 0 0);
+}
+
+/* Ink for text drawn *on the sheet*, and the accent that outlines a selected part there.
+   The sheet is unthemed, so what is drawn on it has to be as well. A reader can pair any theme with any
+   backdrop, and a theme colour on the wrong paper is not merely off — it measured as low as 1.45:1 for
+   text and 1.96:1 for the outline, both of them invisible. The empty state is the first thing a new
+   reader sees, so it is the last place to be unreadable.
+
+   Two sets, one per sort of paper, chosen by `data-paper` on the sheet rather than by the theme. Every
+   value below clears 4.5:1 for text and 3:1 for the outline against the paper it is for, and
+   `tests/tokens.test.ts` fails if one stops doing it. */
+:root {
+  --sheet-ink: oklch(0.3 0.012 260);
+  --sheet-ink-soft: oklch(0.38 0.012 260);
+  --sheet-ink-faint: oklch(0.44 0.012 260);
+  --sheet-accent: oklch(0.52 0.2 258);
+}
+
+[data-paper='dark'] {
+  --sheet-ink: oklch(0.96 0.005 260);
+  --sheet-ink-soft: oklch(0.85 0.008 260);
+  --sheet-ink-faint: oklch(0.74 0.008 260);
+  --sheet-accent: oklch(0.72 0.16 258);
 }
 
 /* Chrome that sits over artwork the app does not control: the index badge on a generated mark, on

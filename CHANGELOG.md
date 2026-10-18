@@ -85,6 +85,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Text the design system had quietly made unreadable.** Two token values failed AA, and neither was
+  visible by inspection, because in each case the pairing that matched looked fine.
+
+  `--ink-faint` carries field hints, section headings and inspector labels at caption size. It is never
+  large text, so it never qualified for the 3:1 allowance: it measured **3.20:1** on the stage and
+  3.41–3.65:1 on the app's surfaces in the light theme, and **4.09:1** on a card in the dark one. Solved
+  rather than eyeballed — **0.52** in the light theme, worst ground 4.83:1, and **0.62** in the dark,
+  worst ground 4.81:1.
+
+  The sheet has always been unthemed: its paper colours are fixed, so a palette can be judged against a
+  light or a dark page. The text drawn _on_ it was not. A reader can pair any theme with any backdrop, and
+  over the two inks the empty state draws with — the first thing a reader ever sees — **eight of the
+  twelve** theme-and-paper pairings were below AA and four were at or under 2.5:1, the worst being dark
+  theme on the checkerboard at **1.45:1**. The sheet now declares which sort of paper it is, and takes its
+  ink from the paper rather than from the theme. The same fault in the outline drawn around a selected
+  part, where the dark theme's accent measured **1.96:1** on the checkerboard, went with it.
+
+  It is a test now rather than a habit: `tests/tokens.test.ts` parses the stylesheet and fails if any ink
+  drops below 4.5:1 on any ground it can land on, or the accent below 3:1 where it marks rather than reads.
+
 - **The selected segment's highlight sat in the wrong place, everywhere it was used.** The moving pill
   behind the active option was sized `calc((100% - 0.25rem) / n)` and moved by `translateX(index * 100%)`,
   which assumes the segments are equal columns and flush with the container's edge. Neither is true: the

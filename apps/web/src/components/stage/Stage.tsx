@@ -24,6 +24,13 @@ const BACKDROP_STYLE: Record<Backdrop, string> = {
   board: 'bg-[var(--paper-checker-b)]',
 }
 
+/** Which sort of paper each backdrop is, so the ink drawn on it can follow the paper. See `--sheet-ink`. */
+const BACKDROP_PAPER: Record<Backdrop, 'light' | 'dark'> = {
+  light: 'light',
+  dark: 'dark',
+  board: 'light',
+}
+
 /**
  * The canvas.
  *
@@ -159,6 +166,9 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
         // "square" on a wide stage, which letterboxed the mark at "fit" and broke zoom centring.
         className={`relative flex aspect-square w-[min(100cqw,100cqh)] items-center justify-center
           overflow-hidden rounded-panel ${BACKDROP_STYLE[backdrop]} shadow-[var(--shadow-lift)]`}
+        // The paper is not the theme's, so the ink on it cannot be the theme's either. This selects the
+        // matching set in the token sheet; without it the empty state measures as low as 1.45:1.
+        data-paper={BACKDROP_PAPER[backdrop]}
         style={
           backdrop === 'board'
             ? {
@@ -174,13 +184,20 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
       >
         {concept === undefined ? (
           <div className="flex max-w-[min(22rem,80%)] flex-col items-center gap-2 text-center">
-            <p className={`type-title ${errorKey === null ? 'text-ink-soft' : 'text-ink'}`}>
+            <p
+              className={`type-title ${
+                errorKey === null ? 'text-[var(--sheet-ink-soft)]' : 'text-[var(--sheet-ink)]'
+              }`}
+            >
               {errorKey === null ? t('empty.title') : t('error.title')}
             </p>
-            <p className="type-body text-ink-faint">
+            <p className="type-body text-[var(--sheet-ink-faint)]">
               {errorKey === null ? t('empty.body') : t(errorKey)}
             </p>
-            <p className="type-caption text-ink-faint/70">
+            {/* No opacity on this one. `/70` against the faintest ink is a contrast cut, and it is one that
+                cannot be checked against a threshold — it took the light theme's 3.59 down to about 2.4.
+                Size already carries the difference between this line and the one above it. */}
+            <p className="type-caption text-[var(--sheet-ink-faint)]">
               {errorKey === null ? t('empty.suggestion') : errorDetail}
             </p>
           </div>
@@ -235,7 +252,7 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
                       // The highlight is a stroke on a copy rather than on the part itself, so the part's
                       // own fill and geometry are untouched and the outline reads as a selection rather
                       // than as a different shape.
-                      stroke={selected ? 'var(--accent)' : 'none'}
+                      stroke={selected ? 'var(--sheet-accent)' : 'none'}
                       strokeWidth={selected ? 3 : 0}
                       strokeLinejoin="round"
                       className={editMode ? 'cursor-move' : undefined}
