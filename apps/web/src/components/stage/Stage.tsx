@@ -43,6 +43,23 @@ const BACKDROP_PAPER: Record<Backdrop, 'light' | 'dark'> = {
  * The sheet is the surface the palette's colours were chosen against, so it keeps its fixed paper colours
  * in both themes — see `--paper-light` in the token sheet.
  *
+ * ## Why the sheet is square
+ *
+ * Because the artwork's own canvas is. The serializer emits `viewBox="0 0 <size> <size>"` for every mark,
+ * so a sheet of any other shape could only show more empty paper: the mark would still be limited by the
+ * shorter axis. Measured over 40 generated marks (five engines, eight names), the ink fills 47.6% of that
+ * square on average — emblem 74%, monogram 71%, lettermark 64%, abstract 38%, wordmark 14%. Nearly all of
+ * the slack is inside the canvas, where it is the engines' clear space, rather than between the canvas and
+ * the paper.
+ *
+ * That is why a wordmark reads small, and it is not a styling bug: on a 1920x1080 stage one renders at
+ * 693x138. Letting the paper follow the ink's own aspect would take it to 1268x253 — 1.83x linear, 3.35x
+ * the area — at the cost of reshaping the sheet on every concept switch and making one zoom percentage
+ * mean a different size per concept. Cropping the rendered viewBox to the ink is the cheaper 1.35–2.54x,
+ * and the thing to know before doing it is that the export is `applyEdits(concept.svg, edits)`, which
+ * keeps the original viewBox: a crop applied at render time alone would make the stage disagree with the
+ * file the reader downloads.
+ *
  * ## The mark is inline SVG, not an image
  *
  * It used to be a data URL in an `<img>`, which is the right way to show a finished document and the wrong

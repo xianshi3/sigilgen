@@ -19,7 +19,11 @@
   --font-ui: var(--font-ui-stack);
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
 
-  /* Type scale. Sizes are rem so they scale with the user's browser setting. */
+  /* Type scale. Sizes are rem so they scale with the user's browser setting.
+
+     Nominal sizes: the `type-*` utilities multiply by `--scale-display` or `--scale-body`, which the
+     locale block below turns down for Chinese. Read back out of the browser at that scale they come to
+     26.3 / 18.8 / 14.4 / 12.48 / 11px — the last one only because nothing scales it. See `type-caps`. */
   --text-display: 1.75rem;
   --text-title: 1.25rem;
   --text-body: 0.9375rem;
@@ -363,6 +367,18 @@
   letter-spacing: var(--tracking-body);
 }
 
+/* The one size with no locale scale, which is worth knowing before changing it.
+   `--scale-body` exists because "Han glyphs are square and fill the em box, so the same nominal size
+   reads larger". That holds at 20px and 15px. At 11px it inverts: `uppercase` is a no-op on Han, so
+   there is no cap-height bonus to offset the size, and the Latin label ends up the easier of the two to
+   read. Measured, section headings resolve to 11px in both locales while every other size shrinks for
+   Chinese.
+
+   Left alone rather than fixed: 11px at weight 600 with 0.08em tracking is a standard label idiom, and
+   `Section` and `Disclosure` are the only places it is used. If it is ever raised, the candidates are
+   `--text-micro: 0.75rem`, which would crowd it against `--text-caption` at 12.48px, or a `--scale-caps`
+   that rises for Chinese and stays at 1 for Latin — a scale that only ever enlarges is unusual enough to
+   need its own rationale rather than riding on `--scale-body`. */
 @utility type-caps {
   font-size: var(--text-micro);
   line-height: 1.4;
