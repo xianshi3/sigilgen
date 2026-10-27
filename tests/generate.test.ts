@@ -289,14 +289,15 @@ describe('generateLogo', () => {
     )
   })
 
-  it('gives every engine an icon except the typographic ones', () => {
+  it('gives every engine an icon except the ones that draw none', () => {
     const withIcon: string[] = []
     const withoutIcon: string[] = []
     for (const engine of ENGINE_NAMES) {
       const logo = generateLogo({ name: 'Acme', keywords: 'tech', engine })
       ;(logo.icon === null ? withoutIcon : withIcon).push(engine)
     }
-    expect(withoutIcon.toSorted()).toEqual(['abstract', 'lettermark'])
+    // `abstract` draws only geometry, and `lettermark` and `apparatus` are type-only by definition.
+    expect(withoutIcon.toSorted()).toEqual(['abstract', 'apparatus', 'lettermark'])
     expect(withIcon.toSorted()).toEqual(['emblem', 'monogram', 'wordmark'])
   })
 

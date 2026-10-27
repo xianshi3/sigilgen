@@ -6,6 +6,7 @@ import { findFont, findIcon, findPalette } from '../src/brain/index'
 import { normaliseConfig } from '../src/generate'
 import { CONTAINERS, containerPath, placeIcon, wordmarkLetters } from '../src/engines/shared'
 import { frameHalfWidth } from '../src/engines/emblem'
+import { APPARATUS_STYLES } from '../src/engines/apparatus'
 import { MODES } from '../src/engines/abstract'
 import { discPath } from '../src/geometry'
 import { isSafePathData, pathBounds } from '../src/path'
@@ -58,7 +59,7 @@ function fills(elements: readonly { attrs: Record<string, string | number> }[]):
 }
 
 describe('engineWeights', () => {
-  it('always returns a weight for all five engines', () => {
+  it('always returns a weight for all six engines', () => {
     const request = normaliseConfig({ name: 'Acme' })
     const weights = engineWeights(request, moodResolver.resolve('tech'))
     for (const engine of ENGINE_NAMES) {
@@ -720,8 +721,66 @@ describe('abstract', () => {
   })
 })
 
+/**
+ * An apparatus input with one style pinned.
+ *
+ * @param style - One of {@link APPARATUS_STYLES}.
+ * @returns The engine input.
+ */
+function apparatusInput(style: string): EngineInput {
+  return makeInput({
+    engine: 'apparatus',
+    request: normaliseConfig({
+      name: 'Acme Labs',
+      engine: 'apparatus',
+      preferences: { style },
+    }),
+  })
+}
+
+describe('apparatus', () => {
+  it('draws a different mark for each style', () => {
+    // A lookup that quietly fell back to one style would still produce a valid mark, so "it draws" is not
+    // the claim. Four styles have to be four drawings.
+    const draws = APPARATUS_STYLES.map(style =>
+      JSON.stringify(ENGINES.apparatus(apparatusInput(style)))
+    )
+    expect(new Set(draws).size).toBe(APPARATUS_STYLES.length)
+  })
+
+  it('records the style it actually drew', () => {
+    // The pin has to reach the engine. The note is written from the value that came out, so a preference
+    // the engine ignored shows up here as a different word rather than as a silent no-op.
+    for (const style of APPARATUS_STYLES) {
+      const input = apparatusInput(style)
+      ENGINES.apparatus(input)
+      expect(input.mood.notes.at(-1)).toContain(`the ${style} style`)
+    }
+  })
+
+  it('never changes the initials from one style to the next', () => {
+    // The styles vary the grammar around the core, never its contents. A style that nudged or resized the
+    // letters would make the same name look like a different name in each one.
+    const letters = APPARATUS_STYLES.map(style =>
+      JSON.stringify(ENGINES.apparatus(apparatusInput(style)).at(-1))
+    )
+    expect(new Set(letters).size).toBe(1)
+  })
+
+  it('does not collapse its fills when the accent is the background', () => {
+    // `azure-current`'s accent is literally its background, the palette that caught the abstract engine
+    // resolving its roles one after another. The same trap exists here: the hairlines and the index are
+    // both chosen by `readableOn` against the canvas.
+    const palette = findPalette('azure-current')!
+    for (const style of APPARATUS_STYLES) {
+      const distinct = new Set(fills(ENGINES.apparatus({ ...apparatusInput(style), palette })))
+      expect(distinct.size, `${style} came out in one colour on azure-current`).toBeGreaterThan(1)
+    }
+  })
+})
+
 describe('engine registry', () => {
-  it('has exactly the five documented engines', () => {
+  it('has exactly the six documented engines', () => {
     expect(Object.keys(ENGINES).toSorted()).toEqual([...ENGINE_NAMES].toSorted())
   })
 

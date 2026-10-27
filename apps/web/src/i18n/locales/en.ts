@@ -45,11 +45,13 @@ export const en: Record<MessageKey, string> = {
   'engine.monogram': 'Monogram',
   'engine.wordmark': 'Wordmark',
   'engine.lettermark': 'Lettermark',
+  'engine.apparatus': 'Apparatus',
   'engine.abstract': 'Abstract',
   'engine.emblem': 'Emblem',
   'engine.monogramHint': 'One or two letters set in a container',
   'engine.wordmarkHint': 'The full name, paired with a pictogram',
   'engine.lettermarkHint': 'Letters only, no pictogram',
+  'engine.apparatusHint': 'A chamfered core with hairline arcs and ticks',
   'engine.abstractHint': 'Pure geometry, no letterforms at all',
   'engine.emblemHint': 'Pictogram and name inside one frame',
 
@@ -113,6 +115,7 @@ export const en: Record<MessageKey, string> = {
   'dimension.accent': 'Accent',
   'dimension.frame': 'Frame',
   'dimension.mode': 'Composition',
+  'dimension.style': 'Style',
 
   'edit.title': 'Edit',
   'edit.start': 'Start editing',

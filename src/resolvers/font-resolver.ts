@@ -103,7 +103,7 @@ export function resolveFont(
   }
 
   let preferred: readonly FontCategory[] = CATEGORY_FALLBACK
-  if (engine === 'monogram' || engine === 'lettermark') {
+  if (engine === 'monogram' || engine === 'lettermark' || engine === 'apparatus') {
     preferred = [...LETTERMARK_CATEGORIES]
   } else if (engine === 'wordmark' || engine === 'emblem') {
     preferred = [...LOCKUP_CATEGORIES]
@@ -155,7 +155,7 @@ export function resolveFont(
 export function explainFont(font: FontEntry, engine: EngineName, forced: string | null): string {
   const source = forced === null ? 'mood pool' : 'requested'
   const role =
-    engine === 'monogram' || engine === 'lettermark'
+    engine === 'monogram' || engine === 'lettermark' || engine === 'apparatus'
       ? 'letterforms must survive at icon size'
       : 'the name has to sit with other elements'
   return `Typeface "${font.family}" (${font.category}, weight ${font.weight}, ${source}): ${role}.`

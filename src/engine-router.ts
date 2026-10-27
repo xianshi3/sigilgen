@@ -1,5 +1,5 @@
 /**
- * Chooses which of the five engines draws a concept.
+ * Chooses which of the six engines draws a concept.
  *
  * Routing combines three inputs: the mood's declared engine weights, structural facts about the name
  * (how many letters, how many words), and any engine the caller forced.
@@ -11,11 +11,13 @@
  * | `monogram` | name has ≤ 3 letters, or the mood favours it heavily | initials inside a geometric container |
  * | `wordmark` | name has 4–14 letters | icon plus brand name, horizontal or stacked |
  * | `lettermark` | minimal or abbreviation brands | letters only, no icon |
+ * | `apparatus` | technical, instrument or signage briefs | initials in a chamfered core, framed by hairlines |
  * | `abstract` | abstract or generative concepts | seed-driven pure geometry, no text |
  * | `emblem` | badge, manufacturing or hospitality concepts | icon inside a frame with the name below |
  */
 
 import { abstract } from './engines/abstract'
+import { apparatus } from './engines/apparatus'
 import { emblem } from './engines/emblem'
 import { lettermark } from './engines/lettermark'
 import { monogram } from './engines/monogram'
@@ -39,6 +41,7 @@ export const ENGINES: Readonly<Record<EngineName, Engine>> = Object.freeze({
   monogram,
   wordmark,
   lettermark,
+  apparatus,
   abstract,
   emblem,
 })
@@ -65,6 +68,7 @@ export function engineWeights(
     monogram: 0,
     wordmark: 0,
     lettermark: 0,
+    apparatus: 0,
     abstract: 0,
     emblem: 0,
   }

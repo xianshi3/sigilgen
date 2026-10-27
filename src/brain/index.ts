@@ -14,7 +14,15 @@ import colorsData from './colors.json'
 import fontsData from './fonts.json'
 import moodsData from './moods.json'
 import palettesData from './palettes.json'
-import type { Brain, FontCategory, FontEntry, IconEntry, MoodRule, PaletteEntry } from '../types'
+import {
+  ENGINE_NAMES,
+  type Brain,
+  type FontCategory,
+  type FontEntry,
+  type IconEntry,
+  type MoodRule,
+  type PaletteEntry,
+} from '../types'
 import { isSafePathData } from '../path'
 
 /** Accepted colour literals: `#rgb`, `#rrggbb`, `#rrggbbaa`. */
@@ -23,14 +31,14 @@ const HEX_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i
 /** Accepted ids and keys. */
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
-/** Every engine id, used to reject mood weights for unknown engines. */
-const ENGINE_IDS: ReadonlySet<string> = new Set([
-  'monogram',
-  'wordmark',
-  'lettermark',
-  'abstract',
-  'emblem',
-])
+/**
+ * Every engine id, used to reject mood weights for unknown engines.
+ *
+ * Derived from the engine list rather than written out a second time. It used to be a literal copy here,
+ * and adding an engine made every mood that named it fail integrity at import time — the copy is only
+ * ever correct until the next engine.
+ */
+const ENGINE_IDS: ReadonlySet<string> = new Set(ENGINE_NAMES)
 
 /**
  * Finds ids that appear more than once.

@@ -13,7 +13,7 @@ import { type EngineName, type IconEntry, type MoodMatch } from '../types'
 import type { SeedResolver } from '../seed-resolver'
 
 /** Engines that never draw a pictogram. */
-const ICONLESS_ENGINES: ReadonlySet<EngineName> = new Set(['lettermark', 'abstract'])
+const ICONLESS_ENGINES: ReadonlySet<EngineName> = new Set(['lettermark', 'apparatus', 'abstract'])
 
 /**
  * Chooses a pictogram.

@@ -68,7 +68,7 @@ describe('public API', () => {
     expect(sigilgen.generateLogo(config).svg).toBe(generateLogo(config).svg)
   })
 
-  it('exposes the five engine implementations', () => {
+  it('exposes the six engine implementations', () => {
     for (const engine of sigilgen.ENGINE_NAMES) {
       expect(typeof sigilgen.ENGINES[engine], engine).toBe('function')
     }

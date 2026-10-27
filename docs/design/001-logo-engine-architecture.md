@@ -142,13 +142,14 @@ are normalised by rule size so a rule cannot win by listing more synonyms.
 
 ### 4.3 EngineRouter
 
-| Engine       | Selected when                                        | Output                                           |
-| ------------ | ---------------------------------------------------- | ------------------------------------------------ |
-| `monogram`   | Name has ≤ 3 letters, or the mood weights it heavily | Initials inside a geometric container            |
-| `wordmark`   | Name has 4–12 letters                                | Pictogram plus brand name, horizontal or stacked |
-| `lettermark` | Minimal or abbreviation brands                       | Letters only, no pictogram                       |
-| `abstract`   | Abstract or generative concepts                      | Seed-driven pure geometry                        |
-| `emblem`     | Badge, manufacturing or hospitality concepts         | Pictogram and name inside one frame              |
+| Engine       | Selected when                                        | Output                                            |
+| ------------ | ---------------------------------------------------- | ------------------------------------------------- |
+| `monogram`   | Name has ≤ 3 letters, or the mood weights it heavily | Initials inside a geometric container             |
+| `wordmark`   | Name has 4–12 letters                                | Pictogram plus brand name, horizontal or stacked  |
+| `lettermark` | Minimal or abbreviation brands                       | Letters only, no pictogram                        |
+| `apparatus`  | Technical, instrument or signage briefs              | Initials in a chamfered core, framed by hairlines |
+| `abstract`   | Abstract or generative concepts                      | Seed-driven pure geometry                         |
+| `emblem`     | Badge, manufacturing or hospitality concepts         | Pictogram and name inside one frame               |
 
 ### 4.4 Resolvers
 
@@ -164,9 +165,9 @@ The trust boundary. See [section 6](#6-flatness-and-safety).
 
 ### 4.6 Design preferences
 
-Every engine draws its container, layout, accent or frame from the seed stream, which is what makes a
-reroll produce genuinely different compositions rather than the same mark in new colours. It also means
-a reader who liked the hexagon in concept two has no way to ask for the hexagon again.
+Every engine draws its container, layout, accent, frame or style from the seed stream, which is what
+makes a reroll produce genuinely different compositions rather than the same mark in new colours. It
+also means a reader who liked the hexagon in concept two has no way to ask for the hexagon again.
 
 `LogoConfig.preferences` is the escape hatch. Each dimension is optional, and an engine reads only the
 ones it has candidates for:
@@ -178,6 +179,7 @@ ones it has candidates for:
 | `layout`    | wordmark   | `horizontal`, `vertical`                          |
 | `treatment` | wordmark   | `plain`, `badge`, `rule`                          |
 | `accent`    | lettermark | `none`, `rule`, `dot`, `corner-frame`             |
+| `style`     | apparatus  | `dial`, `reticle`, `brackets`, `sector`           |
 | `frame`     | emblem     | `shield`, `hexagon`, `circle`, `banner`           |
 | `mode`      | abstract   | 15 modes, `orbit` … `stacked`                     |
 
@@ -318,6 +320,30 @@ Two rules make that budget hold:
   corners. `frameHalfWidth` reports a frame's width at any row, and the name is fitted to the
   _narrowest_ row of the band it occupies. Budgeting it against the frame's maximum width instead is
   how names end up hanging outside their own badge.
+
+### Apparatus
+
+Styles: `dial`, `reticle`, `brackets`, `sector`. The technical reading: initials reversed out of a
+chamfered core, with the grammar around them — arcs, ticks, brackets, a base rule — drawn as hairlines.
+
+Three things hold it together, and none of them is a taste call:
+
+- **One mass, everything else a hairline.** The core is the only filled shape; the rest is a rule 0.009
+  of the canvas thick, which is 4.6 units at 512. Drawn at the weight the other engines give their
+  shapes it reads as generic geometry, and drawn thinner it stops existing when the mark is scaled to a
+  favicon.
+- **The chamfer bounds the type.** A letter's ink can reach the corner of its box, and the cut is the
+  one place that can bite into it: the safe half-width is `CORE - CHAMFER / 2`, which is 0.186 of the
+  canvas at these constants, against a letter box of 0.174.
+- **Order is the layout guarantee.** The grammar is drawn first, the core over it and the type last, so
+  no tick, arc or bracket can cross an initial whatever the seed picked. Nothing is clipped: the core
+  simply covers the band of canvas where the layers could meet.
+
+The styles vary only the grammar. `dial` is a segmented bezel over a tick band, its gaps sitting under
+the long ticks; `reticle` runs crosshair arms through a ring; `brackets` sets four corner marks and one
+base rule; `sector` puts a heavy arc over a thin ring, which is the only style with a direction. The
+initials are identical across all four, and a test asserts it: a style that nudged the letters would
+make the same name look like a different name in each.
 
 ## 6. Flatness and safety
 

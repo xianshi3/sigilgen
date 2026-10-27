@@ -26,7 +26,7 @@ describe('brain contents', () => {
     expect(MOODS.length).toBeGreaterThanOrEqual(20)
   })
 
-  it('exposes exactly five engines in the mood weights', () => {
+  it('exposes exactly six engines in the mood weights', () => {
     const engines = new Set(ENGINE_NAMES)
     for (const mood of MOODS) {
       for (const engine of Object.keys(mood.engineWeights)) {

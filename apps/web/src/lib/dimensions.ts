@@ -1,4 +1,5 @@
 import { MODES } from '@sigilgen/engines/abstract'
+import { APPARATUS_STYLES } from '@sigilgen/engines/apparatus'
 import { FRAMES } from '@sigilgen/engines/emblem'
 import { ACCENTS } from '@sigilgen/engines/lettermark'
 import { CONTAINERS, LETTER_LAYOUTS } from '@sigilgen/engines/shared'
@@ -37,6 +38,7 @@ export const DIMENSIONS: Record<EngineName, readonly DimensionSpec[]> = {
     { dimension: 'treatment', label: 'dimension.treatment', values: TREATMENTS },
   ],
   lettermark: [{ dimension: 'accent', label: 'dimension.accent', values: ACCENTS }],
+  apparatus: [{ dimension: 'style', label: 'dimension.style', values: APPARATUS_STYLES }],
   emblem: [{ dimension: 'frame', label: 'dimension.frame', values: FRAMES }],
   abstract: [{ dimension: 'mode', label: 'dimension.mode', values: MODES }],
 }

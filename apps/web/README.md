@@ -95,7 +95,7 @@ produce eighteen identical rows. `fontSample` lays the run out with the generato
 metrics instead, set in the reader's own brand name.
 
 **A pinned value the engine cannot use is offered nothing.** `OptionPanel` lists only the dimensions
-`DIMENSIONS[engine]` declares, and `ENGINE_USES_ICON` disables the pictogram group for the three
+`DIMENSIONS[engine]` declares, and `ENGINE_USES_ICON` disables the pictogram group for the four
 engines that draw no pictogram. A control that silently does nothing is worse than no control.
 
 ### Decisions worth knowing

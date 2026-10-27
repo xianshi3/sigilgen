@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { generateLogos } from '../src/generate'
 import { pathBounds } from '../src/path'
 import { FRAMES } from '../src/engines/emblem'
+import { APPARATUS_STYLES } from '../src/engines/apparatus'
 import { LAYOUTS, TREATMENTS } from '../src/engines/wordmark'
 import type { EngineName } from '../src/types'
 
@@ -132,12 +133,35 @@ describe('vertical centring', () => {
     }
   })
 
+  it('keeps an apparatus centred horizontally, whatever its style', () => {
+    // Horizontal only. Every style mirrors left to right — the ticks, the bezel segments, the brackets and
+    // the sector's arc all do — but not top to bottom: `sector` puts its heavy arc above and `brackets`
+    // puts its rule below, so the ink is deliberately heavier on one side. Asserting `dy` would be
+    // asserting that those styles are not what they are.
+    for (const style of APPARATUS_STYLES) {
+      for (const name of NAMES) {
+        const [logo] = generateLogos({
+          name,
+          engine: 'apparatus',
+          variations: 1,
+          preferences: { style },
+        })
+        const found = offset(logo ?? { svg: '' })
+        expect(found, `${style}/${name}`).not.toBeNull()
+        expect(found?.dx, `${style}/${name} is off centre horizontally`).toBeLessThan(
+          WITHIN_A_PIXEL
+        )
+      }
+    }
+  })
+
   it('never lets ink leave the canvas, at any size', () => {
     for (const size of [16, 64, 128, 512, 1024, 4096]) {
       for (const engine of [
         'monogram',
         'wordmark',
         'lettermark',
+        'apparatus',
         'abstract',
         'emblem',
       ] as EngineName[]) {

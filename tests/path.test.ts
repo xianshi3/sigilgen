@@ -6,6 +6,7 @@ import {
   arcBandPath,
   burstPath,
   capsulePath,
+  chamferedRectPath,
   chevronPath,
   discPath,
   ellipsePath,
@@ -438,6 +439,7 @@ describe('geometry helpers', () => {
       ['burst', burstPath(50, 50, 25, 14, 8)],
       ['superellipse', superellipsePath(50, 50, 20, 20, 4)],
       ['roundedRect', roundedRectPath(10, 10, 30, 20, 4)],
+      ['chamferedRect', chamferedRectPath(50, 50, 20, 5)],
       ['shield', shieldPath(50, 5, 40, 45)],
       ['chevron', chevronPath(5, 5, 20, 12, 4)],
       ['capsule', capsulePath(50, 50, 30, 8)],
@@ -466,6 +468,30 @@ describe('geometry helpers', () => {
 
   it('closes a zero-radius rounded rectangle without curves', () => {
     expect(roundedRectPath(0, 0, 10, 10, 0)).not.toContain('C')
+  })
+
+  it('cuts the corners off a rectangle by the amount asked for', () => {
+    // A chamfer is a straight run between two points rather than a curve, which is the whole difference
+    // between a corner that reads as machined and one that reads as soft.
+    const d = chamferedRectPath(50, 50, 20, 5)
+    expect(d).not.toContain('C')
+    // Eight vertices, so seven line segments after the move.
+    expect((d.match(/L/g) ?? []).length).toBe(7)
+    const box = pathBounds(d)
+    expect(box?.minX).toBeCloseTo(30)
+    expect(box?.minY).toBeCloseTo(30)
+    expect(box?.maxX).toBeCloseTo(70)
+    expect(box?.maxY).toBeCloseTo(70)
+  })
+
+  it('clamps a chamfer larger than the rectangle rather than turning it inside out', () => {
+    // A cut past the half-edge would fold the outline back through itself. Clamped, it collapses to a
+    // diamond, which is still a shape.
+    const d = chamferedRectPath(0, 0, 10, 50)
+    const box = pathBounds(d)
+    expect(box?.minX).toBeCloseTo(-10)
+    expect(box?.maxX).toBeCloseTo(10)
+    expect(d).not.toMatch(/NaN|Infinity/)
   })
 
   it('winds an arc band the same way whichever direction it is swept', () => {

@@ -24,7 +24,7 @@ import { generateLogo } from 'sigilgen'
 const logo = generateLogo({ name: 'Acme', keywords: 'tech, minimal' })
 
 logo.svg // '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" ...>'
-logo.engine // 'monogram' | 'wordmark' | 'lettermark' | 'abstract' | 'emblem'
+logo.engine // 'monogram' | 'wordmark' | 'lettermark' | 'apparatus' | 'abstract' | 'emblem'
 logo.palette.id // 'graphite-signal'
 logo.font.family // 'Orbit Grotesk'
 logo.conceptNotes // why this palette, this typeface, this engine
@@ -69,8 +69,10 @@ every one of them is reported back to you in words. That buys three things an im
 - **Zero runtime dependencies.** SVG output needs nothing installed. PNG output is optional.
 - **Explainable.** Every concept carries notes naming the mood that matched, the pool it drew from, and
   the structural reason for the engine it chose.
-- **Five engines.** `monogram`, `wordmark`, `lettermark`, `abstract` and `emblem` — each a different
-  structural reading of the same input, not a recolouring.
+- **Six engines.** `monogram`, `wordmark`, `lettermark`, `apparatus`, `abstract` and `emblem` — each a
+  different structural reading of the same input, not a recolouring. `apparatus` is the technical one:
+  initials reversed out of a chamfered core, with the arcs, ticks and brackets around it drawn as
+  hairlines, in four styles.
 - **Fifteen abstract modes.** The abstract engine draws seed-driven geometry with no type at all, grouped
   as orbital (`orbit`, `scatter`), interference (`venn`, `lattice`), radiating (`arcs`, `portal`,
   `burst`), continuous (`waves`, `helix`), faceted (`aperture`, `prism`, `stacked`) and instrument
@@ -131,9 +133,9 @@ It imports the generator's source directly, so editing an engine in `src/` hot-r
 separate package with its own gate — the root `pnpm run check` does not cover it. See
 [apps/web/README.md](apps/web/README.md).
 
-## Five engines
+## Six engines
 
-![Five engines, one name](docs/images/engines.svg)
+![Six engines, one name](docs/images/engines.svg)
 
 <sub>One name through each engine. Unedited output, drawn by
 `scripts/build-docs-images.mjs`.</sub>
@@ -150,26 +152,26 @@ sigilgen --name "Acme" --keywords owl --png --png-size 1024
 
 ### Options
 
-| Flag                       | Meaning                                                                      |
-| -------------------------- | ---------------------------------------------------------------------------- |
-| `-n`, `--name <brand>`     | **Required.** Brand name. Letters `A`–`Z` are used; others are ignored.      |
-| `-k`, `--keywords <list>`  | Comma or space separated keywords, e.g. `"tech, minimal"`.                   |
-| `-b`, `--brief <text>`     | Free-text brief. Keywords are extracted from it too.                         |
-| `-e`, `--engine <id>`      | Force an engine: `monogram`, `wordmark`, `lettermark`, `abstract`, `emblem`. |
-| `-c`, `--palette <spec>`   | A palette id, or a colour list. Colours may be hex or a name from the brain. |
-| `--font <id>`              | Force a typeface id.                                                         |
-| `--icon <key>`             | Force a pictogram key.                                                       |
-| `-s`, `--seed <number>`    | Numeric seed mixed into the hash. Default `0`.                               |
-| `--size <number>`          | Square canvas size, 16–4096. Default `512`.                                  |
-| `-N`, `--variations <1-6>` | Number of concepts. Default `3`.                                             |
-| `--background`             | Emit an opaque background rectangle.                                         |
-| `-o`, `--output <path>`    | Write files instead of stdout. Directories are created.                      |
-| `--json`                   | Print a machine-readable summary instead of SVG.                             |
-| `--png`                    | Also write a PNG. Requires the optional `sharp` dependency.                  |
-| `--png-size <number>`      | PNG edge length in pixels. Default `1024`.                                   |
-| `-q`, `--quiet`            | Suppress the summary line on stderr.                                         |
-| `-h`, `--help`             | Show help.                                                                   |
-| `-v`, `--version`          | Show the version.                                                            |
+| Flag                       | Meaning                                                                                   |
+| -------------------------- | ----------------------------------------------------------------------------------------- |
+| `-n`, `--name <brand>`     | **Required.** Brand name. Letters `A`–`Z` are used; others are ignored.                   |
+| `-k`, `--keywords <list>`  | Comma or space separated keywords, e.g. `"tech, minimal"`.                                |
+| `-b`, `--brief <text>`     | Free-text brief. Keywords are extracted from it too.                                      |
+| `-e`, `--engine <id>`      | Force an engine: `monogram`, `wordmark`, `lettermark`, `apparatus`, `abstract`, `emblem`. |
+| `-c`, `--palette <spec>`   | A palette id, or a colour list. Colours may be hex or a name from the brain.              |
+| `--font <id>`              | Force a typeface id.                                                                      |
+| `--icon <key>`             | Force a pictogram key.                                                                    |
+| `-s`, `--seed <number>`    | Numeric seed mixed into the hash. Default `0`.                                            |
+| `--size <number>`          | Square canvas size, 16–4096. Default `512`.                                               |
+| `-N`, `--variations <1-6>` | Number of concepts. Default `3`.                                                          |
+| `--background`             | Emit an opaque background rectangle.                                                      |
+| `-o`, `--output <path>`    | Write files instead of stdout. Directories are created.                                   |
+| `--json`                   | Print a machine-readable summary instead of SVG.                                          |
+| `--png`                    | Also write a PNG. Requires the optional `sharp` dependency.                               |
+| `--png-size <number>`      | PNG edge length in pixels. Default `1024`.                                                |
+| `-q`, `--quiet`            | Suppress the summary line on stderr.                                                      |
+| `-h`, `--help`             | Show help.                                                                                |
+| `-v`, `--version`          | Show the version.                                                                         |
 
 ### Exit codes
 
@@ -251,7 +253,7 @@ interface LogoConfig {
   name: string // required, max 64 characters, must contain at least one A–Z
   keywords?: string // max 240 characters
   brief?: string // max 600 characters
-  engine?: 'monogram' | 'wordmark' | 'abstract' | 'emblem' | 'lettermark'
+  engine?: 'monogram' | 'wordmark' | 'lettermark' | 'apparatus' | 'abstract' | 'emblem'
   palette?: string // palette id, or "#2B1B12,cream,rust"
   font?: string // font id, e.g. "orbit-grotesk"
   icon?: string // icon key, e.g. "mountain-peak"

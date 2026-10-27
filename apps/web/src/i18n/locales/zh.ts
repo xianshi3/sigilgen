@@ -46,11 +46,13 @@ export const zh = {
   'engine.monogram': '字母组合',
   'engine.wordmark': '文字标',
   'engine.lettermark': '字母标',
+  'engine.apparatus': '仪器',
   'engine.abstract': '抽象',
   'engine.emblem': '徽章',
   'engine.monogramHint': '一到两个字母放进容器里',
   'engine.wordmarkHint': '完整品牌名，配图标',
   'engine.lettermarkHint': '只保留字母，不加图标',
+  'engine.apparatusHint': '切角核心配细弧与刻度，器械面板式的构成',
   'engine.abstractHint': '不含任何字母的纯几何构图',
   'engine.emblemHint': '图标与名称同处一个边框内',
 
@@ -113,6 +115,7 @@ export const zh = {
   'dimension.accent': '装饰',
   'dimension.frame': '边框',
   'dimension.mode': '构成',
+  'dimension.style': '式样',
 
   'edit.title': '编辑',
   'edit.start': '开始编辑',

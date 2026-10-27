@@ -7,14 +7,21 @@
 
 import type { SeedResolver } from './seed-resolver'
 
-/** Identifier of one of the five rendering engines. */
-export type EngineName = 'monogram' | 'wordmark' | 'lettermark' | 'abstract' | 'emblem'
+/** Identifier of one of the six rendering engines. */
+export type EngineName =
+  | 'monogram'
+  | 'wordmark'
+  | 'lettermark'
+  | 'apparatus'
+  | 'abstract'
+  | 'emblem'
 
 /** Every engine, in the canonical order used for iteration and documentation. */
 export const ENGINE_NAMES: readonly EngineName[] = [
   'monogram',
   'wordmark',
   'lettermark',
+  'apparatus',
   'abstract',
   'emblem',
 ]
@@ -145,6 +152,8 @@ export type DesignDimension =
   | 'frame'
   /** Abstract composition mode. */
   | 'mode'
+  /** Apparatus instrument grammar. */
+  | 'style'
 
 /** Design decisions held fixed across every concept, keyed by dimension. */
 export type DesignPreferences = Partial<Record<DesignDimension, string>>

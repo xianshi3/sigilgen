@@ -332,6 +332,40 @@ export function roundedRectPath(
 }
 
 /**
+ * Builds a rectangle with its four corners cut at 45°.
+ *
+ * Distinct from {@link roundedRectPath} on purpose: a rounded corner reads as a soft consumer product and
+ * a cut corner reads as machined. The cut is a straight run between two points rather than a curve, so
+ * the silhouette stays hard at any size.
+ *
+ * The points run clockwise from the top edge, the same direction `roundedRectPath` winds, so the two are
+ * interchangeable without changing how the shape merges with anything drawn beneath it.
+ *
+ * @param cx - Centre x.
+ * @param cy - Centre y.
+ * @param half - Half the edge length.
+ * @param cut - How far each corner is cut back along both of its edges.
+ * @returns Path data.
+ */
+export function chamferedRectPath(cx: number, cy: number, half: number, cut: number): string {
+  const c = Math.max(0, Math.min(cut, half))
+  const left = cx - half
+  const right = cx + half
+  const top = cy - half
+  const bottom = cy + half
+  return polygonPath([
+    { x: left + c, y: top },
+    { x: right - c, y: top },
+    { x: right, y: top + c },
+    { x: right, y: bottom - c },
+    { x: right - c, y: bottom },
+    { x: left + c, y: bottom },
+    { x: left, y: bottom - c },
+    { x: left, y: top + c },
+  ])
+}
+
+/**
  * Builds a shield outline: a flat top, straight flanks that taper into a point at the bottom.
  *
  * @param cx - Centre x.

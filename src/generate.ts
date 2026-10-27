@@ -152,6 +152,7 @@ const DIMENSIONS = [
   'accent',
   'frame',
   'mode',
+  'style',
 ] as const satisfies readonly DesignDimension[]
 
 /**

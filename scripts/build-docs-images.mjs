@@ -165,8 +165,8 @@ write(
   })
 )
 
-// 2. The range: the same short name through each engine, so the five readings are visible side by side.
-const ENGINES = ['monogram', 'wordmark', 'lettermark', 'abstract', 'emblem']
+// 2. The range: the same short name through each engine, so the six readings are visible side by side.
+const ENGINES = ['monogram', 'wordmark', 'lettermark', 'apparatus', 'abstract', 'emblem']
 const engines = ENGINES.map(engine => {
   const [logo] = generateLogos({ name: 'Vela', engine, variations: 1, size: MARK })
   return logo === undefined ? null : { svg: logo.svg, caption: engine }
@@ -174,9 +174,9 @@ const engines = ENGINES.map(engine => {
 write(
   'engines.svg',
   sheet({
-    title: 'Five engines, one name',
+    title: 'Six engines, one name',
     subtitle: 'A different structural reading of the same input — not a recolouring',
-    columns: 5,
+    columns: 6,
     marks: engines,
   })
 )
