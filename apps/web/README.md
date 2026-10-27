@@ -81,7 +81,7 @@ The left sidebar answers, in order: _what is it called_, _what shape_, _what col
 | `DesignPanel`    | Engine, concept count, canvas size, opaque background              |
 | `ResourcePanel`  | Palette swatches and a custom colour list, typefaces, pictograms   |
 | `OptionPanel`    | Tri-state pins for the dimensions the active engine actually reads |
-| `InspectorPanel` | What was chosen, why, and how to export it                         |
+| `InspectorPanel` | What was chosen, and how to export it                              |
 
 Three details are worth knowing before changing them.
 

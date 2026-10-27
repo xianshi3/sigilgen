@@ -84,9 +84,7 @@ export const zh = {
   'concept.icon': '图标',
   'concept.none': '无',
   'concept.seed': '种子指纹',
-
-  'notes.title': '设计说明',
-  'notes.empty': '选择概念后显示',
+  'concept.empty': '选择概念后显示详情',
 
   'resource.palette': '配色',
   'resource.font': '字体',

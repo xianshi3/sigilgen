@@ -105,6 +105,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `CONTAINERS` and `LETTER_LAYOUTS` as module exports, so a consumer can offer the same choices the
   engines accept instead of keeping a second copy that will drift.
 
+### Removed
+
+- **The design notes panel.** The inspector ended with the generator's own notes as a numbered list —
+  nine lines on a typical concept, in English, in a panel that had already stated the engine, the
+  typeface, the pictogram and the palette three rows above it. Three of the nine were resolver
+  diagnostics: the palette pool, the typeface pool, the runner-up mood. Those belong in a log, and they
+  made the one screen in the studio that read like one.
+
+  The panel now carries the decisions and the export and nothing else: six rows, each a value the reader
+  can act on. The palette gained a row of its own on the way past, because a run draws a different
+  palette for every concept, so the left panel's selection says nothing about the concept on screen.
+
+  `conceptNotes` is untouched. It still travels through the API and the CLI's JSON output, and the tests
+  that assert on a decision still read it.
+
 ### Fixed
 
 - **The drawers animated anyway when the system asked for less motion.** `tokens.css` zeroes every CSS

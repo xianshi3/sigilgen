@@ -83,9 +83,7 @@ export const en: Record<MessageKey, string> = {
   'concept.icon': 'Pictogram',
   'concept.none': 'None',
   'concept.seed': 'Seed fingerprint',
-
-  'notes.title': 'Design notes',
-  'notes.empty': 'Select a concept to see its notes',
+  'concept.empty': 'Select a concept to see its details',
 
   'resource.palette': 'Palette',
   'resource.font': 'Typeface',

@@ -26,13 +26,16 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 /**
- * What was chosen, and why.
+ * What was chosen, and how to take it away.
  *
- * The notes are the point of the panel: the generator can produce a mark a reader likes without
- * understanding why, but cannot be iterated on without knowing which decision to push on.
+ * The panel used to end with the generator's design notes: nine lines of English prose about the mood
+ * that matched, the pools each resolver drew from, and the runner-up. They were the library's own
+ * diagnostics wearing a section heading, and in a panel that already states the engine, the typeface,
+ * the pictogram and the palette, they restated the outcome and buried it — the one screen in the studio
+ * that read like a log rather than a tool.
  *
- * The edit controls sit above the notes because they are the more frequent reason to open this panel:
- * a reader who wants to nudge a shape is not usually also reading about why the palette was chosen.
+ * What belongs here is the answer, not the argument. `conceptNotes` still carries the audit trail, for
+ * the API, the CLI's JSON output and every test that asserts on a decision.
  */
 export function InspectorPanel({ concept }: InspectorPanelProps) {
   const { t } = useI18n()
@@ -56,8 +59,8 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
 
   if (concept === undefined) {
     return (
-      <Section title={t('notes.title')}>
-        <p className="type-caption text-ink-faint">{t('notes.empty')}</p>
+      <Section title={t('concept.title')}>
+        <p className="type-caption text-ink-faint">{t('concept.empty')}</p>
       </Section>
     )
   }
@@ -221,6 +224,9 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
             label={t('concept.icon')}
             value={concept.icon === null ? t('concept.none') : concept.icon.key}
           />
+          {/* The palette's name, not only its swatches. Each concept in a run draws its own palette
+              from the mood pool, so the left panel's selection says nothing about this one. */}
+          <Row label={t('concept.palette')} value={concept.palette.id} />
           <Row label={t('concept.seed')} value={concept.seed} />
         </dl>
         {/* The palette's own colours, so the choice can be judged rather than inferred from a name. */}
@@ -269,20 +275,6 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
             {t('action.downloadSvg')}
           </Button>
         </div>
-      </Section>
-
-      <Section title={t('notes.title')}>
-        <ol className="flex flex-col gap-2">
-          {concept.conceptNotes.map((note, index) => (
-            <li
-              key={`${index}-${note.slice(0, 12)}`}
-              className="type-caption flex gap-2 text-ink-soft"
-            >
-              <span className="text-ink-faint tabular-nums">{index + 1}</span>
-              <span className="min-w-0">{note}</span>
-            </li>
-          ))}
-        </ol>
       </Section>
     </>
   )
