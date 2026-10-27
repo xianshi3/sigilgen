@@ -48,3 +48,20 @@ export function useMediaQuery(query: string): boolean {
 export function useIsNarrow(): boolean {
   return useMediaQuery(NARROW_QUERY)
 }
+
+/** The system request for less motion. The same string `tokens.css` overrides transitions with. */
+export const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+
+/**
+ * Whether the reader has asked their system for less motion.
+ *
+ * The stylesheet honours this with a blanket `transition-duration` override, which covers every CSS
+ * transition in the studio. It does not cover a transition driven from JavaScript: framer-motion sets
+ * an inline style and animates it itself, so those components never see the rule and keep moving
+ * regardless unless they ask.
+ *
+ * @returns `true` when motion should be reduced.
+ */
+export function useReducedMotion(): boolean {
+  return useMediaQuery(REDUCED_MOTION_QUERY)
+}

@@ -25,3 +25,25 @@ export const DURATION_BASE = 0.24
 
 /** Seconds, for a panel travelling a long distance. No CSS counterpart: nothing transitions on it. */
 export const DURATION_PANEL = 0.28
+
+/**
+ * The transition for a panel opening or closing.
+ *
+ * Under `prefers-reduced-motion` the travel is what has to go, and here the travel is the `width`: it
+ * reflows the stage, which is precisely the motion that setting asks to be spared. The blanket
+ * `transition-duration` override in `tokens.css` cannot reach it — framer-motion writes an inline style
+ * rather than starting a CSS transition — so this is the second place that has to ask.
+ *
+ * The fade goes with it at duration 0, which is fine: the panel still opens, it just arrives. The two
+ * opacity-only animations elsewhere, the scrim and the mark's cross-fade, deliberately keep their
+ * duration, because a fade in place is not the kind of movement the setting is about.
+ *
+ * @param reduced - Whether the system asks for less motion.
+ * @returns The transition object to hand to `motion`.
+ */
+export function panelTransition(reduced: boolean): {
+  duration: number
+  ease: [number, number, number, number]
+} {
+  return { duration: reduced ? 0 : DURATION_PANEL, ease: EASE_APPLE }
+}

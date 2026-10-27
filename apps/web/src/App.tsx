@@ -10,12 +10,12 @@ import { ConceptStrip } from './components/stage/ConceptStrip'
 import { Stage } from './components/stage/Stage'
 import { StageBar } from './components/stage/StageBar'
 import { useI18n } from './i18n/I18nProvider'
-import { useIsNarrow } from './hooks/useMediaQuery'
+import { useIsNarrow, useReducedMotion } from './hooks/useMediaQuery'
 import { useHotkeys } from './hooks/useHotkeys'
 import { useThemeEffect } from './hooks/useThemeEffect'
 import { generate } from './lib/generate'
 import { PANEL_WIDTH_LEFT, PANEL_WIDTH_RIGHT } from './lib/layout'
-import { DURATION_PANEL, EASE_APPLE } from './lib/motion'
+import { DURATION_PANEL, EASE_APPLE, panelTransition } from './lib/motion'
 import { useStudio } from './store/useStudio'
 
 /** Panel widths, shared by the animation and the inner scroller so the two cannot disagree. */
@@ -86,6 +86,9 @@ export default function App() {
   // become drawers over the stage instead, and only one at a time: two overlays open at once would hide
   // the mark entirely, which is the one thing the app exists to show.
   const narrow = useIsNarrow()
+  // CSS gets this from a blanket override in `tokens.css`. A framer-motion transition is an inline
+  // style, so the drawers have to be told separately or they keep resizing the stage regardless.
+  const reduced = useReducedMotion()
   const { setLeftPanelOpen, setRightPanelOpen, toggleLeftPanel, toggleRightPanel } = studio
 
   // Which panels were open before the viewport narrowed, so widening the window can put them back.
@@ -181,7 +184,7 @@ export default function App() {
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: LEFT_WIDTH, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: DURATION_PANEL, ease: EASE_APPLE }}
+              transition={panelTransition(reduced)}
               className={`material z-30 shrink-0 overflow-hidden hairline-r shadow-[var(--shadow-card)]
                 ${narrow ? 'absolute inset-y-0 left-0' : ''}`}
             >
@@ -218,7 +221,7 @@ export default function App() {
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: RIGHT_WIDTH, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: DURATION_PANEL, ease: EASE_APPLE }}
+              transition={panelTransition(reduced)}
               className={`material z-30 shrink-0 overflow-hidden hairline-l shadow-[var(--shadow-card)]
                 ${narrow ? 'absolute inset-y-0 right-0' : ''}`}
             >
@@ -252,6 +255,8 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              // Opacity only, so it keeps its duration under reduced motion: a fade in place is not the
+              // travel the setting is about. The panels use `panelTransition`, which does zero theirs.
               transition={{ duration: DURATION_PANEL, ease: EASE_APPLE }}
               className="absolute inset-0 z-20 cursor-default bg-[var(--scrim)]"
             />

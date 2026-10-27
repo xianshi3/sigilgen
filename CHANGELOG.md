@@ -85,6 +85,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **The drawers animated anyway when the system asked for less motion.** `tokens.css` zeroes every CSS
+  transition and animation under `prefers-reduced-motion: reduce`, and its own comment says as much —
+  "rather than animating regardless". It covered everything except the two panels, which animate through
+  framer-motion: that library writes an inline style and animates it itself, so it never sees a CSS rule.
+  The panels kept resizing the stage over 280ms, which is the one motion the setting is really about,
+  because it does not fade in place — it reflows everything beside it.
+
+  The panels now watch the query themselves through a `useReducedMotion` hook and take their transition
+  from `panelTransition`, which returns a duration of 0 when it matches. The scrim and the mark's
+  cross-fade deliberately keep their timings: both are opacity only, and a fade in place is not travel.
+
+  Three guards, each confirmed failing against the code before the fix: the reduced branch returns 0
+  rather than 0.28, both drawers are checked to ask for it instead of a literal, and the hook and the
+  stylesheet are checked to be watching the same media query — because if those two ever drift apart the
+  CSS half keeps reducing while the JS half silently does not.
+
 - **Controls that were harder to hit than the controls beside them.** The studio had four control heights
   and no reason for any of them: `Button`'s small tier was 28px, a segmented control came to 31px — and to
   a _different_ 31px in each locale, because a Han caption line and a Latin one are not the same height —
