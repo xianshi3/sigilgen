@@ -27,6 +27,23 @@ export const DURATION_BASE = 0.24
 export const DURATION_PANEL = 0.28
 
 /**
+ * A duration for a change that happens in place, in seconds.
+ *
+ * Every animated component goes through this rather than writing a literal, for the same two reasons the
+ * panels do: the timing is a single decision, and a transition driven from JavaScript is an inline style
+ * that the stylesheet's reduced-motion override cannot reach. Zero is the right answer when the system
+ * asks for less motion — including for a reveal, because a section growing from nothing is movement as
+ * much as a panel sliding is.
+ *
+ * @param base - Seconds to use when motion is allowed.
+ * @param reduced - Whether the system asks for less motion.
+ * @returns The duration to hand to `motion`.
+ */
+export function motionDuration(base: number, reduced: boolean): number {
+  return reduced ? 0 : base
+}
+
+/**
  * The transition for a panel opening or closing.
  *
  * Under `prefers-reduced-motion` the travel is what has to go, and here the travel is the `width`: it
@@ -45,5 +62,5 @@ export function panelTransition(reduced: boolean): {
   duration: number
   ease: [number, number, number, number]
 } {
-  return { duration: reduced ? 0 : DURATION_PANEL, ease: EASE_APPLE }
+  return { duration: motionDuration(DURATION_PANEL, reduced), ease: EASE_APPLE }
 }

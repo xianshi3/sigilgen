@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { readFile } from 'node:fs/promises'
 import type { LogoResult } from '@sigilgen/types'
@@ -168,7 +168,7 @@ describe('the readability notice', () => {
     expect(screen.queryByRole('button', { name: /readable/i })).toBeNull()
   })
 
-  it('disappears once the mark can be seen again', () => {
+  it('disappears once the mark can be seen again', async () => {
     const concept = darkInkConcept()
     act(() => {
       useStudio.setState({ backdrop: 'dark' })
@@ -179,7 +179,11 @@ describe('the readability notice', () => {
     act(() => {
       useStudio.setState({ backdrop: 'light' })
     })
-    expect(screen.queryByRole('status')).toBeNull()
+    // It leaves rather than vanishing. The exit transition keeps the element mounted for a beat after
+    // the state has changed, which is the whole point of it, so the assertion has to allow for that.
+    await waitFor(() => {
+      expect(screen.queryByRole('status')).toBeNull()
+    })
   })
 
   it('stays quiet on a sheet it cannot read, rather than guessing', () => {

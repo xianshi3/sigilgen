@@ -9,6 +9,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Entrances, instead of things appearing.** Three places used to pop: a disclosure body snapped open
+  and shoved every section below it, a concept strip replaced itself between two frames when the batch
+  was rerolled, and the readability notice blinked in and out as the backdrop changed.
+
+  A disclosure now grows its body over `--duration-base`, clipped only while the height is moving — left
+  clipped afterwards it would cut the focus ring of the last row, so the clipping is released when the
+  animation completes. A rerolled strip arrives as a batch: each tile fades and rises eight units, thirty
+  milliseconds apart, capped at the fifth so a long batch does not keep its last tile waiting. The notice
+  fades in with a six-unit rise and leaves the same way.
+
+  All three follow the rule the panels already set: **a fade may stay when motion is reduced, a move may
+  not**. The offsets and the stagger drop out under `prefers-reduced-motion`, the fades do not, and the
+  disclosure skips its animation entirely rather than running it at zero duration — a height animation
+  has to resolve `auto` into pixels, and not starting it is the only way to be sure it cannot resolve to
+  nothing.
+
+  The strip's animation sits on a wrapper around each tile rather than on the tile, because the tile's
+  opacity is state — dimmed when unselected, full on hover — and an animated inline opacity would
+  overwrite it.
+
 - **An `apparatus` engine, for marks that should look made rather than drawn.** The vocabulary is
   equipment: a core with its corners cut, arcs that stop short of closing, radial ticks with one long
   index, brackets that frame without enclosing. What carries it is the contrast between a single solid

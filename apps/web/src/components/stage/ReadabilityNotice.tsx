@@ -1,5 +1,8 @@
 import type { PaletteEntry } from '@sigilgen/types'
+import { motion } from 'motion/react'
+import { useReducedMotion } from '../../hooks/useMediaQuery'
 import { useI18n } from '../../i18n/I18nProvider'
+import { DURATION_BASE, EASE_APPLE } from '../../lib/motion'
 import { Button } from '../primitives/Button'
 
 export interface ReadabilityNoticeProps {
@@ -34,12 +37,21 @@ export interface ReadabilityNoticeProps {
  */
 export function ReadabilityNotice({ ratio, palette, onUsePalette }: ReadabilityNoticeProps) {
   const { t } = useI18n()
+  const reduced = useReducedMotion()
 
   return (
-    <div
+    <motion.div
       // A live region: the notice appears as the reader switches the backdrop, and a sighted reader sees
       // it the moment it does. Without this it would only ever be found by exploring the stage.
       role="status"
+      // It arrives rather than blinking into place. Six units of rise is enough to read as the stage
+      // telling the reader something; more would compete with the mark it is talking about.
+      // A fade is allowed when motion is reduced; the six units of rise are not. So the offset is the
+      // only part of the entrance the setting removes, and the notice still arrives rather than blinking.
+      initial={{ opacity: 0, y: reduced ? 0 : 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: reduced ? 0 : 6 }}
+      transition={{ duration: DURATION_BASE, ease: EASE_APPLE }}
       className="card absolute inset-x-3 bottom-2 z-10 mx-auto flex w-fit max-w-full flex-wrap items-center
         justify-center gap-x-2 gap-y-1 rounded-control px-2.5 py-1.5"
     >
@@ -71,6 +83,6 @@ export function ReadabilityNotice({ ratio, palette, onUsePalette }: ReadabilityN
           {t('stage.readabilityFix')}
         </Button>
       )}
-    </div>
+    </motion.div>
   )
 }

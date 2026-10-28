@@ -1,6 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { DURATION_PANEL, EASE_APPLE, panelTransition } from '../src/lib/motion'
+import {
+  DURATION_BASE,
+  DURATION_PANEL,
+  EASE_APPLE,
+  motionDuration,
+  panelTransition,
+} from '../src/lib/motion'
 import { REDUCED_MOTION_QUERY } from '../src/hooks/useMediaQuery'
 
 /**
@@ -43,5 +49,30 @@ describe('reduced motion', () => {
       /transition=\{panelTransition\(reduced\)\}/g
     )
     expect(uses ?? []).toHaveLength(2)
+  })
+})
+
+describe('the shared duration', () => {
+  it('is the base when motion is allowed and zero when it is not', () => {
+    expect(motionDuration(DURATION_BASE, false)).toBe(DURATION_BASE)
+    expect(motionDuration(DURATION_BASE, true)).toBe(0)
+    // Zero in, zero out: a caller asking for no duration is not turned into motion by the helper.
+    expect(motionDuration(0, false)).toBe(0)
+  })
+
+  it('is read by every animated component', () => {
+    // The rule the studio settled on: a fade may stay when motion is reduced, a move may not. Each of
+    // these asks the setting rather than animating regardless — the failure this started from was a
+    // drawer that kept resizing the stage with the setting on. `reduced ?` rather than the import alone,
+    // because reading the value and then ignoring it would pass an import check.
+    for (const path of [
+      'src/components/primitives/Disclosure.tsx',
+      'src/components/stage/ConceptStrip.tsx',
+      'src/components/stage/ReadabilityNotice.tsx',
+    ]) {
+      const source = readFileSync(path, 'utf8')
+      expect(source, path).toContain('useReducedMotion')
+      expect(source, path).toMatch(/reduced \?/)
+    }
   })
 })

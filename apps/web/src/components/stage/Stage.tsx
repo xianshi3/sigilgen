@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import type { LogoResult } from '@sigilgen/types'
 import type { MessageKey } from '../../i18n/locales/zh'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -285,15 +285,17 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
 
       {/* Outside the sheet, in the stage's own gutter. It is about the mark, but it must not be on top of
           it — see the note in the component. */}
-      {notice === null ? null : (
-        <ReadabilityNotice
-          ratio={notice.ratio}
-          palette={notice.palette}
-          onUsePalette={id => {
-            setField('palette', id)
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {notice === null ? null : (
+          <ReadabilityNotice
+            ratio={notice.ratio}
+            palette={notice.palette}
+            onUsePalette={id => {
+              setField('palette', id)
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

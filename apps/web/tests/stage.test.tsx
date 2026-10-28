@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { I18nProvider } from '../src/i18n/I18nProvider'
 import { useStudio } from '../src/store/useStudio'
 import { NARROW_QUERY } from '../src/hooks/useMediaQuery'
@@ -286,6 +286,25 @@ describe('Disclosure', () => {
     fireEvent.click(button)
     expect(button).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByText('body content')).toBeTruthy()
+  })
+
+  it('keeps the body mounted only for the length of the exit, then unmounts it', async () => {
+    // The body is conditioned on `open` rather than hidden so the icon grid's search text does not
+    // survive putting the section away. The exit transition keeps it mounted for a beat after the click,
+    // which is the point of animating it — but it has to end, or the reset never happens.
+    render(
+      <Disclosure title="Palette" summary="Auto">
+        <span>body content</span>
+      </Disclosure>
+    )
+    const button = screen.getByRole('button')
+    fireEvent.click(button)
+    expect(screen.getByText('body content')).toBeTruthy()
+    fireEvent.click(button)
+    expect(button).toHaveAttribute('aria-expanded', 'false')
+    await waitFor(() => {
+      expect(screen.queryByText('body content')).toBeNull()
+    })
   })
 
   it('shows the heading and the summary but no body when it is not available', () => {
