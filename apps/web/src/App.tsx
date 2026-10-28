@@ -230,7 +230,7 @@ export default function App() {
           ) : null}
         </AnimatePresence>
 
-        <main className="flex min-w-0 flex-1 flex-col pt-16">
+        <main className="relative flex min-w-0 flex-1 flex-col pt-16">
           <Stage
             concept={activeConcept}
             errorKey={errorKey}
@@ -241,6 +241,26 @@ export default function App() {
           <StageBar />
           <div className="hairline-t">
             <ConceptStrip concepts={concepts} />
+          </div>
+
+          {/* The panel toggles belong to the stage, not to the window. Anchored to the window they sat on
+              top of an open panel's left padding — floating above it in the stacking order, which is what
+              kept them clickable, and covering the controls underneath, which is what made them a bug. */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-40 flex items-center pl-1.5">
+            <PanelToggle
+              open={studio.leftPanelOpen}
+              onClick={openLeft}
+              label={studio.leftPanelOpen ? t('panel.collapseLeft') : t('panel.expandLeft')}
+              glyph={studio.leftPanelOpen ? '‹' : '›'}
+            />
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-40 flex items-center pr-1.5">
+            <PanelToggle
+              open={studio.rightPanelOpen}
+              onClick={openRight}
+              label={studio.rightPanelOpen ? t('panel.collapseRight') : t('panel.expandRight')}
+              glyph={studio.rightPanelOpen ? '›' : '‹'}
+            />
           </div>
         </main>
 
@@ -297,27 +317,7 @@ export default function App() {
           ) : null}
         </AnimatePresence>
 
-        {/* Toggles for the panels, in the corners of the stage. They float so the canvas keeps every
-            pixel it can, and they stay put when a panel is closed so it can be reopened.
-
-            Above the drawers in the stacking order, which matters only once the panels become overlays: a
-            toggle underneath an open drawer would be unreachable, leaving the reader no way to close it. */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-40 flex items-center pl-1.5">
-          <PanelToggle
-            open={studio.leftPanelOpen}
-            onClick={openLeft}
-            label={studio.leftPanelOpen ? t('panel.collapseLeft') : t('panel.expandLeft')}
-            glyph={studio.leftPanelOpen ? '‹' : '›'}
-          />
-        </div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-40 flex items-center pr-1.5">
-          <PanelToggle
-            open={studio.rightPanelOpen}
-            onClick={openRight}
-            label={studio.rightPanelOpen ? t('panel.collapseRight') : t('panel.expandRight')}
-            glyph={studio.rightPanelOpen ? '›' : '‹'}
-          />
-        </div>
+        {/* Toggles for the panels live inside the stage now; see the note there. */}
       </div>
     </div>
   )
