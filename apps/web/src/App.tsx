@@ -191,7 +191,7 @@ export default function App() {
               <div className="h-full overflow-y-auto" style={{ width: LEFT_WIDTH }}>
                 {/* The panel owns its padding, so the four groups below it share one rhythm instead of
                     each inventing a gutter against its neighbour. */}
-                <div className="flex flex-col gap-6 px-gutter py-gutter">
+                <div className="flex flex-col gap-8 px-gutter py-gutter">
                   <InputPanel />
                   <DesignPanel />
                   <div className="hairline-t -mx-gutter px-gutter pt-6">
@@ -232,7 +232,7 @@ export default function App() {
                 ${narrow ? 'absolute inset-y-0 right-0' : ''}`}
             >
               <div className="h-full overflow-y-auto" style={{ width: RIGHT_WIDTH }}>
-                <div className="flex flex-col gap-6 px-gutter py-gutter">
+                <div className="flex flex-col gap-8 px-gutter py-gutter">
                   <InspectorPanel concept={activeConcept} />
                 </div>
               </div>

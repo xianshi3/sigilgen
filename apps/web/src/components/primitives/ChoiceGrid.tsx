@@ -47,12 +47,12 @@ export function ChoiceGrid<T extends string>({
             onClick={() => {
               onChange(option.value)
             }}
-            className={`truncate rounded-control px-1 py-1.5 text-center text-caption font-medium
+            className={`truncate rounded-control border px-1 py-1.5 text-center text-caption font-medium
               transition-all duration-fast ease-apple
               ${
                 selected
-                  ? 'bg-accent text-[var(--accent-ink)] shadow-[var(--shadow-card)]'
-                  : 'bg-[var(--surface-sunken)] text-ink-soft hover:bg-[var(--surface-raised)] hover:text-ink'
+                  ? 'border-transparent bg-accent text-[var(--accent-ink)] shadow-[var(--shadow-card)]'
+                  : 'border-[var(--hairline)] bg-transparent text-ink-soft hover:border-[var(--hairline-strong)] hover:text-ink'
               }`}
           >
             {option.label}
