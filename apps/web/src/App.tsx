@@ -193,7 +193,7 @@ export default function App() {
   }, [concepts.length, studio])
 
   return (
-    <div className="flex h-full flex-col bg-[var(--stage)]">
+    <div className="relative flex h-full flex-col bg-[var(--stage)]">
       <Titlebar canReroll={!waiting && errorKey === null} />
 
       <div className="relative flex min-h-0 flex-1">
@@ -208,7 +208,10 @@ export default function App() {
               className={`material z-30 shrink-0 overflow-hidden hairline-r shadow-[var(--shadow-card)]
                 ${narrow ? 'absolute inset-y-0 left-0' : ''}`}
             >
-              <div className="h-full overflow-y-auto" style={{ width: LEFT_WIDTH }}>
+              <div
+                className="h-full overflow-y-auto max-[1007px]:pt-14"
+                style={{ width: LEFT_WIDTH }}
+              >
                 {/* The panel owns its padding, so the four groups below it share one rhythm instead of
                     each inventing a gutter against its neighbour. */}
                 <div className="flex flex-col gap-8 px-gutter py-gutter">
@@ -251,7 +254,10 @@ export default function App() {
               className={`material z-30 shrink-0 overflow-hidden hairline-l shadow-[var(--shadow-card)]
                 ${narrow ? 'absolute inset-y-0 right-0' : ''}`}
             >
-              <div className="h-full overflow-y-auto" style={{ width: RIGHT_WIDTH }}>
+              <div
+                className="h-full overflow-y-auto max-[1007px]:pt-14"
+                style={{ width: RIGHT_WIDTH }}
+              >
                 <div className="flex flex-col gap-8 px-gutter py-gutter">
                   <InspectorPanel concept={activeConcept} />
                 </div>

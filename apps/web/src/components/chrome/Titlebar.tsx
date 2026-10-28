@@ -33,8 +33,11 @@ export function Titlebar({ canReroll }: TitlebarProps) {
   const [open, setOpen] = useState(true)
 
   return (
-    <header className="relative z-20 flex h-16 shrink-0 items-center justify-center px-4">
-      <div className="absolute top-0 left-1/2 flex -translate-x-1/2 flex-col items-center">
+    <header
+      className="pointer-events-none absolute inset-x-0 top-0 z-20 flex h-16 items-center
+        justify-center px-4"
+    >
+      <div className="pointer-events-auto absolute top-0 left-1/2 flex -translate-x-1/2 flex-col items-center">
         <div
           className={`transition-transform duration-base ease-apple ${
             open ? 'translate-y-3' : '-translate-y-[60px]'
@@ -44,13 +47,14 @@ export function Titlebar({ canReroll }: TitlebarProps) {
             className="flex items-center gap-3 rounded-full bg-[var(--surface-raised)] px-3.5 py-2
               shadow-[0_0_0_0.5px_var(--hairline),0_1px_2px_oklch(0.2_0.01_70/0.04),0_10px_30px_oklch(0.2_0.01_70/0.07)]"
           >
-            {/* The identity, inside the island: the name is the one label that never changes, so it is
-                what the front of the capsule is for. The rail under it says which name is loaded. */}
-            <span className="flex flex-col">
-              <span className="text-[0.9375rem] leading-tight font-semibold tracking-[-0.01em] text-ink">
+            {/* The identity, inside the island and on one line: the name is the one label that never
+                changes, so it is what the front of the capsule is for. The loaded brand name follows it in
+                the caps rail — a second line made the capsule taller than the controls it holds. */}
+            <span className="flex items-baseline gap-2">
+              <span className="text-[0.9375rem] leading-none font-semibold tracking-[-0.01em] text-ink">
                 {t('app.title')}
               </span>
-              <span className="type-caps max-w-40 truncate leading-none text-ink-faint">
+              <span className="type-caps hidden max-w-32 truncate leading-none text-ink-faint sm:inline">
                 {name.trim() === '' ? t('app.tagline') : name}
               </span>
             </span>
