@@ -229,7 +229,7 @@ export default function App() {
           ) : null}
         </AnimatePresence>
 
-        <main className="flex min-w-0 flex-1 flex-col">
+        <main className="flex min-w-0 flex-1 flex-col pt-16">
           <Stage
             concept={activeConcept}
             errorKey={errorKey}
