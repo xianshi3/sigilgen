@@ -7,7 +7,7 @@ import { MIN_CONTRAST, readPaper, worstContrast } from '../../lib/contrast'
 import { bestPaletteFor } from '../../lib/resources'
 import { emptyEdit, parseSvgParts, partTransform } from '../../lib/svgParts'
 import { DURATION_BASE, EASE_APPLE } from '../../lib/motion'
-import { useStudio, type Backdrop } from '../../store/useStudio'
+import { paperIsDark, useStudio, type Backdrop } from '../../store/useStudio'
 import { ReadabilityNotice } from './ReadabilityNotice'
 
 export interface StageProps {
@@ -127,6 +127,13 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
       ? {
           ratio: legibility,
           palette: bestPaletteFor(paper)?.id === pinnedPalette ? null : bestPaletteFor(paper),
+          // Whether the sheet on screen is the one this palette declares for itself. If it is, switching
+          // sheets cannot help, and the notice has to say so instead of blaming the backdrop.
+          cause:
+            concept === undefined ||
+            paperIsDark(concept.palette.background) === (backdrop === 'dark')
+              ? ('paper' as const)
+              : ('sheet' as const),
         }
       : null
 
@@ -316,6 +323,7 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
           <ReadabilityNotice
             ratio={notice.ratio}
             palette={notice.palette}
+            cause={notice.cause}
             onUsePalette={id => {
               setField('palette', id)
             }}

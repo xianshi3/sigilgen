@@ -12,6 +12,15 @@ export interface ReadabilityNoticeProps {
   palette: PaletteEntry | null
   /** Called with the palette id when the reader takes the offer. */
   onUsePalette: (id: string) => void
+  /**
+   * Why the mark is hard to see.
+   *
+   * `sheet` means the paper does not match the palette's own page — the backdrop is the thing to change.
+   * `paper` means the palette is faint on the very page it declares, so switching sheets cannot help and
+   * the palette is the only remedy. Two different sentences, because one sentence was pointing readers at
+   * the wrong cause.
+   */
+  cause?: 'sheet' | 'paper'
 }
 
 /**
@@ -35,7 +44,12 @@ export interface ReadabilityNoticeProps {
  *
  * @param props - The measured ratio, the palette on offer, and what to do with it.
  */
-export function ReadabilityNotice({ ratio, palette, onUsePalette }: ReadabilityNoticeProps) {
+export function ReadabilityNotice({
+  ratio,
+  palette,
+  onUsePalette,
+  cause = 'sheet',
+}: ReadabilityNoticeProps) {
   const { t } = useI18n()
   const reduced = useReducedMotion()
 
@@ -69,7 +83,7 @@ export function ReadabilityNotice({ ratio, palette, onUsePalette }: ReadabilityN
        * The query resolves against the stage, which declares `container-type: size`; this card declares no
        * container of its own, so 26rem is the stage's width rather than the card's. */}
       <span className="type-caption hidden min-w-0 text-center text-ink-soft @[26rem]:inline">
-        {t('stage.readabilityHint')}
+        {t(cause === 'paper' ? 'stage.readabilityPale' : 'stage.readabilityHint')}
       </span>
       {palette === null ? null : (
         <Button

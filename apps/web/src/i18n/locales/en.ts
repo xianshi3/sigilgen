@@ -85,6 +85,7 @@ export const en: Record<MessageKey, string> = {
   'concept.seed': 'Seed fingerprint',
   'concept.empty': 'Select a concept to see its details',
   'stage.meta': 'Selected concept',
+  'stage.readabilityPale': 'This palette is faint on its own sheet too.',
 
   'resource.palette': 'Palette',
   'resource.font': 'Typeface',
