@@ -39,13 +39,14 @@ export function Titlebar({ canReroll }: TitlebarProps) {
     >
       <div className="pointer-events-auto absolute top-0 left-1/2 flex -translate-x-1/2 flex-col items-center">
         <div
-          className={`transition-transform duration-base ease-apple ${
-            open ? 'translate-y-3' : '-translate-y-[60px]'
+          className={`transition-[transform,opacity] duration-base ease-apple ${
+            open ? 'translate-y-3' : '-translate-y-10'
           }`}
         >
           <div
-            className="flex items-center gap-3 rounded-full bg-[var(--surface-raised)] px-3.5 py-2
-              shadow-[0_0_0_0.5px_var(--hairline),0_1px_2px_oklch(0.2_0.01_70/0.04),0_10px_30px_oklch(0.2_0.01_70/0.07)]"
+            className={`flex items-center gap-3 rounded-panel bg-[var(--surface-raised)] px-3.5 py-2
+              shadow-[0_0_0_0.5px_var(--hairline),0_1px_2px_oklch(0.2_0.01_70/0.04),0_10px_30px_oklch(0.2_0.01_70/0.07)]
+              transition-opacity duration-base ${open ? '' : 'pointer-events-none opacity-0'}`}
           >
             {/* The identity, inside the island and on one line: the name is the one label that never
                 changes, so it is what the front of the capsule is for. The loaded brand name follows it in
@@ -87,7 +88,6 @@ export function Titlebar({ canReroll }: TitlebarProps) {
             <Button
               variant="primary"
               size="sm"
-              className="rounded-full"
               onClick={reroll}
               disabled={!canReroll}
               title={t('action.rerollHint')}
