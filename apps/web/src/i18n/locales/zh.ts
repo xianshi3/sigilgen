@@ -86,6 +86,8 @@ export const zh = {
   'concept.seed': '种子指纹',
   'concept.empty': '选择概念后显示详情',
   'stage.meta': '当前概念',
+  'header.collapse': '收起控制条',
+  'header.expand': '展开控制条',
   'stage.readabilityPale': '这套配色在它自己的底色上就偏淡。',
 
   'resource.palette': '配色',
