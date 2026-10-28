@@ -10,13 +10,19 @@ export interface TitlebarProps {
 }
 
 /**
- * The window chrome.
+ * The window chrome, as one island.
  *
- * The identity sits at the left edge and the controls float in the middle, in one capsule that the page
- * runs behind — an island rather than a bar. It retracts upward on request and leaves only its handle at
- * the top edge, so a reader who is judging a mark can get the chrome out of the way without leaving the
- * screen. Upward because that is the edge it belongs to: sliding sideways would put it back over the
- * artwork.
+ * Everything lives in it — the wordmark, the language, the appearance and the reroll — so the top of the
+ * screen is a single object floating in the middle rather than a bar with things pushed to its edges. A
+ * hairline rule separates the identity from the controls, which is what keeps them reading as two groups
+ * inside one shape.
+ *
+ * It is flat on purpose: a solid plate and a hairline ring, not a frosted pane. The blur belonged to a
+ * window chrome that sat on top of the page; an island sits *in* the page, and blur there reads as a
+ * leftover.
+ *
+ * The handle under it folds the whole group upward — the edge it belongs to — leaving only the handle at
+ * the top where the island was.
  */
 export function Titlebar({ canReroll }: TitlebarProps) {
   const { t, locale, setLocale } = useI18n()
@@ -27,24 +33,30 @@ export function Titlebar({ canReroll }: TitlebarProps) {
   const [open, setOpen] = useState(true)
 
   return (
-    <header className="relative z-20 flex h-14 shrink-0 items-center px-4">
-      {/* Two lines, the way the reference sets its identity: a wordmark, and a caps rail under it. */}
-      <div className="flex min-w-0 flex-1 flex-col justify-center">
-        <span className="type-title shrink-0 tracking-[-0.02em] text-ink">{t('app.title')}</span>
-        <span className="type-caps hidden truncate text-ink-faint sm:block">
-          {name.trim() === '' ? t('app.tagline') : name}
-        </span>
-      </div>
-
-      {/* Centred, and translated as one group: the handle travels with the island so that when it is
-          folded away the handle is what is left at the top edge, exactly where the island was. */}
+    <header className="relative z-20 flex h-16 shrink-0 items-center justify-center px-4">
       <div className="absolute top-0 left-1/2 flex -translate-x-1/2 flex-col items-center">
         <div
           className={`transition-transform duration-base ease-apple ${
-            open ? 'translate-y-2' : '-translate-y-[52px]'
+            open ? 'translate-y-3' : '-translate-y-[60px]'
           }`}
         >
-          <div className="material flex items-center gap-2 rounded-full p-1.5 shadow-[var(--shadow-lift)]">
+          <div
+            className="flex items-center gap-3 rounded-full bg-[var(--surface-raised)] px-3.5 py-2
+              shadow-[0_0_0_0.5px_var(--hairline),0_1px_2px_oklch(0.2_0.01_70/0.04),0_10px_30px_oklch(0.2_0.01_70/0.07)]"
+          >
+            {/* The identity, inside the island: the name is the one label that never changes, so it is
+                what the front of the capsule is for. The rail under it says which name is loaded. */}
+            <span className="flex flex-col">
+              <span className="text-[0.9375rem] leading-tight font-semibold tracking-[-0.01em] text-ink">
+                {t('app.title')}
+              </span>
+              <span className="type-caps max-w-40 truncate leading-none text-ink-faint">
+                {name.trim() === '' ? t('app.tagline') : name}
+              </span>
+            </span>
+
+            <span aria-hidden="true" className="h-5 w-px shrink-0 bg-[var(--hairline-strong)]" />
+
             <Segmented<Locale>
               aria-label={t('locale.label')}
               value={locale}
