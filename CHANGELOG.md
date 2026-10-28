@@ -142,30 +142,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- **`J` was not attached to itself, and `G` wore a tab.** Two glyphs were wrong in every family, so any
-  wordmark containing them showed it.
+- **Five letters were drawn wrong in every family.** A wordmark containing any of them showed it, and the
+  cause in each case was the same: a stroke placed where it looked right rather than against the thing it
+  has to join.
 
-  The `J`'s hook was a half-ellipse centred _on the stem_. Its two ends therefore landed half a glyph
-  apart, either side of the letter, and the stem came down between them over nothing: the hook hung
-  below the stem as a detached smile. It is now centred so its right end wraps the stem's outer edge, and
-  the joint is a continuous stroke in both terminal styles — the flat families and the round ones part
-  company at that corner, and each needed its own check.
+  `J`'s hook was a half-ellipse centred _on the stem_, so its two ends landed half a glyph apart either
+  side of the letter and the stem came down between them over nothing — the hook hung below the stem as a
+  detached smile. It is centred so its right end wraps the stem's outer edge, and the joint is continuous
+  in both terminal styles.
 
-  The `G`'s arc stopped at the horizontal, while its crossbar's spine stood at the far right. The white
-  gap between them left the crossbar's corner looking like a tab glued onto the letter. The arc now runs
-  down to the angle where its outer edge meets the spine — computed from the stroke width and the glyph
-  width rather than a constant, so it holds for every family — and the corner is a joint.
+  `G`'s arc stopped at the horizontal while its crossbar's spine stood at the far right, and the
+  crossbar's corner looked like a tab glued on. The arc now runs down to the angle where its outer edge
+  meets the spine — computed from the stroke and the glyph width rather than a constant.
 
-  The determinism manifest passes unchanged, which is the evidence that nothing but those two glyphs
-  moved: none of its eleven samples contains a `J` or a `G`.
+  `K`'s arms began a third of a glyph to the right of the stem, so the letter was a vertical bar with a
+  floating chevron beside it. `R`'s leg began mid-glyph, with the same wedge of background under the bowl.
+  Both now spring from the stem. `Y`'s stem stopped exactly on the crotch, leaving a wedge of background
+  between the two diagonals above it; it runs up into the join now.
 
-  One class of defect is still there, and the diagnosis matters more than the two fixes. Several letters
-  leave a small notch where a diagonal butts against a stem — `K`, `N`, `W`, `Y`, `R`, `A` — and `B`'s
-  waist is a pinch rather than a shelf. Those are junctions, not windings. Every contour of every glyph
-  was measured: they all wind the same way, so the non-zero merge is already doing its job, and a path
-  union would change nothing about them. What is missing is that the skeleton's primitives butt against
-  each other instead of overlapping by half a stroke. That is a per-junction parameter, and it has to be
-  done letter by letter.
+  `N`, `W`, `A` and `B` are still imperfect, and what is left there is a different kind of work. Their
+  gaps are at corners and interior peaks, where the fix is a filled wedge — the way `apexWedge` already
+  fills the point of a `V`. Extending the stroke instead was tried on `N` and is wrong: a stroke's end cut
+  is perpendicular to it, so lengthening it pushes a spur out past the baseline.
+
+  None of this was a winding or a path-union problem. Every contour of every glyph was measured, and they
+  all wind the same way, so the non-zero merge already works; a union would have changed none of the five.
 
 - **The drawers animated anyway when the system asked for less motion.** `tokens.css` zeroes every CSS
   transition and animation under `prefers-reduced-motion: reduce`, and its own comment says as much —

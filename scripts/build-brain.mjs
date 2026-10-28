@@ -1357,8 +1357,11 @@ function buildGlyphs(font) {
     const midY = cap * 0.5
     emit('K', width, [
       ...stem(inset, inset, cap - inset),
-      reach(width * 0.36, midY, width - inset, inset, w),
-      reach(width * 0.3, midY - w * 0.25, width - inset, cap - inset, w),
+      // Both arms start on the stem, not beside it. They used to begin a third of a glyph to the right,
+      // which left the K as a vertical bar with a floating chevron next to it — invisible in a 200px tile
+      // and unmistakable at size.
+      reach(inset, midY, width - inset, inset, w),
+      reach(inset, midY - w * 0.25, width - inset, cap - inset, w),
       ...(font.serif > 0 ? [slab(width - inset, inset), slab(width - inset, cap - inset)] : []),
     ])
   }
@@ -1390,6 +1393,10 @@ function buildGlyphs(font) {
     emit('N', width, [
       ...stem(inset, inset, cap - inset),
       ...stem(width - inset, inset, cap - inset),
+      // Corner joins here still show a small step where the diagonal's butt cut sits inside the stem's
+      // square corner. Extending the diagonal along its own axis was tried and is wrong: the cut is
+      // perpendicular to the stroke, so lengthening it pushes a spur out past the baseline. It needs a
+      // corner fill, the way `apexWedge` fills the point of a `V`.
       reach(inset, inset, width - inset, cap - inset, w),
     ])
   }
@@ -1428,7 +1435,10 @@ function buildGlyphs(font) {
     emit('R', width, [
       ...stem(inset, inset, cap - inset),
       bowl(inset, inset, bottom, width - inset + half),
-      reach(width * 0.32, bottom - w * 0.45, width - inset, cap - inset, w),
+      // The leg springs from the stem, where the bowl also lands, not from a point inside the letter.
+      // Started mid-glyph it floated below the bowl with a wedge of background between them — the same
+      // mistake the K's arms had.
+      reach(inset, bottom - w * 0.45, width - inset, cap - inset, w),
       ...(font.serif > 0 ? [slab(width - inset, cap - inset)] : []),
     ])
   }
@@ -1571,8 +1581,10 @@ function buildGlyphs(font) {
     emit('Y', width, [
       reach(inset, 0, width / 2, midY, w),
       reach(width - inset, 0, width / 2, midY, w),
-      // The two upper diagonals need terminals of their own; the stem below carries its own.
-      ...stem(width / 2, midY, cap, false),
+      // The stem starts above the crotch, not on it. Its flat top used to sit exactly where the two
+      // diagonals' inner edges meet, and the space between them above that row stayed white — a wedge of
+      // background in the middle of the letter.
+      ...stem(width / 2, midY - w * 0.75, cap, false),
     ])
   }
 
