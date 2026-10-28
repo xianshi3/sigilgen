@@ -269,16 +269,31 @@
     background: var(--accent-soft);
   }
 
-  /* Slim scrollbars that only appear against content, the way macOS overlays them. */
+  /* Scrollbars as a breath rather than a mechanism.
+   *
+   * The track is never painted, and the thumb is a hairline at rest: a bar that is always fully there is
+   * the loudest piece of chrome on a page this quiet. It asserts itself under the pointer and nowhere
+   * else. WebKit cannot animate a scrollbar pseudo-element, so the change of state *is* the effect — there
+   * is nothing to tween.
+   *
+   * `scrollbar-width`/`scrollbar-color` give Firefox the same quiet thumb, and `scrollbar-gutter` keeps a
+   * panel from shifting sideways the moment its content becomes tall enough to scroll. */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--hairline-strong) transparent;
+    scrollbar-gutter: stable;
+  }
+
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
-  ::-webkit-scrollbar-track {
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: var(--hairline-strong);
+    background: var(--hairline);
     border: 3px solid transparent;
     border-radius: 999px;
     background-clip: content-box;
