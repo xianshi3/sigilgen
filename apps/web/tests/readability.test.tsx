@@ -92,6 +92,21 @@ describe('the paper tokens', () => {
   })
 })
 
+describe('pinning a palette', () => {
+  it('moves the backdrop to the paper the palette was drawn for', () => {
+    // The contradictory pair used to persist: a palette drawn for a pale page, viewed on the dark sheet,
+    // reloading into the same state every time with an invisible mark and a notice as the only clue.
+    act(() => {
+      useStudio.setState({ backdrop: 'dark', palette: '' })
+    })
+    act(() => {
+      useStudio.getState().setField('palette', 'signal-amber')
+    })
+    // `signal-amber` declares no background, so it belongs on a light page.
+    expect(useStudio.getState().backdrop).toBe('light')
+  })
+})
+
 describe('the readability notice', () => {
   it('says nothing while the mark can be seen', () => {
     renderStage(darkInkConcept())

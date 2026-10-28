@@ -4,9 +4,32 @@ import type { DesignDimension } from '@sigilgen/types'
 import type { StudioConfig } from '../lib/generate'
 import { emptyEdit, type PartEdit } from '../lib/svgParts'
 import { NARROW_QUERY } from '../lib/layout'
+import { contrastRatio } from '../lib/contrast'
+import { ALL_PALETTES } from '../lib/resources'
 
 /** How the stage is backed, so a mark can be judged against light and dark grounds. */
 export type Backdrop = 'light' | 'dark' | 'board'
+
+/**
+ * Whether a palette's page is the dark one.
+ *
+ * `background: null` means the palette was drawn for a light page — the convention the brain documents.
+ * An explicit background is judged by which end of the scale it sits closer to, using the same contrast
+ * maths the readability notice uses, so the two cannot disagree about which sheet a palette is for.
+ *
+ * @param background - The palette's own background, or `null`.
+ * @returns Whether that paper is the dark one.
+ */
+function paperIsDark(background: string | null): boolean {
+  if (background === null) {
+    return false
+  }
+  const onWhite = contrastRatio(background, '#ffffff') ?? 0
+  const onBlack = contrastRatio(background, '#000000') ?? 0
+  // A dark colour contrasts strongly against white, so the white comparison winning means the paper is
+  // dark. The first version had this the other way round, which put every pale palette on the dark sheet.
+  return onWhite > onBlack
+}
 
 /**
  * Edits to one concept's parts, keyed by the concept's seed fingerprint.
@@ -218,7 +241,7 @@ function persisted(state: StudioState): PersistedStudio {
 
 export const useStudio = create<StudioState>()(
   persist(
-    set => ({
+    (set, get) => ({
       ...INITIAL,
 
       activeConcept: 0,
@@ -234,7 +257,25 @@ export const useStudio = create<StudioState>()(
       past: [],
       future: [],
 
-      setField: (key, value) => set({ [key]: value } as Partial<StudioState>),
+      setField: (key, value) => {
+        set({ [key]: value } as Partial<StudioState>)
+        // A palette is drawn for a page of its own, and both fields persist. Pinning one while looking at
+        // the other sheet left the mark invisible on a ground it was never designed for — and it came back
+        // that way on every reload, with the readability notice as the only clue. Moving the backdrop to
+        // the palette's own paper removes the combination instead of warning about it forever.
+        if (key === 'palette' && typeof value === 'string') {
+          const palette = ALL_PALETTES.find(entry => entry.id === value)
+          if (palette !== undefined) {
+            const dark = paperIsDark(palette.background)
+            const { backdrop } = get()
+            if (dark && backdrop !== 'dark') {
+              set({ backdrop: 'dark' })
+            } else if (!dark && backdrop === 'dark') {
+              set({ backdrop: 'light' })
+            }
+          }
+        }
+      },
 
       setActiveConcept: index => set({ activeConcept: index }),
 
@@ -359,6 +400,24 @@ export const useStudio = create<StudioState>()(
     {
       name: 'sigilgen.studio',
       partialize: persisted,
+      // A pair persisted before this rule existed can still be contradictory — a palette drawn for a pale
+      // page and a dark backdrop — and it would come back on every reload. Correct it once on the way in,
+      // so a returning reader's first frame is already readable rather than a warning.
+      onRehydrateStorage: () => state => {
+        if (state === undefined) {
+          return
+        }
+        const entry = ALL_PALETTES.find(palette => palette.id === state.palette)
+        if (entry === undefined) {
+          return
+        }
+        const dark = paperIsDark(entry.background)
+        if (dark && state.backdrop !== 'dark') {
+          state.setBackdrop('dark')
+        } else if (!dark && state.backdrop === 'dark') {
+          state.setBackdrop('light')
+        }
+      },
     }
   )
 )
