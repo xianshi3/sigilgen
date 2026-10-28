@@ -1300,8 +1300,15 @@ function buildGlyphs(font) {
     const open = 52 + font.aperture
     const barY = cap * 0.56
     const right = width - half
+    // The arc has to run down as far as the spine before it stops. Its opening is on the upper right
+    // only; stopping at the horizontal left a white gap between the arc's lower terminal and the
+    // crossbar's corner, with the corner standing in the gap like a tab glued to the letter. The angle
+    // is where the arc's outer edge reaches the spine's centreline, so it follows the stroke and the
+    // glyph width instead of being a constant that is right for one family.
+    const stop = Math.acos(Math.max(-1, Math.min(1, 1 - w / width)))
+    const openLow = (stop * 180) / Math.PI
     emit('G', width, [
-      arcBand({ cx: width / 2, cy: cap / 2, rx: width / 2, ry: cap / 2 }, w, open, 360 - open),
+      arcBand({ cx: width / 2, cy: cap / 2, rx: width / 2, ry: cap / 2 }, w, openLow, 360 - open),
       reach(width * 0.52, barY, right, barY, w),
       reach(right, barY, right, cap - inset, w),
     ])
@@ -1328,13 +1335,19 @@ function buildGlyphs(font) {
     const width = font.width * 0.76
     const stemX = width - inset
     const hookY = cap - Math.max(cap * 0.3, w + minCounter)
-    const rx = stemX - inset
+    // The hook is a half-ellipse whose *right end wraps the stem*, not one centred on it. Centred on the
+    // stem — which is what this did — its two ends landed half a glyph apart either side of the letter and
+    // the stem came down between them, over nothing: the whole hook hung below the stem as a detached
+    // smile. Ending it on the stem's centreline instead leaves the stem's outer half standing proud of the
+    // hook's end cut as a square nub, so it ends on the stem's outer edge.
+    const hookRight = stemX + half
+    const rx = (hookRight - inset) / 2
     emit('J', width, [
       ...stem(stemX, inset, hookY),
       // `ry` is measured to the outer edge, so the hook closes on the baseline rather than a half
       // stroke above it — the same correction `U`'s bowl needed.
-      arcBand({ cx: stemX, cy: hookY, rx, ry: cap - hookY }, w, 0, 180),
-      capRound(inset, cap - inset),
+      arcBand({ cx: inset + rx, cy: hookY, rx, ry: cap - hookY }, w, 0, 180),
+      capRound(inset + half, hookY),
     ])
   }
 
