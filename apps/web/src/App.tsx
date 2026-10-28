@@ -205,8 +205,9 @@ export default function App() {
               animate={{ width: LEFT_WIDTH, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={panelTransition(reduced)}
-              className={`material z-30 shrink-0 overflow-hidden hairline-r shadow-[var(--shadow-card)]
-                ${narrow ? 'absolute inset-y-0 left-0' : ''}`}
+              className={`material z-30 shrink-0 overflow-hidden rounded-panel
+                shadow-[var(--shadow-lift)]
+                ${narrow ? 'absolute top-2 bottom-2 left-2' : 'my-2 ml-2'}`}
             >
               <div
                 className="h-full overflow-y-auto max-[1007px]:pt-14"
@@ -251,8 +252,9 @@ export default function App() {
               animate={{ width: RIGHT_WIDTH, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={panelTransition(reduced)}
-              className={`material z-30 shrink-0 overflow-hidden hairline-l shadow-[var(--shadow-card)]
-                ${narrow ? 'absolute inset-y-0 right-0' : ''}`}
+              className={`material z-30 shrink-0 overflow-hidden rounded-panel
+                shadow-[var(--shadow-lift)]
+                ${narrow ? 'absolute top-2 bottom-2 right-2' : 'my-2 mr-2'}`}
             >
               <div
                 className="h-full overflow-y-auto max-[1007px]:pt-14"

@@ -103,11 +103,13 @@ export function Titlebar({ canReroll }: TitlebarProps) {
             onClick={() => {
               setOpen(previous => !previous)
             }}
-            className="mx-auto flex h-4 w-12 items-center justify-center rounded-full text-micro
-              leading-none text-ink-faint transition-colors duration-fast
-              hover:bg-[var(--surface-sunken)] hover:text-ink"
+            className="group mx-auto flex h-4 w-14 items-center justify-center"
           >
-            {open ? '⌃' : '⌄'}
+            <span
+              aria-hidden="true"
+              className="h-1 w-9 rounded-full bg-[var(--hairline-strong)] transition-colors
+                duration-fast group-hover:bg-[var(--ink-faint)]"
+            />
           </button>
         </div>
       </div>
