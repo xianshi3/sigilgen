@@ -74,6 +74,7 @@
   "devDependencies": {
     "@types/node": "^22.15.0",
     "@vitest/coverage-v8": "^3.2.4",
+    "fontkit": "^2.0.4",
     "oxc-standard": "^1.4.0",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",

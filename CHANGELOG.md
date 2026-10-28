@@ -9,6 +9,30 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Real typefaces, extracted from real fonts.** The 18 "families" were parameter variants of one
+  constructed skeleton: 1,600 lines of code drawing 26 letters out of overlapping bars and arcs. That is
+  why every letter was a bug waiting to be found — `J`'s hook was centred on its own stem, `K`'s arms
+  began a third of a glyph to the right of it, `B`'s waist was a pinch — and why Chinese was out of reach:
+  the same approach for 3,500 characters is not a bigger job, it is an impossible one.
+
+  Outlines are now extracted at build time from OFL-licensed fonts by `scripts/glyph-source.mjs`: Inter,
+  Space Grotesk, Archivo, Work Sans, IBM Plex Serif and IBM Plex Mono, in 13 family-weight entries. The
+  fonts are vendored in `assets/fonts/` with their licences. Nothing parses a font at runtime — the
+  output is still committed JSON and `check:brain` still verifies it — so the runtime dependency list
+  stays empty and `fontkit` is a devDependency.
+
+  Measured before the switch: real Latin outlines average 181 characters of path data per glyph against
+  the constructed ~430, so the brain's `fonts.json` went from 224 KB to 179 KB while getting better. The
+  same extractor reads Han at ~505 characters per glyph — 1000 characters ≈ 490 KB, 3500 ≈ 1.7 MB — which
+  is the shape a Chinese pass will take.
+
+  Four things had to move with it, all of them places where a test or an engine had encoded the
+  construction rather than the outcome. `monogram` centred a run on its advance box; real typefaces carry
+  asymmetric side bearings (`B` in Inter is 96 left, 63 right), so it now centres on the measured ink.
+  Four tests asserted constructed-only properties — symmetric bearings, two bowls in an `S`, every
+  contour winding alike, a letterspacing band — and were rewritten to assert what a reader can see: ink
+  inside its advance, a painted waist, an open counter, a word space wider than a letter gap.
+
 - **Entrances, instead of things appearing.** Three places used to pop: a disclosure body snapped open
   and shoved every section below it, a concept strip replaced itself between two frames when the batch
   was rerolled, and the readability notice blinked in and out as the backdrop changed.

@@ -588,7 +588,7 @@ describe('geometry helpers', () => {
 })
 
 describe('fitText', () => {
-  const font = findFont('orbit-grotesk')!
+  const font = findFont('inter-regular')!
 
   it('fits by width when the box is narrow', () => {
     const fitted = fitText(font, 'ABC', 0, 0, 100, 1000)
@@ -598,7 +598,8 @@ describe('fitText', () => {
 
   it('fits by height when the box is short', () => {
     const fitted = fitText(font, 'ABC', 0, 0, 1000, 50)
-    expect(fitted.height).toBeLessThanOrEqual(50)
+    // One float epsilon: the scale is a ratio, so the height lands at 50.00000000000001 as often as at 50.
+    expect(fitted.height).toBeLessThanOrEqual(50 + 1e-9)
   })
 
   it('centres the ink horizontally and vertically', () => {
@@ -632,7 +633,7 @@ describe('fitText', () => {
 })
 
 describe('capHeightForWidth', () => {
-  const font = findFont('orbit-grotesk')!
+  const font = findFont('inter-regular')!
 
   it('solves for the cap height that fills a target width', () => {
     const height = capHeightForWidth(font, 'ACME', 200)

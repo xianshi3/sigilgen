@@ -21,7 +21,7 @@ const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/
 describe('brain contents', () => {
   it('ships a substantial knowledge base', () => {
     expect(PALETTES.length).toBeGreaterThanOrEqual(24)
-    expect(FONTS.length).toBeGreaterThanOrEqual(18)
+    expect(FONTS.length).toBeGreaterThanOrEqual(12)
     expect(ICONS.length).toBeGreaterThanOrEqual(48)
     expect(MOODS.length).toBeGreaterThanOrEqual(20)
   })
@@ -151,13 +151,14 @@ describe('fonts', () => {
     }
   })
 
-  it('gives every glyph symmetric side bearings and keeps its ink inside its advance', () => {
-    // Two invariants that are invisible in a path dump and obvious in a rendered word:
+  it("keeps every glyph's ink inside its own advance", () => {
+    // The invariant that matters, and the one that survived the move to real outlines: ink outside its
+    // advance collides with the next letter, and a centred single letter then sits off centre.
     //
-    // - Ink inside its advance. `J` used to overshoot its advance by enough to collide with the letter
-    //   before it, because the advance came from the skeleton's nominal width rather than the ink.
-    // - Equal bearings. All the spacing used to sit on the right, so a centred single letter looked off
-    //   centre: the run is centred on the advance box, and the ink was not.
+    // The old test also demanded *equal* bearings. That was true of the constructed families by
+    // construction and is false of every real typeface: `B` in Inter carries 96 units on the left and 63
+    // on the right, which is the designer's optical correction. Centring therefore moved to the ink (see
+    // `monogram`), and bearing symmetry stopped being a property worth asserting.
     for (const font of FONTS) {
       for (const [letter, glyph] of Object.entries(font.glyphs)) {
         const bounds = pathBounds(glyph)
@@ -165,12 +166,9 @@ describe('fonts', () => {
         const advance = font.metrics.advance[letter] ?? 0
         const left = (bounds as { minX: number }).minX
         const right = advance - (bounds as { maxX: number }).maxX
-        expect(left, `${font.id}/${letter} left bearing`).toBeGreaterThanOrEqual(-1)
-        expect(right, `${font.id}/${letter} right bearing`).toBeGreaterThanOrEqual(-1)
-        expect(
-          Math.abs(left - right),
-          `${font.id}/${letter} bearings ${left.toFixed(1)}/${right.toFixed(1)}`
-        ).toBeLessThanOrEqual(1)
+        // One unit of slack: a few designs let a terminal overhang its advance on purpose.
+        expect(left, `${font.id}/${letter} left overhang`).toBeGreaterThanOrEqual(-1)
+        expect(right, `${font.id}/${letter} right overhang`).toBeGreaterThanOrEqual(-1)
       }
     }
   })
@@ -292,25 +290,6 @@ function isPainted(edges: readonly Edge[], px: number, py: number): boolean {
 }
 
 /**
- * Twice the signed area of a flattened outline, by the shoelace formula.
- *
- * This is how a sub-path's orientation is read off directly, rather than by testing whether some sample
- * point inside it winds nonzero — which only says *that* a contour is solid, never which way it turns.
- * Two overlapping contours cancel under the `nonzero` rule exactly when their signs disagree, so the sign
- * is the thing that matters and it is the thing a bounding box does not carry.
- *
- * @param edges - The flattened outline of one sub-path.
- * @returns A negative area for one direction and a positive one for the other; zero when degenerate.
- */
-function signedArea(edges: readonly Edge[]): number {
-  let twice = 0
-  for (const edge of edges) {
-    twice += edge.x1 * edge.y2 - edge.x2 * edge.y1
-  }
-  return twice / 2
-}
-
-/**
  * Whether one sub-path's ink box sits inside another's.
  *
  * The difference between a counter and a cancellation is geometric rather than numeric: at a sample
@@ -408,38 +387,32 @@ describe('the winding sampler these glyph tests rely on', () => {
 })
 
 describe('glyph geometry', () => {
-  it('overlaps the two bowls of an S, so the waist is a joint rather than a touch', () => {
-    // The defect this guards was not an angle and not a winding — it was that the two bowls could not
-    // overlap at all. Both ellipses were `cap / 4` tall on centres `cap / 4` and `3 * cap / 4` from the
-    // cap line, so the upper bowl's lowest point and the lower bowl's highest point were the *same* y.
-    // Two filled regions that meet on a line share no area, and the only place they touched at all was
-    // the single point where each ellipse sits at its extreme. Rendered, that is not an S: it is two
-    // C-shaped hooks pinned together, reading as a mirrored S with a step down its right side.
+  it('joins the two halves of an S at the waist', () => {
+    // What this guards is unchanged; how it is measured had to change with the outlines. The constructed S
+    // was two bowls, and the defect was that they met at a single point instead of overlapping — two hooks
+    // pinned together, reading as a mirrored S with a step down its right side.
     //
-    // No choice of sweep angles can produce overlap under that geometry, which is why this is measured
-    // as shared area rather than as a bounding box — the hooks together still spanned the cap height
-    // exactly, so every existing bounds check passed on the broken glyph.
+    // A real outline is one closed contour, so counting bowls says nothing. The outcome still can be
+    // sampled: at the waist row the stroke crosses the letter, so a run of columns there must be painted.
+    // Two pieces meeting at a point would paint a single column.
     for (const font of FONTS) {
-      const bowls = (font.glyphs['S'] as string)
-        .split(/(?=M)/)
-        .filter(piece => piece.trim() !== '')
-        .map(piece => flatten(piece))
-      expect(bowls, `${font.id}/S: expected two bowls`).toHaveLength(2)
-
-      const [upper, lower] = bowls as [Edge[], Edge[]]
+      const outline = font.glyphs['S']
+      if (outline === undefined) {
+        continue
+      }
+      const edges = flatten(outline)
       const cap = font.metrics.capHeight
-      let shared = 0
-      // The waist band only. Overlap anywhere else would be a defect of a different kind.
-      for (let row = 0.35; row <= 0.65; row += 0.005) {
-        for (let column = 0; column <= 1; column += 0.005) {
-          const x = column * cap
-          const y = row * cap
-          if (isPainted(upper, x, y) && isPainted(lower, x, y)) {
-            shared++
-          }
+      const samples = 200
+      let painted = 0
+      for (let index = 0; index <= samples; index += 1) {
+        if (isPainted(edges, (index / samples) * cap, cap * 0.5)) {
+          painted += 1
         }
       }
-      expect(shared, `${font.id}/S: the two bowls never overlap`).toBeGreaterThan(0)
+      expect(
+        painted / (samples + 1),
+        `${font.id}/S: the waist is not painted across the letter`
+      ).toBeGreaterThan(0.04)
     }
   })
   // Letters whose design includes enclosed negative space. A filled counter reads as a blob rather than
@@ -513,7 +486,7 @@ describe('lookups', () => {
   it('finds resources by id and returns undefined otherwise', () => {
     expect(findPalette('ink-monolith')?.id).toBe('ink-monolith')
     expect(findPalette('nope')).toBeUndefined()
-    expect(findFont('orbit-grotesk')?.id).toBe('orbit-grotesk')
+    expect(findFont('inter-regular')?.id).toBe('inter-regular')
     expect(findFont('nope')).toBeUndefined()
     expect(findIcon('mountain-peak')?.key).toBe('mountain-peak')
     expect(findIcon('nope')).toBeUndefined()
@@ -580,9 +553,10 @@ describe('letterform extent', () => {
     const capOnly = 'ABCDEFGHIJKLMNPRSTUVWXYZ'
     for (const font of FONTS) {
       const { capHeight } = font.metrics
-      // A round letter may overshoot the cap line a little and a terminal may land a rounding step off;
-      // anything past two percent of cap height is visible in a logo.
-      const tolerance = capHeight * 0.02
+      // A round letter overshoots the cap line and the baseline a little — that is what makes it read as
+      // round rather than as slightly too small — and a display face overshoots more than a text one.
+      // Three percent of cap height is still far tighter than the defect this guards.
+      const tolerance = capHeight * 0.035
       for (const letter of capOnly) {
         const outline = font.glyphs[letter]
         expect(outline, `${font.id} has no ${letter}`).toBeTypeOf('string')
@@ -732,45 +706,9 @@ describe('letterform extent', () => {
     }
   })
 
-  it('winds every contour of a stroke letter the same way', () => {
-    // The cheap guard for the whole class, and the only one that reaches the apex wedge.
-    //
-    // A wedge fills the background two flat cuts leave at a junction, so it is *designed* not to overlap
-    // the arms by more than a hair — which means no grid can reliably sample its overlap. What can be
-    // sampled is its orientation: read off the signed area of its triangle, which the builder now does
-    // rather than assuming an order, because a fixed vertex order winds one way at the baseline and the
-    // other at the cap line. Wound the wrong way the wedge cancels itself out of the very notch it exists
-    // to fill, and only the families whose junction actually leaves a notch show it — so it reads as a
-    // quirk of two typefaces rather than as a rule with a sign in it. Two `A`s and five `W`s had it.
-    //
-    // The property is that a letter built only from strokes has no contour wound against its neighbours:
-    // every contour of it is a solid piece. A counter in such a letter is empty space between strokes,
-    // not a hole any contour encloses, so nothing there needs the opposite winding. Only the ring letters
-    // are exempt, and they are exempt because their outer ellipse and inner one are wound against each
-    // other on purpose.
-    //
-    // `S` used to be exempt too, on the reasoning that its two bowls were two arcs meeting rather than
-    // two pieces of one stroke. They did not overlap then, so their windings never mattered and the
-    // exemption cost nothing but also hid both bowls. They overlap heavily now — by design, see the
-    // overlap test below — so opposed windings would cancel a hole straight through the waist, and `S`
-    // belongs under the same rule as every other stroke letter.
-    const RINGED = 'COQG'
-    for (const font of FONTS) {
-      for (const [letter, outline] of Object.entries(font.glyphs)) {
-        if (RINGED.includes(letter)) {
-          continue
-        }
-        const signs = new Set(
-          outline
-            .split(/(?=M)/)
-            .filter(piece => piece.trim() !== '')
-            .map(piece => Math.sign(signedArea(flatten(piece))))
-        )
-        expect(
-          signs.size,
-          `${font.id} ${letter}: a contour is wound against the strokes it sits in`
-        ).toBe(1)
-      }
-    }
-  })
+  // The contour-winding guard that used to live here was written against the constructed outlines: it
+  // asserted that every contour of a "stroke letter" wound the same way, which was true because those
+  // letters had no holes — a counter was empty space between separate strokes. Real outlines are the
+  // other way round by design, so the mechanism is now the font's and the *outcome* is what is guarded,
+  // by the open-counter and filled-stroke tests above.
 })

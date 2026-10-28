@@ -35,7 +35,7 @@ function moodWith(fontIds: string[]): MoodMatch {
 
 describe('resolveFont', () => {
   it('prefers a face the engine can actually use', () => {
-    const match = moodWith(['classic-serif', 'orbit-grotesk'])
+    const match = moodWith(['plex-serif-regular', 'inter-regular'])
     expect(resolveFont('monogram', match, new SeedResolver('font', 0), null).category).toBe(
       'geometric-sans'
     )
@@ -45,9 +45,9 @@ describe('resolveFont', () => {
     // A letter mark refuses serifs, but a mood that only lists serifs still has to be drawn with
     // something. Silently substituting a font from outside the mood would be worse than using one of
     // the mood's own faces, so the mood's choice wins even when the engine dislikes it.
-    const match = moodWith(['classic-serif', 'garamond-serif'])
+    const match = moodWith(['plex-serif-regular', 'plex-serif-regular'])
     const font = resolveFont('monogram', match, new SeedResolver('font', 0), null)
-    expect(['classic-serif', 'garamond-serif']).toContain(font.id)
+    expect(['plex-serif-regular', 'plex-serif-regular']).toContain(font.id)
   })
 
   it('falls back to the whole brain when the mood names no fonts at all', () => {
@@ -68,26 +68,31 @@ describe('resolveFont', () => {
 
   it('lets an explicit font id win over every filter', () => {
     // A caller who asks for a specific face gets it, even one a letter mark would otherwise refuse.
-    const explicit = findFont('didone-serif')!
+    const explicit = findFont('plex-serif-regular')!
     expect(
-      resolveFont('monogram', moodWith(['orbit-grotesk']), new SeedResolver('f', 0), 'didone-serif')
+      resolveFont(
+        'monogram',
+        moodWith(['inter-regular']),
+        new SeedResolver('f', 0),
+        'plex-serif-regular'
+      )
     ).toBe(explicit)
   })
 
   it('ignores an explicit id that names no font in the brain', () => {
     const font = resolveFont(
       'monogram',
-      moodWith(['orbit-grotesk']),
+      moodWith(['inter-regular']),
       new SeedResolver('f', 0),
       'nope'
     )
-    expect(font).toBe(findFont('orbit-grotesk'))
+    expect(font).toBe(findFont('inter-regular'))
   })
 
   it('never returns the same face for every seed', () => {
     // A resolver that ignored the seed stream would still produce valid, deterministic output, so
     // only variation across seeds reveals that the stream is actually wired up.
-    const match = moodWith(['orbit-grotesk', 'nexus-grotesk', 'vector-grotesk'])
+    const match = moodWith(['inter-regular', 'inter-regular', 'inter-semibold'])
     const seen = new Set<string>()
     for (let round = 0; round < 40; round++) {
       seen.add(resolveFont('monogram', match, new SeedResolver('font', round), null).id)

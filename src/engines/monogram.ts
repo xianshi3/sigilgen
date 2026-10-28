@@ -23,7 +23,7 @@ import {
 } from './shared'
 import { opticalTracking } from './metrics'
 import { contrastFill } from '../resolvers/palette-resolver'
-import { measureText, textPath } from '../text'
+import { measureText, textInk, textPath } from '../text'
 import type { Engine, EngineInput, SVGElement } from '../types'
 
 export { contrastFill } from '../resolvers/palette-resolver'
@@ -120,10 +120,14 @@ export const monogram: Engine = (input: EngineInput): SVGElement[] => {
     // with everything else.
     const available = radius * 2 * innerWidthRatio(kind)
     const runScale = metrics.width > available ? (available / metrics.width) * scale : scale
-    const run = measureText(font, letters, runScale, tracking)
-    const x = centre - run.width / 2
+    // Centred on the ink, not on the advance box. A real typeface gives a letter different side
+    // bearings on each side — `B` in Inter has 96 units on the left and 63 on the right — so centring the
+    // box puts the drawn mark a bearing's width off centre. The synthetic families this replaced had
+    // symmetric bearings by construction, which is why the difference never showed.
+    const ink = textInk(font, letters, runScale, tracking)
+    const x = centre - ink.width / 2 - ink.offsetX
     // `textPath` takes the top of the caps, so the run is centred by offsetting the cap top.
-    const capTop = centre - run.height / 2
+    const capTop = centre - ink.height / 2 - ink.offsetY
     elements.push(path(textPath(font, letters, x, capTop, runScale, tracking), letterFill))
   }
 

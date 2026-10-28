@@ -228,7 +228,7 @@ describe('generateLogo', () => {
       { keywords: 'tech, bold' },
       { size: 257 },
       { palette: 'ink-monolith' },
-      { font: 'orbit-grotesk' },
+      { font: 'inter-regular' },
       { icon: 'mountain-peak' },
       { background: true },
     ]) {
@@ -275,10 +275,10 @@ describe('generateLogo', () => {
     const logo = generateLogo({
       name: 'Acme',
       keywords: 'tech',
-      font: 'classic-serif',
+      font: 'plex-serif-regular',
       icon: 'mountain-peak',
     })
-    expect(logo.font.id).toBe('classic-serif')
+    expect(logo.font.id).toBe('plex-serif-regular')
     expect(logo.icon?.key).toBe('mountain-peak')
   })
 

@@ -88,8 +88,10 @@ These are the invariants the test suite enforces. Breaking one is a bug, not a t
 3. **Flat SVG only.** Emitted SVG contains no `<linearGradient>`, `<radialGradient>`, `<filter>`,
    `<mask>`, `<clipPath>`, `<pattern>`, `<image>`, `<foreignObject>` or `<script>`, and no `on*`
    event attributes.
-4. **Font paths come from the JSON brain.** Never parse a font file at runtime. No `opentype.js`,
-   no `measureText`, no canvas.
+4. **Font paths come from the JSON brain.** Never parse a font file at runtime. `fontkit` runs at build
+   time only (`scripts/glyph-source.mjs`), against the OFL fonts vendored in `assets/fonts/`; nothing in
+   `src/` reads a font, and no `measureText` or canvas is used anywhere. Runtime dependencies stay empty —
+   `fontkit` is a devDependency and its output is committed as `src/brain/fonts.json`.
 5. **Untrusted input is escaped or rejected.** Brand names and keywords are attacker-controlled.
    See the escaping contract in `src/serializer.ts`.
 6. **No import cycles.** `import/no-cycle` is an error. Engines never import the router; the router
@@ -126,6 +128,7 @@ These are the invariants the test suite enforces. Breaking one is a bug, not a t
 | Studio component      | `apps/web/src/`   |
 | Studio test           | `apps/web/tests/` |
 | Build-time tooling    | `scripts/`        |
+| Vendored font         | `assets/fonts/`   |
 
 ## Testing Rules
 

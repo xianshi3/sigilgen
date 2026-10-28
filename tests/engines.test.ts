@@ -35,7 +35,7 @@ function makeInput(overrides: Partial<EngineInput> = {}): EngineInput {
     request,
     mood: { ...mood, notes: [] },
     palette: findPalette('ink-monolith')!,
-    font: findFont('orbit-grotesk')!,
+    font: findFont('inter-regular')!,
     icon: findIcon('hexagon-node')!,
     engine: 'monogram',
     seed: new SeedResolver('engine-test', 'Acme Labs'),
