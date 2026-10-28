@@ -207,7 +207,13 @@ export default function App() {
         </AnimatePresence>
 
         <main className="flex min-w-0 flex-1 flex-col">
-          <Stage concept={activeConcept} errorKey={errorKey} errorDetail={errorDetail} />
+          <Stage
+            concept={activeConcept}
+            errorKey={errorKey}
+            errorDetail={errorDetail}
+            index={studio.activeConcept}
+            total={concepts.length}
+          />
           <StageBar />
           <div className="hairline-t">
             <ConceptStrip concepts={concepts} />

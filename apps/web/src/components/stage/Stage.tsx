@@ -15,6 +15,10 @@ export interface StageProps {
   /** Set when generation failed; the stage explains it instead of showing a mark. */
   errorKey: MessageKey | null
   errorDetail: string | null
+  /** Zero-based concept index, shown oversized in the corner the way a catalogue numbers a plate. */
+  index?: number
+  /** How many concepts this run produced. */
+  total?: number
 }
 
 /** Backdrop fills. Fixed paper colours, not themed tokens — see `--paper-light` in the token sheet. */
@@ -69,7 +73,7 @@ const BACKDROP_PAPER: Record<Backdrop, 'light' | 'dark'> = {
  * The generator forbids script and event handlers in its output, so putting that markup in the DOM is
  * safe by construction rather than by sanitising it on the way in.
  */
-export function Stage({ concept, errorKey, errorDetail }: StageProps) {
+export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: StageProps) {
   const { t } = useI18n()
   const backdrop = useStudio(state => state.backdrop)
   const zoom = useStudio(state => state.zoom)
@@ -182,7 +186,8 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
         // the flex algorithm before aspect-ratio ever runs. That combination left a 1376x635
         // "square" on a wide stage, which letterboxed the mark at "fit" and broke zoom centring.
         className={`relative flex aspect-square w-[min(100cqw,100cqh)] items-center justify-center
-          overflow-hidden rounded-panel ${BACKDROP_STYLE[backdrop]} shadow-[var(--shadow-lift)]`}
+          overflow-hidden rounded-panel ${BACKDROP_STYLE[backdrop]} shadow-[var(--shadow-lift)]
+          animate-[stage-drift_18s_ease-in-out_infinite]`}
         // The paper is not the theme's, so the ink on it cannot be the theme's either. This selects the
         // matching set in the token sheet; without it the empty state measures as low as 1.45:1.
         data-paper={BACKDROP_PAPER[backdrop]}
@@ -281,6 +286,27 @@ export function Stage({ concept, errorKey, errorDetail }: StageProps) {
             </svg>
           </motion.div>
         )}
+      </div>
+
+      {/* The stage reads as a plate in a catalogue rather than as a canvas: a meta rail along the top and
+          the concept number set oversized in the corner. Both are inert — the sheet underneath still takes
+          the pointer — and both are hidden on a stage too narrow to carry them without crowding the mark. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between
+        p-5 sm:p-8"
+      >
+        <span className="type-caps hidden text-ink-faint @[26rem]:inline">{t('stage.meta')}</span>
+        <span className="type-caps hidden text-ink-faint tabular-nums @[26rem]:inline">
+          {concept === undefined ? '' : `${concept.engine} / ${concept.palette.id}`}
+        </span>
+      </div>
+      <div className="pointer-events-none absolute bottom-0 left-0 flex items-baseline gap-2 p-5 sm:p-8">
+        <span className="text-[clamp(2rem,9cqh,4.5rem)] font-light leading-none tabular-nums text-ink">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+        <span className="type-caps text-ink-faint tabular-nums">
+          / {String(total).padStart(2, '0')}
+        </span>
       </div>
 
       {/* Outside the sheet, in the stage's own gutter. It is about the mark, but it must not be on top of

@@ -31,15 +31,13 @@ export function Titlebar({ canReroll }: TitlebarProps) {
       className="material hairline-b relative z-20 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5
         px-4 py-1.5 sm:h-12 sm:flex-nowrap sm:py-0"
     >
-      <div className="flex min-w-0 flex-1 items-baseline gap-2.5">
-        <span className="type-title shrink-0 text-ink">{t('app.title')}</span>
-        {name.trim() === '' ? (
-          <span className="type-caption hidden truncate text-ink-faint sm:inline">
-            {t('app.tagline')}
-          </span>
-        ) : (
-          <span className="type-caption hidden truncate text-ink-faint sm:inline">{name}</span>
-        )}
+      {/* Two lines, the way the reference sets its identity: a wordmark, and a caps rail under it. The
+          name replaces the tagline once there is one, so the rail always says something true. */}
+      <div className="flex min-w-0 flex-1 flex-col justify-center">
+        <span className="type-title shrink-0 tracking-[-0.02em] text-ink">{t('app.title')}</span>
+        <span className="type-caps hidden truncate text-ink-faint sm:block">
+          {name.trim() === '' ? t('app.tagline') : name}
+        </span>
       </div>
 
       <div className="flex w-full shrink-0 items-center justify-between gap-2 sm:w-auto sm:justify-end">
