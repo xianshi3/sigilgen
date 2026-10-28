@@ -16,7 +16,7 @@ import { useThemeEffect } from './hooks/useThemeEffect'
 import { generate } from './lib/generate'
 import { PANEL_WIDTH_LEFT, PANEL_WIDTH_RIGHT } from './lib/layout'
 import { DURATION_PANEL, EASE_APPLE, panelTransition } from './lib/motion'
-import { useStudio } from './store/useStudio'
+import { paperIsDark, useStudio } from './store/useStudio'
 
 /** Panel widths, shared by the animation and the inner scroller so the two cannot disagree. */
 const LEFT_WIDTH = PANEL_WIDTH_LEFT
@@ -76,6 +76,26 @@ export default function App() {
   )
 
   const activeConcept = concepts[studio.activeConcept] ?? concepts[0]
+
+  // With `auto`, every concept draws its own palette, so the sheet follows the one on screen: the mark is
+  // shown on the paper it was drawn for. A manual backdrop choice still wins until the next concept
+  // arrives — otherwise the control could not be used to look at the mark anywhere.
+  const activePalette = activeConcept?.palette
+  useEffect(() => {
+    if (activePalette === undefined) {
+      return
+    }
+    const state = useStudio.getState()
+    if (state.palette !== '') {
+      return
+    }
+    const dark = paperIsDark(activePalette.background)
+    if (dark && state.backdrop !== 'dark') {
+      state.setBackdrop('dark')
+    } else if (!dark && state.backdrop === 'dark') {
+      state.setBackdrop('light')
+    }
+  }, [activePalette])
   const waiting = name.trim() === ''
 
   useThemeEffect()

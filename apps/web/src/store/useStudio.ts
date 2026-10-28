@@ -20,7 +20,7 @@ export type Backdrop = 'light' | 'dark' | 'board'
  * @param background - The palette's own background, or `null`.
  * @returns Whether that paper is the dark one.
  */
-function paperIsDark(background: string | null): boolean {
+export function paperIsDark(background: string | null): boolean {
   if (background === null) {
     return false
   }
