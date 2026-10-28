@@ -120,50 +120,51 @@
 :root {
   color-scheme: light dark;
 
-  --ink: oklch(0.22 0.01 260);
-  --ink-soft: oklch(0.44 0.01 260);
-  /* 0.52 rather than 0.62: at caption size on the stage the lighter value measured 3.20:1, under AA's
-     4.5. It looked fine, which is the whole reason it gets measured. */
-  --ink-faint: oklch(0.52 0.008 260);
+  /* Bone, sampled from the reference and re-derived for contrast. Chroma is almost zero and the hue sits
+     at 70–75°: the warmth is the whole material, so a "neutral" grey here reads as a different product. */
+  --ink: oklch(0.2 0.006 70);
+  --ink-soft: oklch(0.38 0.008 70);
+  /* 0.46 rather than the paper's own grey: at caption size on the recess it measured under AA. The value
+     is solved by `tests/tokens.test.ts`, not chosen. */
+  --ink-faint: oklch(0.46 0.008 70);
 
-  --surface: oklch(0.995 0 0);
-  --surface-raised: oklch(1 0 0);
-  --surface-sunken: oklch(0.975 0.002 260);
+  --surface: oklch(0.947 0.008 75);
+  --surface-raised: oklch(0.968 0.007 75);
+  --surface-sunken: oklch(0.897 0.012 72);
 
-  --stage: oklch(0.955 0.003 260);
+  --stage: oklch(0.918 0.006 75);
 
-  --hairline: oklch(0.22 0.01 260 / 0.09);
-  --hairline-strong: oklch(0.22 0.01 260 / 0.16);
+  --hairline: oklch(0.2 0.006 70 / 0.1);
+  --hairline-strong: oklch(0.2 0.006 70 / 0.17);
 
-  --accent: oklch(0.55 0.21 258);
-  --accent-soft: oklch(0.55 0.21 258 / 0.12);
+  /* The accent is ink, not a colour. The reference keeps every saturated thing inside the artwork, and a
+     blue ring on a bone page is the one mark that would break that. `--accent-ink` is what sits on top. */
+  --accent: oklch(0.2 0.006 70);
+  --accent-ink: oklch(0.968 0.007 75);
+  --accent-soft: oklch(0.2 0.006 70 / 0.08);
 
   /* Translucent chrome. The blur is what makes the titlebar and sidebars read as material rather
      than as flat panels sitting on top of the stage. */
-  --material-bg: oklch(1 0 0 / 0.72);
+  --material-bg: oklch(0.968 0.007 75 / 0.72);
   --material-blur: 50px;
   --material-saturate: 180%;
 
   /* Two-layer shadow: a tight contact shadow so the element sits on the surface, and a wide ambient
-     one so it lifts off it. A single layer reads as a sticker. */
+     one so it lifts off it. A single layer reads as a sticker. Warm, because a neutral shadow on bone
+     reads as dirt. */
   --shadow-card:
-    0 0 0 0.5px var(--hairline), 0 1px 2px oklch(0.22 0.01 260 / 0.05),
-    0 8px 24px oklch(0.22 0.01 260 / 0.07);
+    0 0 0 0.5px var(--hairline), 0 1px 2px oklch(0.2 0.01 70 / 0.05),
+    0 8px 24px oklch(0.2 0.01 70 / 0.07);
   --shadow-lift:
-    0 0 0 0.5px var(--hairline), 0 2px 6px oklch(0.22 0.01 260 / 0.07),
-    0 18px 48px oklch(0.22 0.01 260 / 0.11);
+    0 0 0 0.5px var(--hairline), 0 2px 6px oklch(0.2 0.01 70 / 0.07),
+    0 18px 48px oklch(0.2 0.01 70 / 0.11);
   --shadow-inset: inset 0 0.5px 0 oklch(1 0 0 / 0.7);
 
   /* Small controls. A pill sitting inside a segmented control, and the round knob of a toggle or the
      thumb of a slider: each rests only a step above its own surface, so they want a contact shadow
-     rather than the ambient one a card carries.
-
-     Both used to inline `oklch(0.22 0.01 260 / …)` in the component instead, which is the light-mode
-     ink. Correct in light mode, and in dark mode a near-black shadow on a near-black surface — so
-     every selected segment, toggle knob and slider thumb silently lost its shadow when the reader
-     switched theme. */
-  --shadow-control: 0 0 0 0.5px var(--hairline), 0 1px 2px oklch(0.22 0.01 260 / 0.1);
-  --shadow-knob: 0 0 0 0.5px var(--hairline-strong), 0 1px 3px oklch(0.22 0.01 260 / 0.25);
+     rather than the ambient one a card carries. */
+  --shadow-control: 0 0 0 0.5px var(--hairline), 0 1px 2px oklch(0.2 0.01 70 / 0.1);
+  --shadow-knob: 0 0 0 0.5px var(--hairline-strong), 0 1px 3px oklch(0.2 0.01 70 / 0.25);
 }
 
 /*
@@ -175,24 +176,27 @@
  * writes `data-theme` accordingly, which keeps this to one block instead of two that must stay in step.
  */
 :root[data-theme='dark'] {
-  --ink: oklch(0.96 0.005 260);
-  --ink-soft: oklch(0.76 0.008 260);
-  /* 0.62 rather than 0.58: on a card the lighter value measured 4.09:1, under AA's 4.5. */
-  --ink-faint: oklch(0.62 0.008 260);
+  --ink: oklch(0.93 0.006 75);
+  --ink-soft: oklch(0.75 0.008 75);
+  /* 0.65 rather than the paper's own grey: on a raised card the lighter value measured 4.23:1, under AA.
+     Solved by the guard, as above. */
+  --ink-faint: oklch(0.65 0.008 75);
 
-  --surface: oklch(0.17 0.008 265);
-  --surface-raised: oklch(0.215 0.009 265);
-  --surface-sunken: oklch(0.145 0.008 265);
+  --surface: oklch(0.22 0.005 70);
+  --surface-raised: oklch(0.26 0.006 70);
+  --surface-sunken: oklch(0.18 0.004 70);
 
-  --stage: oklch(0.125 0.008 265);
+  --stage: oklch(0.15 0.004 70);
 
-  --hairline: oklch(1 0 0 / 0.1);
-  --hairline-strong: oklch(1 0 0 / 0.18);
+  --hairline: oklch(0.93 0.006 75 / 0.12);
+  --hairline-strong: oklch(0.93 0.006 75 / 0.2);
 
-  --accent: oklch(0.68 0.17 258);
-  --accent-soft: oklch(0.68 0.17 258 / 0.18);
+  /* Bone on charcoal: the accent inverts with the theme so it stays an ink rather than a colour. */
+  --accent: oklch(0.93 0.006 75);
+  --accent-ink: oklch(0.15 0.004 70);
+  --accent-soft: oklch(0.93 0.006 75 / 0.12);
 
-  --material-bg: oklch(0.19 0.008 265 / 0.7);
+  --material-bg: oklch(0.22 0.005 70 / 0.72);
 
   /* Shadows are almost invisible on a dark surface, so depth is carried by the hairline and a
        faint light rim instead. */

@@ -51,7 +51,7 @@ export function ChoiceGrid<T extends string>({
               transition-all duration-fast ease-apple
               ${
                 selected
-                  ? 'bg-accent text-white shadow-[var(--shadow-card)]'
+                  ? 'bg-accent text-[var(--accent-ink)] shadow-[var(--shadow-card)]'
                   : 'bg-[var(--surface-sunken)] text-ink-soft hover:bg-[var(--surface-raised)] hover:text-ink'
               }`}
           >
