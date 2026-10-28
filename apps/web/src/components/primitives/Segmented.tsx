@@ -149,14 +149,16 @@ export function Segmented<T extends string>({
     <div
       ref={group}
       role="radiogroup"
-      className={`relative flex w-fit gap-0.5 rounded-control bg-[var(--surface-sunken)] p-0.5 ${className}`}
+      // A text rail rather than a track. The segments sit straight on the panel with one hairline under
+      // the row, and the moving highlight is a one-pixel rule rather than a filled pill. The measured
+      // positioning below is untouched — only what the highlight looks like has moved.
+      className={`relative flex w-fit items-stretch border-b border-[var(--hairline)] ${className}`}
       {...rest}
     >
       {pill === null ? null : (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute top-0.5 bottom-0.5 left-0 rounded-[calc(var(--radius-control)-0.125rem)]
-            bg-[var(--surface-raised)] shadow-[var(--shadow-control)]
+          className="pointer-events-none absolute -bottom-px left-0 h-px bg-[var(--accent)]
             transition-[transform,width] duration-base ease-apple"
           style={{
             width: `${pill.width}px`,
