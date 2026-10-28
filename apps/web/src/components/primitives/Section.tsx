@@ -13,7 +13,7 @@ export function Section({ title, action, children }: SectionProps) {
     // A hairline above every section but the first: the panels are read as a stack of rules with controls
     // between them, not as cards. That is the whole of the reference's grouping grammar.
     <section
-      className="flex flex-col gap-3 border-t border-[var(--hairline)] pt-4
+      className="flex flex-col gap-4 border-t border-[var(--hairline)] pt-5
         first:border-t-0 first:pt-0"
     >
       <div className="flex items-baseline justify-between gap-2">
