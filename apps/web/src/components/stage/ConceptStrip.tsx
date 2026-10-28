@@ -77,11 +77,11 @@ export function ConceptStrip({ concepts }: ConceptStripProps) {
               aria-label={t('concept.position', { index: index + 1, total: concepts.length })}
               title={`${concept.engine} · ${concept.palette.id}`}
               className={`group relative flex aspect-square w-tile items-center justify-center
-                overflow-hidden rounded-card transition-all duration-base ease-apple
+                overflow-hidden rounded-card border transition-all duration-base ease-apple
                 ${
                   selected
-                    ? 'shadow-[var(--shadow-lift)] ring-2 ring-[var(--accent)]'
-                    : 'opacity-70 shadow-[var(--shadow-card)] hover:opacity-100 hover:shadow-[var(--shadow-lift)]'
+                    ? 'border-[var(--accent)] opacity-100 shadow-[var(--shadow-card)]'
+                    : 'border-[var(--hairline)] opacity-70 hover:border-[var(--hairline-strong)] hover:opacity-100'
                 }`}
               style={{ background: paper(concept.palette.background) }}
             >
