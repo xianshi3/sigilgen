@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
+import { pathBounds } from '@sigilgen/path'
 import type { LogoResult } from '@sigilgen/types'
 import type { MessageKey } from '../../i18n/locales/zh'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -108,8 +109,41 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
     if (parts === null) {
       return null
     }
+    // Only the inks that actually sit on the paper.
+    //
+    // A mark can reverse type or a pictogram out of a filled plate — the white apple inside a black badge
+    // — and that white is painted on the plate, not on the sheet. Measuring every fill against the sheet
+    // reported 1.4:1 for a mark whose every visible edge was high contrast, and no backdrop could make the
+    // warning go away because the white was never the problem.
+    //
+    // A part enclosed by a strictly larger one is on that one. Strictly larger, so two parts sharing a
+    // box do not exclude each other.
+    const boxes = parts.parts.map(part => ({ fill: part.fill, box: pathBounds(part.d) }))
+    const onPaper = boxes.filter((part, index) => {
+      const box = part.box
+      if (box === null) {
+        return true
+      }
+      return !boxes.some((other, otherIndex) => {
+        if (otherIndex === index) {
+          return false
+        }
+        const outer = other.box
+        if (outer === null) {
+          return false
+        }
+        const wider = outer.maxX - outer.minX > box.maxX - box.minX + 2
+        const taller = outer.maxY - outer.minY > box.maxY - box.minY + 2
+        const covers =
+          outer.minX <= box.minX + 1 &&
+          outer.maxX >= box.maxX - 1 &&
+          outer.minY <= box.minY + 1 &&
+          outer.maxY >= box.maxY - 1
+        return covers && (wider || taller)
+      })
+    })
     return worstContrast(
-      parts.parts
+      onPaper
         .map(part => part.fill)
         .filter((fill): fill is string => fill !== null && fill !== 'none'),
       paper
