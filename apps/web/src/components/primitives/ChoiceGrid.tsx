@@ -47,7 +47,7 @@ export function ChoiceGrid<T extends string>({
             onClick={() => {
               onChange(option.value)
             }}
-            className={`truncate rounded-control px-1.5 py-1.5 text-center text-caption font-medium
+            className={`truncate rounded-control px-1 py-1.5 text-center text-caption font-medium
               transition-all duration-fast ease-apple
               ${
                 selected

@@ -13,11 +13,14 @@ export interface InspectorPanelProps {
   concept: LogoResult | undefined
 }
 
-/** A label and value pair. The value keeps its own typography so ids stay legible. */
+/** A label and value pair, set like a line in a specification sheet. */
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-3">
-      <dt className="type-caption shrink-0 text-ink-faint">{label}</dt>
+    <div
+      className="flex items-baseline justify-between gap-3 border-b border-[var(--hairline)] py-1.5
+        last:border-b-0"
+    >
+      <dt className="type-caps shrink-0 text-ink-faint">{label}</dt>
       <dd className="type-caption min-w-0 truncate text-right text-ink" title={value}>
         {value}
       </dd>

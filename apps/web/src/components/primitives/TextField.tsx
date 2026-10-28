@@ -22,10 +22,12 @@ export function TextField({ label, hint, trailing, id, ...rest }: TextFieldProps
       <input
         id={id}
         aria-describedby={hint === undefined ? undefined : hintId}
-        className="h-8 w-full rounded-control bg-[var(--surface-sunken)] px-2.5 text-body text-ink
-          shadow-[var(--shadow-inset)] transition-shadow duration-fast
-          placeholder:text-ink-faint hover:bg-[var(--surface-raised)]
-          focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40"
+        // An underline, not a filled box. A field is a line of writing on the page; a sunken rounded box
+        // is a form control from a different product. The border does the focus signal as well, so the
+        // field keeps one rule at rest and one under the pointer.
+        className="h-8 w-full border-b border-[var(--hairline-strong)] bg-transparent px-0 text-body
+          text-ink transition-colors duration-fast placeholder:text-ink-faint
+          hover:border-[var(--accent)] focus:border-[var(--accent)] focus:outline-none"
         {...rest}
       />
       {/* Always rendered, so that adding or removing a hint cannot reflow the fields below it. */}
