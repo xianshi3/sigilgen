@@ -28,8 +28,8 @@ export function Titlebar({ canReroll }: TitlebarProps) {
     // and the brand was clipped mid-word. Wrapping keeps every control reachable instead of dropping some,
     // and costs 24px of height only where there is height to spare.
     <header
-      className="material hairline-b relative z-20 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5
-        px-4 py-1.5 sm:h-12 sm:flex-nowrap sm:py-0"
+      className="relative z-20 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2
+        sm:h-14 sm:flex-nowrap sm:py-0"
     >
       {/* Two lines, the way the reference sets its identity: a wordmark, and a caps rail under it. The
           name replaces the tagline once there is one, so the rail always says something true. */}
@@ -41,36 +41,41 @@ export function Titlebar({ canReroll }: TitlebarProps) {
       </div>
 
       <div className="flex w-full shrink-0 items-center justify-between gap-2 sm:w-auto sm:justify-end">
-        <Segmented<Locale>
-          aria-label={t('locale.label')}
-          value={locale}
-          options={[
-            { value: 'zh', label: t('locale.zh') },
-            { value: 'en', label: t('locale.en') },
-          ]}
-          onChange={setLocale}
-        />
+        {/* A floating island rather than a bar: one capsule the page flows behind, so the header reads as
+            a piece of the instrument rather than as a strip of chrome glued to the top edge. */}
+        <div className="material flex items-center gap-2 rounded-full p-1.5 shadow-[var(--shadow-lift)]">
+          <Segmented<Locale>
+            aria-label={t('locale.label')}
+            value={locale}
+            options={[
+              { value: 'zh', label: t('locale.zh') },
+              { value: 'en', label: t('locale.en') },
+            ]}
+            onChange={setLocale}
+          />
 
-        <Segmented<ThemePreference>
-          aria-label={t('theme.label')}
-          value={theme}
-          options={[
-            { value: 'light', label: t('theme.light') },
-            { value: 'dark', label: t('theme.dark') },
-            { value: 'auto', label: t('theme.auto') },
-          ]}
-          onChange={setTheme}
-        />
+          <Segmented<ThemePreference>
+            aria-label={t('theme.label')}
+            value={theme}
+            options={[
+              { value: 'light', label: t('theme.light') },
+              { value: 'dark', label: t('theme.dark') },
+              { value: 'auto', label: t('theme.auto') },
+            ]}
+            onChange={setTheme}
+          />
 
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={reroll}
-          disabled={!canReroll}
-          title={t('action.rerollHint')}
-        >
-          {t('action.reroll')}
-        </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            className="rounded-full"
+            onClick={reroll}
+            disabled={!canReroll}
+            title={t('action.rerollHint')}
+          >
+            {t('action.reroll')}
+          </Button>
+        </div>
       </div>
     </header>
   )
