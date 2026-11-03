@@ -322,26 +322,6 @@
   -webkit-backdrop-filter: blur(var(--material-blur)) saturate(var(--material-saturate));
 }
 
-/* The capsule's own breathing surface.
- *
- * The island shares the page's register, not just its material: the same dots as the stage, a step
- * stronger so they survive sitting on the capsule, and a counter-drift on the same 18-second cadence —
- * the page moves one way and the island moves the other, so the seam between them is alive from both
- * sides. Its own background rather than the backdrop: 50px of blur cannot carry 1px of motion, which is
- * why the island behind the controls read as dead even after the material became translucent.
- *
- * 8px of blur rather than the panels' 50 — enough to keep what bleeds through soft, not enough to erase
- * it. The global reduced-motion rule zeroes the drift. */
-@utility island {
-  background-color: var(--material-bg);
-  background-image: radial-gradient(circle, var(--hairline-strong) 1.1px, transparent 1.7px);
-  background-size: 18px 18px;
-  background-position: 0 0;
-  backdrop-filter: blur(8px) saturate(1.5);
-  -webkit-backdrop-filter: blur(8px) saturate(1.5);
-  animation: stage-grid-breathe 18s var(--ease-apple) infinite reverse;
-}
-
 /* Type utilities. These exist because the locale variables cannot live in `@theme`: they are
    redefined per language, and a `@theme` value that refers to itself would collapse. Wrapping them
    here means a component writes `type-title` and gets the right size, leading and tracking for

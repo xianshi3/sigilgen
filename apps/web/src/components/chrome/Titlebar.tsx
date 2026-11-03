@@ -19,11 +19,9 @@ export interface TitlebarProps {
  * hairline rule separates the identity from the controls, which is what keeps them reading as two groups
  * inside one shape.
  *
- * The background is not a flat plate: the capsule carries its own register of dots — the same family as
- * the stage's, a step stronger, drifting the opposite way on the same 18-second cadence — so the area
- * behind the controls breathes too, not just the page around it. The backdrop blur is 8px rather than the
- * panels' 50, because the dots inside are what carries the motion and the rest is allowed to show
- * through soft.
+ * The island is a flat plate on purpose. The page breathing behind it is what sells the depth — a solid
+ * capsule set well above it — and a blurred pane would only soften the very thing that needs to stay a
+ * hard, readable shape.
  *
  * The handle under it folds the whole group upward — the edge it belongs to — leaving only the handle at
  * the top where the island was.
@@ -58,7 +56,7 @@ export function Titlebar({ canReroll }: TitlebarProps) {
         >
           <div
             className={`flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1.5
-              rounded-panel island px-3 py-2 sm:gap-x-3 sm:px-3.5
+              rounded-panel bg-[var(--surface-raised)] px-3 py-2 sm:gap-x-3 sm:px-3.5
               shadow-[0_0_0_0.5px_var(--hairline),0_1px_2px_oklch(0.2_0.01_70/0.04),0_10px_30px_oklch(0.2_0.01_70/0.07)]
               transition-opacity duration-base ${open ? '' : 'pointer-events-none opacity-0'}`}
           >

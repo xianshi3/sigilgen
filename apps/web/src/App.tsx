@@ -193,7 +193,7 @@ export default function App() {
   }, [concepts.length, studio])
 
   return (
-    <div className="relative flex h-full flex-col bg-[var(--stage)]">
+    <div className="stage-grid relative flex h-full flex-col bg-[var(--stage)]">
       <Titlebar canReroll={!waiting && errorKey === null} />
 
       <div className="relative flex min-h-0 flex-1">

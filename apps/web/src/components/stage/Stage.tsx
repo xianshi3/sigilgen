@@ -218,7 +218,7 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
   }
 
   return (
-    <div className="stage-grid [container-type:size] relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[var(--stage)] p-5 sm:p-10">
+    <div className="[container-type:size] relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-5 sm:p-10">
       <div
         // Sized as a square that fits whichever axis runs out first: `min(100cqw, 100cqh)` is
         // `min(width, height)` of the stage's content box. Percentage widths cannot express this —
