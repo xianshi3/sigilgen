@@ -19,9 +19,10 @@ export interface TitlebarProps {
  * hairline rule separates the identity from the controls, which is what keeps them reading as two groups
  * inside one shape.
  *
- * It is flat on purpose: a solid plate and a hairline ring, not a frosted pane. The blur belonged to a
- * window chrome that sat on top of the page; an island sits *in* the page, and blur there reads as a
- * leftover.
+ * The background is the translucent `material`, not a flat plate: the register of dots behind the page
+ * drifts on the same 18-second cadence as the sheet, and a solid capsule would hide that motion exactly
+ * where the reader's eye rests. At 72% opacity over a 50px blur the dots read as depth without ever
+ * becoming legible — the island keeps the look of an object set *in* the page.
  *
  * The handle under it folds the whole group upward — the edge it belongs to — leaving only the handle at
  * the top where the island was.
@@ -56,7 +57,7 @@ export function Titlebar({ canReroll }: TitlebarProps) {
         >
           <div
             className={`flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1.5
-              rounded-panel bg-[var(--surface-raised)] px-3 py-2 sm:gap-x-3 sm:px-3.5
+              rounded-panel material px-3 py-2 sm:gap-x-3 sm:px-3.5
               shadow-[0_0_0_0.5px_var(--hairline),0_1px_2px_oklch(0.2_0.01_70/0.04),0_10px_30px_oklch(0.2_0.01_70/0.07)]
               transition-opacity duration-base ${open ? '' : 'pointer-events-none opacity-0'}`}
           >

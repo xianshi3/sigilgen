@@ -445,9 +445,26 @@
 /* The drafting table the sheet is laid on: a faint register of dots in the stage's own bone, so the
    uncluttered middle of the screen reads as a surface rather than as nothing. `--hairline` is 10% ink
    in both themes, which is below the threshold at which a repeated mark starts to vibrate against the
-   sheet; the pitch is large enough that the eye groups it as one field rather than as a texture. */
+   sheet; the pitch is large enough that the eye groups it as one field rather than as a texture.
+
+   The register drifts on the same 18-second cadence as the sheet, half a period out of phase with it, so
+   the two layers never sit still together — the top of the stage, where the island floats, is alive
+   rather than pinned. `background-position` is a paint property, but the tile is cached, so the
+   repaint is cheap; and the global reduced-motion rule zeroes the duration for a reader who asked for
+   stillness. */
+@keyframes stage-grid-breathe {
+  0%,
+  100% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 6px -6px;
+  }
+}
+
 @utility stage-grid {
   background-image: radial-gradient(circle, var(--hairline) 1px, transparent 1.6px);
   background-size: 22px 22px;
-  background-position: center;
+  background-position: 0 0;
+  animation: stage-grid-breathe 18s var(--ease-apple) infinite;
 }
