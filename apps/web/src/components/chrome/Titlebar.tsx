@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useI18n, type Locale } from '../../i18n/I18nProvider'
 import { useStudio, type ThemePreference } from '../../store/useStudio'
+import { useIsNarrow } from '../../hooks/useMediaQuery'
+import { PANEL_WIDTH_LEFT, PANEL_WIDTH_RIGHT } from '../../lib/layout'
 import { Button } from '../primitives/Button'
 import { Segmented } from '../primitives/Segmented'
 
@@ -30,17 +32,23 @@ export function Titlebar({ canReroll }: TitlebarProps) {
   const reroll = useStudio(state => state.reroll)
   const theme = useStudio(state => state.theme)
   const setTheme = useStudio(state => state.setTheme)
+  const leftOpen = useStudio(state => state.leftPanelOpen)
+  const rightOpen = useStudio(state => state.rightPanelOpen)
+  // On a wide screen the two docked panels flank the stage, so the island is centred on the *gap* they
+  // leave rather than on the window — centred on the window it slid under the right panel, which the
+  // panel (correctly) outranks in the stacking order, and the reroll vanished behind it. On a narrow
+  // screen the panels are drawers over the stage, and the island spans the window again.
+  const narrow = useIsNarrow()
+  const padLeft = !narrow && leftOpen ? PANEL_WIDTH_LEFT + 8 : 0
+  const padRight = !narrow && rightOpen ? PANEL_WIDTH_RIGHT + 8 : 0
   const [open, setOpen] = useState(true)
 
   return (
     <header
-      className="pointer-events-none absolute inset-x-0 top-0 z-20 flex h-16 items-center
-        justify-center px-4"
+      className="pointer-events-none absolute top-0 z-20 flex h-16 items-center justify-center px-2"
+      style={{ left: padLeft, right: padRight }}
     >
-      <div
-        className="pointer-events-auto absolute top-0 left-1/2 flex w-[calc(100vw-0.5rem)] max-w-[calc(100vw-0.5rem)]
-        -translate-x-1/2 flex-col items-center"
-      >
+      <div className="pointer-events-auto flex w-full flex-col items-center">
         <div
           className={`transition-[transform,opacity] duration-base ease-apple ${
             open ? 'translate-y-3' : '-translate-y-10'
@@ -55,7 +63,9 @@ export function Titlebar({ canReroll }: TitlebarProps) {
             {/* The identity, inside the island and on one line: the name is the one label that never
                 changes, so it is what the front of the capsule is for. The loaded brand name follows it in
                 the caps rail — a second line made the capsule taller than the controls it holds. */}
-            <span className="hidden items-baseline gap-2 min-[600px]:flex">
+            {/* The identity, hidden below 1250px: the three-column gap at its narrowest is 404px, and the
+                controls alone need most of it. */}
+            <span className="hidden items-baseline gap-2 min-[1250px]:flex">
               <span className="text-[0.9375rem] leading-none font-semibold tracking-[-0.01em] text-ink">
                 {t('app.title')}
               </span>
@@ -66,7 +76,7 @@ export function Titlebar({ canReroll }: TitlebarProps) {
 
             <span
               aria-hidden="true"
-              className="hidden h-5 w-px shrink-0 bg-[var(--hairline-strong)] min-[600px]:block"
+              className="hidden h-5 w-px shrink-0 bg-[var(--hairline-strong)] min-[1250px]:block"
             />
 
             <Segmented<Locale>
