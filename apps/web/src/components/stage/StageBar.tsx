@@ -19,7 +19,7 @@ export function StageBar() {
   const zoomBy = useStudio(state => state.zoomBy)
 
   return (
-    <div className="hairline-t flex items-center justify-between gap-3 px-gutter py-4">
+    <div className="hairline-t flex items-center justify-between gap-3 bg-[var(--stage)] px-gutter py-4">
       <Segmented<Backdrop>
         aria-label={t('stage.backdrop')}
         value={backdrop}

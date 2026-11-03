@@ -239,7 +239,7 @@ export default function App() {
             total={concepts.length}
           />
           <StageBar />
-          <div className="hairline-t">
+          <div className="hairline-t bg-[var(--stage)]">
             <ConceptStrip concepts={concepts} />
           </div>
 
