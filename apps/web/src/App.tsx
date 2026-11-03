@@ -289,7 +289,7 @@ export default function App() {
         </AnimatePresence>
 
         {/* Scrim for the drawer overlays, and the only way out of one that does not involve finding
-            the 16px-wide chevron at the edge of the window.
+            the 24px-wide grip at the edge of the window.
 
             A drawer covers the mark outright, and the app exists to show the mark, so the overlay has to
             read as "something is on top" and has to be dismissible by tapping the part of the screen

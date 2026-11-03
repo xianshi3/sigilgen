@@ -218,7 +218,7 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
   }
 
   return (
-    <div className="[container-type:size] relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[var(--stage)] p-5 sm:p-10">
+    <div className="stage-grid [container-type:size] relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[var(--stage)] p-5 sm:p-10">
       <div
         // Sized as a square that fits whichever axis runs out first: `min(100cqw, 100cqh)` is
         // `min(width, height)` of the stage's content box. Percentage widths cannot express this —
@@ -336,8 +336,10 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
         className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between
         p-5 sm:p-8"
       >
-        <span className="type-caps hidden text-ink-faint @[26rem]:inline">{t('stage.meta')}</span>
-        <span className="type-caps hidden text-ink-faint tabular-nums @[26rem]:inline">
+        <span className="type-caps hidden text-ink-faint min-[480px]:inline">
+          {t('stage.meta')}
+        </span>
+        <span className="type-caps hidden text-ink-faint tabular-nums min-[480px]:inline">
           {concept === undefined ? '' : `${concept.engine} / ${concept.palette.id}`}
         </span>
       </div>

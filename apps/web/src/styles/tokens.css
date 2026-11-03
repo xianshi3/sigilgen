@@ -441,3 +441,13 @@
 @utility hairline-l {
   border-left: 0.5px solid var(--hairline);
 }
+
+/* The drafting table the sheet is laid on: a faint register of dots in the stage's own bone, so the
+   uncluttered middle of the screen reads as a surface rather than as nothing. `--hairline` is 10% ink
+   in both themes, which is below the threshold at which a repeated mark starts to vibrate against the
+   sheet; the pitch is large enough that the eye groups it as one field rather than as a texture. */
+@utility stage-grid {
+  background-image: radial-gradient(circle, var(--hairline) 1px, transparent 1.6px);
+  background-size: 22px 22px;
+  background-position: center;
+}

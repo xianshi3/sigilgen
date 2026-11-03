@@ -37,30 +37,37 @@ export function Titlebar({ canReroll }: TitlebarProps) {
       className="pointer-events-none absolute inset-x-0 top-0 z-20 flex h-16 items-center
         justify-center px-4"
     >
-      <div className="pointer-events-auto absolute top-0 left-1/2 flex -translate-x-1/2 flex-col items-center">
+      <div
+        className="pointer-events-auto absolute top-0 left-1/2 flex w-[calc(100vw-0.5rem)] max-w-[calc(100vw-0.5rem)]
+        -translate-x-1/2 flex-col items-center"
+      >
         <div
           className={`transition-[transform,opacity] duration-base ease-apple ${
             open ? 'translate-y-3' : '-translate-y-10'
           }`}
         >
           <div
-            className={`flex items-center gap-3 rounded-panel bg-[var(--surface-raised)] px-3.5 py-2
+            className={`flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1.5
+              rounded-panel bg-[var(--surface-raised)] px-3 py-2 sm:gap-x-3 sm:px-3.5
               shadow-[0_0_0_0.5px_var(--hairline),0_1px_2px_oklch(0.2_0.01_70/0.04),0_10px_30px_oklch(0.2_0.01_70/0.07)]
               transition-opacity duration-base ${open ? '' : 'pointer-events-none opacity-0'}`}
           >
             {/* The identity, inside the island and on one line: the name is the one label that never
                 changes, so it is what the front of the capsule is for. The loaded brand name follows it in
                 the caps rail — a second line made the capsule taller than the controls it holds. */}
-            <span className="flex items-baseline gap-2">
+            <span className="hidden items-baseline gap-2 min-[600px]:flex">
               <span className="text-[0.9375rem] leading-none font-semibold tracking-[-0.01em] text-ink">
                 {t('app.title')}
               </span>
-              <span className="type-caps hidden max-w-32 truncate leading-none text-ink-faint sm:inline">
+              <span className="type-caps hidden max-w-32 truncate leading-none text-ink-faint lg:inline">
                 {name.trim() === '' ? t('app.tagline') : name}
               </span>
             </span>
 
-            <span aria-hidden="true" className="h-5 w-px shrink-0 bg-[var(--hairline-strong)]" />
+            <span
+              aria-hidden="true"
+              className="hidden h-5 w-px shrink-0 bg-[var(--hairline-strong)] min-[600px]:block"
+            />
 
             <Segmented<Locale>
               aria-label={t('locale.label')}

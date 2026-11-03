@@ -82,7 +82,7 @@ export function ReadabilityNotice({
        *
        * The query resolves against the stage, which declares `container-type: size`; this card declares no
        * container of its own, so 26rem is the stage's width rather than the card's. */}
-      <span className="type-caption hidden min-w-0 text-center text-ink-soft @[26rem]:inline">
+      <span className="type-caption hidden min-w-0 text-center text-ink-soft min-[480px]:inline">
         {t(cause === 'paper' ? 'stage.readabilityPale' : 'stage.readabilityHint')}
       </span>
       {palette === null ? null : (
