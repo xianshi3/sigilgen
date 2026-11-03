@@ -111,7 +111,10 @@ describe('the interactive floor', () => {
 
   it('gives the panel handle a width a finger can find', () => {
     // It was `w-4`: a 16px target on the only control that opens a drawer, which is the single control a
-    // reader on a touch screen has to locate. It floats over the stage, so the extra 8px costs nothing.
-    expect(readFileSync('src/App.tsx', 'utf8')).toContain('h-11 w-6')
+    // reader on a touch screen has to locate. It floats over the stage, so the extra 8px costs nothing;
+    // under the pointer it widens to 32px rather than resting there, so the stage is not paying for a
+    // touch affordance on a device that has no thumbs.
+    expect(readFileSync('src/App.tsx', 'utf8')).toContain('h-14 w-6')
+    expect(readFileSync('src/App.tsx', 'utf8')).toContain('hover:w-8')
   })
 })
