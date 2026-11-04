@@ -58,6 +58,21 @@ function fills(elements: readonly { attrs: Record<string, string | number> }[]):
     .filter((value): value is string => typeof value === 'string')
 }
 
+/**
+ * The largest coordinate anywhere in a run of path data, used to check that an output actually grows
+ * when the canvas does.
+ *
+ * @param elements - The elements to inspect.
+ * @returns The biggest number found in any `d` attribute.
+ */
+function magnitude(elements: readonly { attrs: Record<string, string | number> }[]): number {
+  return Math.max(
+    ...elements.map(element =>
+      Number(element.attrs['d']?.toString().match(/\d+(\.\d+)?/)?.[0] ?? 0)
+    )
+  )
+}
+
 describe('engineWeights', () => {
   it('always returns a weight for all six engines', () => {
     const request = normaliseConfig({ name: 'Acme' })
@@ -249,12 +264,6 @@ describe('engines', () => {
   it('scales its output with the canvas size', () => {
     const small = ENGINES.monogram(makeInput({ size: 64 }))
     const large = ENGINES.monogram(makeInput({ size: 1024 }))
-    const magnitude = (elements: readonly { attrs: Record<string, string | number> }[]): number =>
-      Math.max(
-        ...elements.map(element =>
-          Number(element.attrs['d']?.toString().match(/\d+(\.\d+)?/)?.[0] ?? 0)
-        )
-      )
     expect(magnitude(large)).toBeGreaterThan(magnitude(small))
   })
 })

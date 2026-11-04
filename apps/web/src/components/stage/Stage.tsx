@@ -119,13 +119,13 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
     // A part enclosed by a strictly larger one is on that one. Strictly larger, so two parts sharing a
     // box do not exclude each other.
     const boxes = parts.parts.map(part => ({ fill: part.fill, box: pathBounds(part.d) }))
-    const onPaper = boxes.filter((part, index) => {
+    const onPaper = boxes.filter((part, partIndex) => {
       const box = part.box
       if (box === null) {
         return true
       }
       return !boxes.some((other, otherIndex) => {
-        if (otherIndex === index) {
+        if (otherIndex === partIndex) {
           return false
         }
         const outer = other.box
@@ -185,18 +185,18 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
   }
 
   const onPointerDown =
-    (index: number) =>
+    (partIndex: number) =>
     (event: React.PointerEvent): void => {
       if (!editMode || concept === undefined || parts === null) {
         return
       }
       event.stopPropagation()
-      selectPart(index)
+      selectPart(partIndex)
       // One snapshot for the whole drag, so undo restores the position the part was in before it moved
       // rather than one pixel into the move.
       beginEdit()
       const point = toUserUnits(event.clientX, event.clientY)
-      const edit = edits?.[index] ?? emptyEdit()
+      const edit = edits?.[partIndex] ?? emptyEdit()
       drag.current = { x: point.x, y: point.y, dx: edit.dx, dy: edit.dy }
       svgRef.current?.setPointerCapture(event.pointerId)
     }
@@ -300,15 +300,15 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
               role="img"
               aria-label={`${concept.engine} — ${concept.palette.id}`}
             >
-              {parts.parts.map((part, index) => {
-                const edit = edits?.[index]
+              {parts.parts.map((part, pathIndex) => {
+                const edit = edits?.[pathIndex]
                 if (edit?.hidden === true) {
                   return null
                 }
-                const selected = editMode && selectedPart === index
+                const selected = editMode && selectedPart === pathIndex
                 const transform = edit === undefined ? null : partTransform(part.d, edit)
                 return (
-                  <g key={index} transform={transform ?? undefined}>
+                  <g key={pathIndex} transform={transform ?? undefined}>
                     <path
                       d={part.d}
                       fill={edit?.fill ?? part.fill ?? 'none'}
@@ -319,7 +319,7 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
                       strokeWidth={selected ? 3 : 0}
                       strokeLinejoin="round"
                       className={editMode ? 'cursor-move' : undefined}
-                      onPointerDown={onPointerDown(index)}
+                      onPointerDown={onPointerDown(pathIndex)}
                     />
                   </g>
                 )

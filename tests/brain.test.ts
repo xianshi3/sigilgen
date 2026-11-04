@@ -281,12 +281,16 @@ function flatten(d: string): Edge[] {
  * @param py - Sample y.
  * @returns `true` when the point is painted.
  */
-function isPainted(edges: readonly Edge[], px: number, py: number): boolean {
+function windingNumber(edges: readonly Edge[], px: number, py: number): number {
   let winding = 0
   for (const edge of edges) {
     winding += crossing(edge.x1, edge.y1, edge.x2, edge.y2, px, py)
   }
-  return winding !== 0
+  return winding
+}
+
+function isPainted(edges: readonly Edge[], px: number, py: number): boolean {
+  return windingNumber(edges, px, py) !== 0
 }
 
 /**
@@ -667,7 +671,6 @@ describe('letterform extent', () => {
         if (bounds === null) {
           continue
         }
-        const together = flatten(outline)
         const parts = outline
           .split(/(?=M)/)
           .filter(piece => piece.trim() !== '')
@@ -679,10 +682,31 @@ describe('letterform extent', () => {
 
         for (let y = bounds.minY + 1.5; y < bounds.maxY; y += step) {
           for (let x = bounds.minX + 1.5; x < bounds.maxX; x += step) {
-            if (isPainted(together, x, y)) {
+            // A point cannot contribute to the winding from a part whose box it falls outside of, so scan
+            // boxes first and reuse the windings of the parts that match. A point outside every box has
+            // winding zero overall, which makes it a candidate with no painters — skipped either way.
+            const painters: {
+              box: (typeof parts)[number]['box']
+              edges: (typeof parts)[number]['edges']
+              winding: number
+            }[] = []
+            for (const part of parts) {
+              if (
+                x < part.box.minX ||
+                x > part.box.maxX ||
+                y < part.box.minY ||
+                y > part.box.maxY
+              ) {
+                continue
+              }
+              const winding = windingNumber(part.edges, x, y)
+              if (winding !== 0) {
+                painters.push({ box: part.box, edges: part.edges, winding })
+              }
+            }
+            if (painters.reduce((sum, part) => sum + part.winding, 0) !== 0) {
               continue
             }
-            const painters = parts.filter(part => isPainted(part.edges, x, y))
             if (painters.length < 2) {
               continue
             }

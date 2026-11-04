@@ -130,6 +130,23 @@ function quadToCubic(
 }
 
 /**
+ * Signed angle between two vectors, in radians, with the sign from their cross product.
+ *
+ * @param ux - First vector x.
+ * @param uy - First vector y.
+ * @param vx - Second vector x.
+ * @param vy - Second vector y.
+ * @returns The angle between them, with the sign taken from the vectors' cross product.
+ */
+function signedAngleBetween(ux: number, uy: number, vx: number, vy: number): number {
+  const dot = ux * vx + uy * vy
+  const len = Math.hypot(ux, uy) * Math.hypot(vx, vy)
+  const clamped = Math.min(Math.max(dot / len, -1), 1)
+  const base = Math.acos(clamped)
+  return ux * vy - uy * vx < 0 ? -base : base
+}
+
+/**
  * Converts an elliptical arc to a run of cubic segments, splitting into at most 90° pieces.
  *
  * @param x1 - Start x.
@@ -195,20 +212,12 @@ function arcToCubics(
   const cx = cosPhi * cxp - sinPhi * cyp + (x1 + x) / 2
   const cy = sinPhi * cxp + cosPhi * cyp + (y1 + y) / 2
 
-  const angle = (ux: number, uy: number, vx: number, vy: number): number => {
-    const dot = ux * vx + uy * vy
-    const len = Math.hypot(ux, uy) * Math.hypot(vx, vy)
-    const clamped = Math.min(Math.max(dot / len, -1), 1)
-    const base = Math.acos(clamped)
-    return ux * vy - uy * vx < 0 ? -base : base
-  }
-
   const ux = (x1p - cxp) / rx
   const uy = (y1p - cyp) / ry
   const vx = (-x1p - cxp) / rx
   const vy = (-y1p - cyp) / ry
-  const startAngle = angle(1, 0, ux, uy)
-  let delta = angle(ux, uy, vx, vy)
+  const startAngle = signedAngleBetween(1, 0, ux, uy)
+  let delta = signedAngleBetween(ux, uy, vx, vy)
   if (!sweep && delta > 0) {
     delta -= 2 * Math.PI
   } else if (sweep && delta < 0) {
