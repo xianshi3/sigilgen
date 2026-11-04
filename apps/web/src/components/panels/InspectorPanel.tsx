@@ -164,8 +164,11 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
                     <input
                       type="color"
                       value={selected.fill ?? selectedPath.fill ?? '#000000'}
+                      // One snapshot per picker session, not one per `input` tick: a colour dragged across
+                      // the wheel fired onChange dozens of times and each one pushed an undo step.
+                      onPointerDown={beginEdit}
+                      onFocus={beginEdit}
                       onChange={event => {
-                        beginEdit()
                         updatePart(concept.seed, selectedPart, { fill: event.currentTarget.value })
                       }}
                       className="h-[var(--control-h)] w-12 cursor-pointer rounded-control border-0
@@ -194,7 +197,13 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
                     className="flex-1"
                     onClick={() => {
                       beginEdit()
-                      updatePart(concept.seed, selectedPart, { hidden: selected.hidden !== true })
+                      const nextHidden = selected.hidden !== true
+                      updatePart(concept.seed, selectedPart, { hidden: nextHidden })
+                      if (nextHidden) {
+                        // A hidden part can't be grabbed on the canvas, and the highlight would point at
+                        // nothing. Showing keeps the selection, so the freed part comes back selected.
+                        selectPart(null)
+                      }
                     }}
                   >
                     {selected.hidden === true ? t('edit.show') : t('edit.hide')}

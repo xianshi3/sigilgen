@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { pathBounds } from '@sigilgen/path'
 import type { LogoResult } from '@sigilgen/types'
@@ -87,9 +87,26 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
   const pinnedPalette = useStudio(state => state.palette)
 
   const svgRef = useRef<SVGSVGElement>(null)
-  // Where the current drag started, in user units, plus the part's transform at that moment. Stored in a
-  // ref rather than state because a drag fires dozens of moves a second and none of them need a render.
-  const drag = useRef<{ x: number; y: number; dx: number; dy: number } | null>(null)
+  // Selection is not an edit and does not travel between concepts: part 2 in one concept is a different
+  // shape in the next. A lingering highlight would point at the wrong part after a switch or a reroll.
+  const activeSeed = concept?.seed
+  useEffect(() => {
+    if (activeSeed === undefined) {
+      return
+    }
+    useStudio.getState().selectPart(null)
+  }, [activeSeed])
+  // An edit session's drag: where it started, the part's transform at that moment, and whether the
+  // pointer has moved far enough yet to count as a drag rather than as a click.
+  const drag = useRef<{
+    x: number
+    y: number
+    dx: number
+    dy: number
+    engaged: boolean
+  } | null>(null)
+  /** How far the pointer must travel, as a fraction of the viewBox, for a drag to count. */
+  const DRAG_THRESHOLD = 0.0075
 
   const parts = useMemo(
     () => (concept === undefined ? null : parseSvgParts(concept.svg)),
@@ -192,21 +209,33 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
       }
       event.stopPropagation()
       selectPart(partIndex)
-      // One snapshot for the whole drag, so undo restores the position the part was in before it moved
-      // rather than one pixel into the move.
-      beginEdit()
+      // No snapshot here: a click that selects a part is not an edit, and every pointer-down used to push
+      // one, filling the history with steps that revert nothing. The snapshot is taken in onPointerMove,
+      // once the pointer has actually travelled.
       const point = toUserUnits(event.clientX, event.clientY)
       const edit = edits?.[partIndex] ?? emptyEdit()
-      drag.current = { x: point.x, y: point.y, dx: edit.dx, dy: edit.dy }
+      drag.current = { x: point.x, y: point.y, dx: edit.dx, dy: edit.dy, engaged: false }
       svgRef.current?.setPointerCapture(event.pointerId)
     }
 
   const onPointerMove = (event: React.PointerEvent): void => {
     const active = drag.current
-    if (active === null || concept === undefined || selectedPart === null) {
+    if (active === null || concept === undefined || parts === null || selectedPart === null) {
       return
     }
     const point = toUserUnits(event.clientX, event.clientY)
+    // Below the threshold the pointer is hovering on the way to somewhere else: moving the part a
+    // fraction of a pixel is worse than moving it not at all, and every pointer-down used to push an
+    // undo snapshot on top of that. The drag engages once, then stays engaged for the gesture.
+    if (!active.engaged) {
+      if (Math.hypot(point.x - active.x, point.y - active.y) < parts.viewBox[2] * DRAG_THRESHOLD) {
+        return
+      }
+      active.engaged = true
+      // One snapshot for the whole drag, taken before the first actual move — undo restores the position
+      // the part was in before it moved, not one pixel into it, and clicks produce no step at all.
+      beginEdit()
+    }
     updatePart(concept.seed, selectedPart, {
       dx: Math.round((active.dx + point.x - active.x) * 100) / 100,
       dy: Math.round((active.dy + point.y - active.y) * 100) / 100,
