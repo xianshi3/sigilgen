@@ -12,6 +12,14 @@ function el(overrides: Partial<SVGElement> = {}): SVGElement {
   return { tag: 'path', attrs: { d: 'M 0 0 L 10 10 Z', fill: '#123456' }, ...overrides }
 }
 
+/** Builds the fixture used by the byte-identical assertions. */
+function buildFixture(): string {
+  return serialiseDocument([el(), el({ attrs: { d: 'M 1 1 L 2 2 Z', fill: 'none' } })], {
+    size: 512,
+    background: '#fff',
+  })
+}
+
 describe('serialiseDocument', () => {
   it('emits a scalable document with a viewBox', () => {
     const svg = serialiseDocument([], { size: 256, background: null })
@@ -37,12 +45,7 @@ describe('serialiseDocument', () => {
   })
 
   it('is byte-identical for identical input', () => {
-    const build = (): string =>
-      serialiseDocument([el(), el({ attrs: { d: 'M 1 1 L 2 2 Z', fill: 'none' } })], {
-        size: 512,
-        background: '#fff',
-      })
-    expect(build()).toBe(build())
+    expect(buildFixture()).toBe(buildFixture())
   })
 
   it('serialises nested groups', () => {

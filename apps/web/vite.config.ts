@@ -22,7 +22,7 @@ export default defineConfig({
     emptyOutDir: true,
     rolldownOptions: {
       output: {
-        advancedChunks: {
+        codeSplitting: {
           groups: [
             { name: 'motion', test: /node_modules[\\/](motion|framer-motion)[\\/]/ },
             { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
