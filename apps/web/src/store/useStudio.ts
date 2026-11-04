@@ -73,6 +73,55 @@ export type Zoom = 'fit' | number
 const ZOOM_MIN = 0.25
 const ZOOM_MAX = 4
 
+/**
+ * The most history entries the studio keeps.
+ *
+ * Undo is one snapshot of the whole edits map per gesture, and a long session makes hundreds of them.
+ * Kept at 50: deep enough that the reader never runs out of "how far back can I go", small enough that
+ * the store never carries a meaningful amount of memory, and short enough that a scroll through `past`
+ * stays bounded.
+ */
+const HISTORY_LIMIT = 50
+
+/** Whether two edits maps hold the same thing, part for part. */
+function sameEdits(a: ConceptEdits, b: ConceptEdits): boolean {
+  const aKeys = Object.keys(a)
+  if (aKeys.length !== Object.keys(b).length) {
+    return false
+  }
+  for (const key of aKeys) {
+    const aParts = a[key]
+    const bParts = b[key]
+    if (aParts === undefined || bParts === undefined) {
+      return false
+    }
+    if (aParts.length !== bParts.length) {
+      return false
+    }
+    for (let index = 0; index < aParts.length; index++) {
+      const aPart = aParts[index]
+      const bPart = bParts[index]
+      if (aPart === undefined || bPart === undefined) {
+        if (aPart !== bPart) {
+          return false
+        }
+        continue
+      }
+      if (
+        aPart.dx !== bPart.dx ||
+        aPart.dy !== bPart.dy ||
+        aPart.rotate !== bPart.rotate ||
+        aPart.scale !== bPart.scale ||
+        aPart.fill !== bPart.fill ||
+        aPart.hidden !== bPart.hidden
+      ) {
+        return false
+      }
+    }
+  }
+  return true
+}
+
 export interface StudioState extends StudioConfig {
   activeConcept: number
   backdrop: Backdrop
@@ -342,12 +391,20 @@ export const useStudio = create<StudioState>()(
       selectPart: index => set({ selectedPart: index }),
 
       beginEdit: () =>
-        set(state => ({
-          past: [...state.past, { edits: state.edits }],
-          // Any new gesture invalidates the redo branch: the reader has gone somewhere the stored
-          // future no longer describes.
-          future: [],
-        })),
+        set(state => {
+          // Nothing has changed since the last snapshot: pushing another would hand the reader an undo
+          // step that reverts nothing, and an empty click is not a gesture.
+          const top = state.past.at(-1)
+          if (top !== undefined && sameEdits(top.edits, state.edits)) {
+            return state
+          }
+          return {
+            past: [...state.past, { edits: state.edits }].slice(-HISTORY_LIMIT),
+            // Any new gesture invalidates the redo branch: the reader has gone somewhere the stored
+            // future no longer describes.
+            future: [],
+          }
+        }),
 
       updatePart: (conceptSeed, index, patch) =>
         set(state => {
@@ -368,7 +425,7 @@ export const useStudio = create<StudioState>()(
           return {
             edits: previous.edits,
             past: state.past.slice(0, -1),
-            future: [...state.future, { edits: state.edits }],
+            future: [...state.future, { edits: state.edits }].slice(-HISTORY_LIMIT),
           }
         }),
 
@@ -381,7 +438,7 @@ export const useStudio = create<StudioState>()(
           return {
             edits: next.edits,
             future: state.future.slice(0, -1),
-            past: [...state.past, { edits: state.edits }],
+            past: [...state.past, { edits: state.edits }].slice(-HISTORY_LIMIT),
           }
         }),
 
@@ -392,7 +449,7 @@ export const useStudio = create<StudioState>()(
           return {
             edits: next,
             selectedPart: null,
-            past: [...state.past, { edits: state.edits }],
+            past: [...state.past, { edits: state.edits }].slice(-HISTORY_LIMIT),
             future: [],
           }
         }),

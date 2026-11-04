@@ -255,6 +255,48 @@ describe('file names', () => {
   })
 })
 
+describe('edit history', () => {
+  beforeEach(() => {
+    act(() => {
+      useStudio.setState({ edits: {}, past: [], future: [], selectedPart: null })
+    })
+  })
+
+  it('does not push an undo step when nothing changed since the last snapshot', () => {
+    // Every pointer-down used to push one, so selecting a part four times meant four steps of undo that
+    // reverted nothing — and pressing undo looked broken.
+    act(() => {
+      useStudio.getState().beginEdit()
+      useStudio.getState().beginEdit()
+    })
+    expect(useStudio.getState().past).toHaveLength(1)
+  })
+
+  it('takes one snapshot per gesture, and undo restores the pre-gesture state', () => {
+    act(() => {
+      useStudio.getState().beginEdit()
+      useStudio.getState().updatePart('seed-a', 0, { dx: 10 })
+      useStudio.getState().updatePart('seed-a', 0, { dy: 20 })
+    })
+    expect(useStudio.getState().past).toHaveLength(1)
+    act(() => useStudio.getState().undo())
+    expect(useStudio.getState().edits['seed-a']).toBeUndefined()
+    act(() => useStudio.getState().redo())
+    expect(useStudio.getState().edits['seed-a']?.[0]?.dx).toBe(10)
+  })
+
+  it('caps the undo history so a long session does not grow without bound', () => {
+    for (let step = 0; step < 60; step++) {
+      act(() => {
+        useStudio.getState().beginEdit()
+        useStudio.getState().updatePart('seed-a', 0, { dx: step + 1 })
+      })
+    }
+    expect(useStudio.getState().past.length).toBeLessThanOrEqual(50)
+    expect(useStudio.getState().edits['seed-a']?.[0]?.dx).toBe(60)
+  })
+})
+
 describe('clipboard', () => {
   it('reports failure honestly instead of pretending', async () => {
     // The legacy fallback needs a document; without one both paths must fail, and the interface has to
