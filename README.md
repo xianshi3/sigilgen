@@ -51,6 +51,7 @@ every one of them is reported back to you in words. That buys three things an im
 - [Installation](#installation)
 - [Studio](#studio-browser-app)
 - [CLI](#cli)
+- [MCP server](#mcp-server)
 - [API](#api)
 - [How a logo is decided](#how-a-logo-is-decided)
 - [Guarantees](#guarantees)
@@ -216,6 +217,30 @@ sigilgen --name "Ledgerly" --keywords fintech -N 2 --json
   ],
 }
 ```
+
+## MCP server
+
+`apps/mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server, so any MCP client —
+Claude Desktop, Cursor, VS Code, an agent framework — can generate logos without leaving the
+conversation. It is an adapter over the same generator: no second brain, no second routing table, and
+the same input still returns the same bytes.
+
+Two tools: `generate_logo` (1–6 concepts, SVG or a JSON summary, optionally written to disk) and
+`list_options` (engine ids, palettes, fonts, pictograms, moods). Five `sigilgen://options/*` resources
+mirror the catalogues for clients that read resources.
+
+```jsonc
+// claude_desktop_config.json — after `pnpm build` at the repository root
+{
+  "mcpServers": {
+    "sigilgen": { "command": "node", "args": ["<repo>/apps/mcp/dist/index.js"] },
+  },
+}
+```
+
+See [apps/mcp/README.md](apps/mcp/README.md) for the tool schema, client configuration and the
+package's own commands. The server keeps its dependencies — the official MCP SDK and `zod` — in that
+package; the root library still has none.
 
 ## API
 
