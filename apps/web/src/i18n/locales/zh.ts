@@ -67,6 +67,8 @@ export const zh = {
   'action.export': '导出',
   'action.copySvg': '复制 SVG',
   'action.downloadSvg': '下载 SVG',
+  'action.saveSvg': '保存 SVG…',
+  'action.saved': '已保存',
   'action.downloadPng': '下载 PNG',
   'action.copied': '已复制',
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Titlebar } from './components/chrome/Titlebar'
+import { WindowChrome } from './components/chrome/WindowChrome'
 import { DesignPanel } from './components/panels/DesignPanel'
 import { InputPanel } from './components/panels/InputPanel'
 import { InspectorPanel } from './components/panels/InspectorPanel'
@@ -10,6 +11,7 @@ import { ConceptStrip } from './components/stage/ConceptStrip'
 import { Stage } from './components/stage/Stage'
 import { StageBar } from './components/stage/StageBar'
 import { useI18n } from './i18n/I18nProvider'
+import { useDesktopCommands } from './hooks/useDesktopCommands'
 import { useIsNarrow, useReducedMotion } from './hooks/useMediaQuery'
 import { useHotkeys } from './hooks/useHotkeys'
 import { useThemeEffect } from './hooks/useThemeEffect'
@@ -76,6 +78,7 @@ export default function App() {
   )
 
   const activeConcept = concepts[studio.activeConcept] ?? concepts[0]
+  useDesktopCommands(activeConcept, name)
 
   // With `auto`, every concept draws its own palette, so the sheet follows the one on screen: the mark is
   // shown on the paper it was drawn for. A manual backdrop choice still wins until the next concept
@@ -194,101 +197,104 @@ export default function App() {
 
   return (
     <div className="stage-grid relative flex h-full flex-col bg-[var(--stage)]">
-      <Titlebar canReroll={!waiting && errorKey === null} />
+      <WindowChrome />
 
-      <div className="relative flex min-h-0 flex-1">
-        <AnimatePresence initial={false}>
-          {leftOpen ? (
-            <motion.aside
-              key="left"
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: LEFT_WIDTH, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={panelTransition(reduced)}
-              className={`material z-30 shrink-0 overflow-hidden rounded-panel
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <Titlebar canReroll={!waiting && errorKey === null} />
+
+        <div className="relative flex min-h-0 flex-1">
+          <AnimatePresence initial={false}>
+            {leftOpen ? (
+              <motion.aside
+                key="left"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: LEFT_WIDTH, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={panelTransition(reduced)}
+                className={`material z-30 shrink-0 overflow-hidden rounded-panel
                 shadow-[var(--shadow-lift)]
                 ${narrow ? 'absolute top-2 bottom-2 left-2' : 'my-2 ml-2'}`}
-            >
-              <div
-                className="h-full overflow-y-auto max-[1007px]:pt-14"
-                style={{ width: LEFT_WIDTH }}
               >
-                {/* The panel owns its padding, so the four groups below it share one rhythm instead of
+                <div
+                  className="h-full overflow-y-auto max-[1007px]:pt-14"
+                  style={{ width: LEFT_WIDTH }}
+                >
+                  {/* The panel owns its padding, so the four groups below it share one rhythm instead of
                     each inventing a gutter against its neighbour. */}
-                <div className="flex flex-col gap-10 px-gutter py-gutter">
-                  <InputPanel />
-                  <DesignPanel />
-                  <div className="hairline-t -mx-gutter px-gutter pt-6">
-                    <ResourcePanel />
-                  </div>
-                  <div className="hairline-t -mx-gutter px-gutter pt-6">
-                    <OptionPanel />
+                  <div className="flex flex-col gap-10 px-gutter py-gutter">
+                    <InputPanel />
+                    <DesignPanel />
+                    <div className="hairline-t -mx-gutter px-gutter pt-6">
+                      <ResourcePanel />
+                    </div>
+                    <div className="hairline-t -mx-gutter px-gutter pt-6">
+                      <OptionPanel />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.aside>
-          ) : null}
-        </AnimatePresence>
+              </motion.aside>
+            ) : null}
+          </AnimatePresence>
 
-        <main className="relative flex min-w-0 flex-1 flex-col pt-16">
-          <Stage
-            concept={activeConcept}
-            errorKey={errorKey}
-            errorDetail={errorDetail}
-            index={studio.activeConcept}
-            total={concepts.length}
-          />
-          <StageBar />
-          <div className="hairline-t bg-[var(--stage)]">
-            <ConceptStrip concepts={concepts} />
-          </div>
+          <main className="relative flex min-w-0 flex-1 flex-col pt-16">
+            <Stage
+              concept={activeConcept}
+              errorKey={errorKey}
+              errorDetail={errorDetail}
+              index={studio.activeConcept}
+              total={concepts.length}
+            />
+            <StageBar />
+            <div className="hairline-t bg-[var(--stage)]">
+              <ConceptStrip concepts={concepts} />
+            </div>
 
-          {/* The panel toggles belong to the stage, not to the window. Anchored to the window they sat on
+            {/* The panel toggles belong to the stage, not to the window. Anchored to the window they sat on
               top of an open panel's left padding — floating above it in the stacking order, which is what
               kept them clickable, and covering the controls underneath, which is what made them a bug. */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-40 flex items-center pl-1.5">
-            <PanelToggle
-              open={studio.leftPanelOpen}
-              onClick={openLeft}
-              label={studio.leftPanelOpen ? t('panel.collapseLeft') : t('panel.expandLeft')}
-              glyph={studio.leftPanelOpen ? '‹' : '›'}
-            />
-          </div>
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-40 flex items-center pr-1.5">
-            <PanelToggle
-              open={studio.rightPanelOpen}
-              onClick={openRight}
-              label={studio.rightPanelOpen ? t('panel.collapseRight') : t('panel.expandRight')}
-              glyph={studio.rightPanelOpen ? '›' : '‹'}
-            />
-          </div>
-        </main>
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-40 flex items-center pl-1.5">
+              <PanelToggle
+                open={studio.leftPanelOpen}
+                onClick={openLeft}
+                label={studio.leftPanelOpen ? t('panel.collapseLeft') : t('panel.expandLeft')}
+                glyph={studio.leftPanelOpen ? '‹' : '›'}
+              />
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-40 flex items-center pr-1.5">
+              <PanelToggle
+                open={studio.rightPanelOpen}
+                onClick={openRight}
+                label={studio.rightPanelOpen ? t('panel.collapseRight') : t('panel.expandRight')}
+                glyph={studio.rightPanelOpen ? '›' : '‹'}
+              />
+            </div>
+          </main>
 
-        <AnimatePresence initial={false}>
-          {rightOpen ? (
-            <motion.aside
-              key="right"
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: RIGHT_WIDTH, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={panelTransition(reduced)}
-              className={`material z-30 shrink-0 overflow-hidden rounded-panel
+          <AnimatePresence initial={false}>
+            {rightOpen ? (
+              <motion.aside
+                key="right"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: RIGHT_WIDTH, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={panelTransition(reduced)}
+                className={`material z-30 shrink-0 overflow-hidden rounded-panel
                 shadow-[var(--shadow-lift)]
                 ${narrow ? 'absolute top-2 bottom-2 right-2' : 'my-2 mr-2'}`}
-            >
-              <div
-                className="h-full overflow-y-auto max-[1007px]:pt-14"
-                style={{ width: RIGHT_WIDTH }}
               >
-                <div className="flex flex-col gap-10 px-gutter py-gutter">
-                  <InspectorPanel concept={activeConcept} />
+                <div
+                  className="h-full overflow-y-auto max-[1007px]:pt-14"
+                  style={{ width: RIGHT_WIDTH }}
+                >
+                  <div className="flex flex-col gap-10 px-gutter py-gutter">
+                    <InspectorPanel concept={activeConcept} />
+                  </div>
                 </div>
-              </div>
-            </motion.aside>
-          ) : null}
-        </AnimatePresence>
+              </motion.aside>
+            ) : null}
+          </AnimatePresence>
 
-        {/* Scrim for the drawer overlays, and the only way out of one that does not involve finding
+          {/* Scrim for the drawer overlays, and the only way out of one that does not involve finding
             the 24px-wide grip at the edge of the window.
 
             A drawer covers the mark outright, and the app exists to show the mark, so the overlay has to
@@ -298,26 +304,27 @@ export default function App() {
 
             Below the drawer (z-30) so the panel stays readable, and below the toggles (z-40) so the
             chevron that opened it can still be pressed. */}
-        <AnimatePresence>
-          {drawerOpen ? (
-            <motion.button
-              key="scrim"
-              type="button"
-              tabIndex={-1}
-              aria-label={t('panel.dismiss')}
-              onClick={closeDrawers}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              // Opacity only, so it keeps its duration under reduced motion: a fade in place is not the
-              // travel the setting is about. The panels use `panelTransition`, which does zero theirs.
-              transition={{ duration: DURATION_PANEL, ease: EASE_APPLE }}
-              className="absolute inset-0 z-20 cursor-default bg-[var(--scrim)]"
-            />
-          ) : null}
-        </AnimatePresence>
+          <AnimatePresence>
+            {drawerOpen ? (
+              <motion.button
+                key="scrim"
+                type="button"
+                tabIndex={-1}
+                aria-label={t('panel.dismiss')}
+                onClick={closeDrawers}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                // Opacity only, so it keeps its duration under reduced motion: a fade in place is not the
+                // travel the setting is about. The panels use `panelTransition`, which does zero theirs.
+                transition={{ duration: DURATION_PANEL, ease: EASE_APPLE }}
+                className="absolute inset-0 z-20 cursor-default bg-[var(--scrim)]"
+              />
+            ) : null}
+          </AnimatePresence>
 
-        {/* Toggles for the panels live inside the stage now; see the note there. */}
+          {/* Toggles for the panels live inside the stage now; see the note there. */}
+        </div>
       </div>
     </div>
   )

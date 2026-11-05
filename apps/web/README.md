@@ -6,6 +6,10 @@ deterministic flat-SVG marks, and see the reasoning behind each one.
 This app is a **first-party client**, not a third-party integration: it imports the generator's source
 directly, so there is no published package to install and no API to keep in sync.
 
+The same source is the renderer for [`apps/desktop`](../desktop), the Electron client. A change here is
+a change there with no copy to keep in step; the shell only adds the desktop-only `WindowChrome` strip
+and the bridge in `src/lib/desktop.ts`.
+
 ## Running it
 
 This is a **separate package**: its own `package.json`, its own lockfile, its own gate. The root
@@ -37,6 +41,7 @@ and its rehydration, the clipboard fallbacks, locale detection and switching.
 | `dimensions.test.ts` | the dictionaries agree, and every offered value is real |
 | `studio.test.ts`     | the store, persistence, generation and file naming      |
 | `i18n.test.tsx`      | the provider, rendered rather than merely imported      |
+| `desktop.test.tsx`   | the shell bridge, native save and the window strip      |
 
 Three assertions are worth keeping an eye on, because each catches a way this app can quietly break:
 
@@ -57,7 +62,8 @@ modules separately from `tsc`. Keep the two in step with `tsconfig.json` when an
 ```
 src/
 ├── components/
-│   ├── chrome/Titlebar.tsx      window chrome: language, theme, reroll
+│   ├── chrome/Titlebar.tsx      the in-app island: language, theme, reroll
+│   ├── chrome/WindowChrome.tsx  desktop-only strip behind the native caption buttons
 │   ├── panels/                  left: inputs, engine, resources, options; right: inspector
 │   ├── primitives/              Button, ChoiceGrid, Disclosure, RangeField, Section, Segmented,
 │   │                            TextField, Toggle

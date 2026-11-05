@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { isTypingTarget } from '../lib/typing'
 import { useStudio } from '../store/useStudio'
 
 /**
@@ -123,24 +124,4 @@ export function useHotkeys(conceptCount: number): void {
       window.removeEventListener('keydown', onKeyDown)
     }
   }, [conceptCount])
-}
-
-/**
- * Whether a key press belongs to a control the reader is typing into.
- *
- * `isContentEditable` is read off the element rather than inferred, because a rich-text host may set it
- * on an ancestor rather than on the node that received the press.
- *
- * @param target - The event target.
- * @returns `true` when the key is for the field, not for the app.
- */
-function isTypingTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) {
-    return false
-  }
-  const tag = target.tagName
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-    return true
-  }
-  return target.isContentEditable === true
 }

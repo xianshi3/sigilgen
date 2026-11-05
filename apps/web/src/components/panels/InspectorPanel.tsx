@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { LogoResult } from '@sigilgen/types'
 import { useI18n } from '../../i18n/I18nProvider'
+import { isDesktop } from '../../lib/desktop'
 import { ENGINE_LABEL } from '../../lib/engines'
 import { copyText, downloadSvg, fileStem } from '../../lib/export'
 import { applyEdits, emptyEdit, parseSvgParts } from '../../lib/svgParts'
@@ -44,6 +45,9 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
   const { t } = useI18n()
   const name = useStudio(state => state.name)
   const [copied, setCopied] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const desktop = isDesktop()
 
   const editMode = useStudio(state => state.editMode)
   const setEditMode = useStudio(state => state.setEditMode)
@@ -280,11 +284,26 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
             size="sm"
             variant="secondary"
             className="flex-1"
+            disabled={saving}
             onClick={() => {
-              downloadSvg(concept, stem, applyEdits(concept.svg, edits ?? []))
+              setSaving(true)
+              void downloadSvg(concept, stem, applyEdits(concept.svg, edits ?? []))
+                .then(ok => {
+                  if (!ok) {
+                    return
+                  }
+                  setSaved(true)
+                  setTimeout(() => {
+                    setSaved(false)
+                  }, 1400)
+                })
+                .catch(() => false)
+                .finally(() => {
+                  setSaving(false)
+                })
             }}
           >
-            {t('action.downloadSvg')}
+            {saved ? t('action.saved') : desktop ? t('action.saveSvg') : t('action.downloadSvg')}
           </Button>
         </div>
       </Section>

@@ -1,0 +1,57 @@
+appId: dev.sigilgen.desktop
+productName: Sigilgen
+copyright: Copyright © 2026 xianshi3
+
+directories:
+  buildResources: build
+  output: release
+
+files:
+  - out/**/*
+  - package.json
+
+asar: true
+compression: maximum
+npmRebuild: false
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+    - target: portable
+
+nsis:
+  artifactName: ${productName}-${version}-setup-${arch}.${ext}
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Sigilgen
+  deleteAppDataOnUninstall: false
+
+portable:
+  artifactName: ${productName}-${version}-portable-${arch}.${ext}
+
+mac:
+  icon: build/icon.png
+  category: public.app-category.graphics-design
+  darkModeSupport: true
+  target:
+    - target: dmg
+    - target: zip
+
+linux:
+  icon: build/icon.png
+  category: Graphics
+  synopsis: Deterministic flat geometric SVG logos
+  description: |
+    Sigilgen generates deterministic, flat geometric SVG logo concepts from a brand name and
+    keywords. Every decision comes from a curated JSON brain; the same input always produces the
+    same bytes.
+  maintainer: xianshi3 <vm1784257751@foxmail.com>
+  target:
+    - target: AppImage
+    - target: deb

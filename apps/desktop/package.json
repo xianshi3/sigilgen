@@ -1,0 +1,42 @@
+{
+  "name": "@sigilgen/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Sigilgen desktop client: the studio, wrapped in a native cross-platform shell.",
+  "license": "MIT",
+  "author": "xianshi3 <vm1784257751@foxmail.com>",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test && pnpm run build",
+    "icons": "node scripts/build-icon.mjs",
+    "dist": "pnpm run build && electron-builder",
+    "dist:win": "pnpm run build && electron-builder --win",
+    "dist:mac": "pnpm run build && electron-builder --mac",
+    "dist:linux": "pnpm run build && electron-builder --linux"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^22.15.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0",
+    "electron-vite": "^6.0.0",
+    "oxfmt": "^0.72.0",
+    "oxlint": "^1.87.0",
+    "png-to-ico": "^3.0.2",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3",
+    "vitest": "^3.2.7"
+  }
+}

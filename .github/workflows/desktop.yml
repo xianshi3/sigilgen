@@ -1,0 +1,91 @@
+name: desktop
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+      - 'apps/web/**'
+      - 'src/**'
+      - '.github/workflows/desktop.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: desktop gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install the library
+        run: pnpm install --frozen-lockfile
+
+      - name: Install the studio
+        run: pnpm --dir apps/web install --frozen-lockfile
+
+      - name: Install the desktop shell
+        run: pnpm --dir apps/desktop install --frozen-lockfile
+
+      - name: Desktop gate
+        run: pnpm --dir apps/desktop run check
+
+  package:
+    name: package (${{ matrix.os }})
+    if: github.event_name != 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install the library
+        run: pnpm install --frozen-lockfile
+
+      - name: Install the studio
+        run: pnpm --dir apps/web install --frozen-lockfile
+
+      - name: Install the desktop shell
+        run: pnpm --dir apps/desktop install --frozen-lockfile
+
+      # Unsigned builds are the default here; a release pipeline supplies the certificates.
+      - name: Package
+        run: pnpm --dir apps/desktop run dist
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: sigilgen-desktop-${{ matrix.os }}
+          if-no-files-found: warn
+          path: |
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.zip
+            apps/desktop/release/*.AppImage
+            apps/desktop/release/*.deb
+            apps/desktop/release/*.blockmap
+            apps/desktop/release/*.yml

@@ -50,6 +50,7 @@ every one of them is reported back to you in words. That buys three things an im
 - [Features](#features)
 - [Installation](#installation)
 - [Studio](#studio-browser-app)
+- [Desktop app](#desktop-app)
 - [CLI](#cli)
 - [MCP server](#mcp-server)
 - [API](#api)
@@ -135,6 +136,29 @@ pnpm run check  # its own gate: lint, format, typecheck, tests, build
 It imports the generator's source directly, so editing an engine in `src/` hot-reloads the app. It is a
 separate package with its own gate — the root `pnpm run check` does not cover it. See
 [apps/web/README.md](apps/web/README.md).
+
+## Desktop app
+
+`apps/desktop` is the desktop client: the same studio, wrapped in an Electron shell with native window
+controls, a localized application menu, a real Save dialog, a clipboard that works outside a secure
+context, and window geometry that survives a restart. It runs on Windows, macOS and Linux.
+
+![The Sigilgen desktop client](docs/images/desktop-v.png)
+
+<sub>Captured from the packaged Windows build. Like the studio image above, this one is a photograph
+of a user interface rather than generated art.</sub>
+
+```bash
+pnpm install
+pnpm --dir apps/web install
+pnpm --dir apps/desktop install
+pnpm --dir apps/desktop dev      # Electron + HMR
+```
+
+On Windows the native caption buttons sit on the custom strip, which keeps Snap Layouts and
+double-click-to-maximize working; macOS keeps its traffic lights; Linux uses its ordinary window frame.
+Packaging is `pnpm --dir apps/desktop run dist`, and builds are unsigned until a release pipeline
+supplies certificates. See [apps/desktop/README.md](apps/desktop/README.md).
 
 ## Nine engines
 
@@ -470,8 +494,9 @@ pnpm run links    # create the AI tool symlinks
 pnpm run check    # lint, format check, typecheck, tests
 ```
 
-The studio is a separate package with its own gate, so a change that touches `apps/web` also needs
-`pnpm --dir apps/web run check`.
+The studio and the desktop shell are separate packages with their own gates, so a change that touches
+`apps/web` also needs `pnpm --dir apps/web run check`, and a change that touches `apps/desktop` also
+needs `pnpm --dir apps/desktop run check`.
 
 ## Security
 
