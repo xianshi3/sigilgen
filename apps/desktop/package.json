@@ -24,10 +24,10 @@
     "test:watch": "vitest",
     "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test && pnpm run build",
     "icons": "node scripts/build-icon.mjs",
-    "dist": "pnpm run build && electron-builder",
-    "dist:win": "pnpm run build && electron-builder --win",
-    "dist:mac": "pnpm run build && electron-builder --mac",
-    "dist:linux": "pnpm run build && electron-builder --linux"
+    "dist": "pnpm run build && electron-builder --publish never",
+    "dist:win": "pnpm run build && electron-builder --win --publish never",
+    "dist:mac": "pnpm run build && electron-builder --mac --publish never",
+    "dist:linux": "pnpm run build && electron-builder --linux --publish never"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
