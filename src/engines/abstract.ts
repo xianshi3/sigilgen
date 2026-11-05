@@ -1,5 +1,5 @@
 /**
- * Abstract engine — seed-driven pure geometry, no type.
+ * Abstract engine 鈥?seed-driven pure geometry, no type.
  *
  * Some brands want a mark that is not a container, an initial or a pictogram: a shape that stands on
  * its own. That is what this engine produces. Five modes cover a wide range of visual languages:
@@ -16,7 +16,7 @@
  * `variations` yields genuinely different ones.
  */
 
-import { path, pick } from './shared'
+import { centreOnInk, path, pick } from './shared'
 import { contrastFill } from './monogram'
 import { contrastRatio } from '../resolvers/palette-resolver'
 import { fmt } from '../format'
@@ -31,7 +31,6 @@ import {
   smoothClosedPath,
   type Point,
 } from '../geometry'
-import { pathBounds, transformPath } from '../path'
 import type { SeedResolver } from '../seed-resolver'
 import type { Engine, EngineInput, PaletteEntry, SVGElement } from '../types'
 
@@ -94,7 +93,7 @@ const ARC_ROLES = ['lead', 'second', 'third', 'second'] as const
  * them are not actually centred, because their filled pattern is asymmetric: a lattice whose cells fade
  * along a diagonal, arcs that only sweep one side, a polygon rotated off its own symmetry axis, a
  * satellite arc that starts at a random tilt. The ink then sits to one side of the centre the geometry
- * was built on, which is what "not 整整齐齐" looks like — a mark that is not visibly wrong, only visibly
+ * was built on, which is what "not 鏁存暣榻愰綈" looks like 鈥?a mark that is not visibly wrong, only visibly
  * off. Measured, the worst of these sat 69.6 user units off centre on a 512 canvas, about 14% of the
  * width, at the scale where nobody can say why it looks loose.
  *
@@ -442,8 +441,7 @@ const CENTRED_MODES: Record<string, CentredMode> = {
  * Resolving the roles one at a time with {@link readableOn} is not enough, because each role's fallback is
  * the previous role. On `azure-current` the accent is *the same colour as the background*, so the accent
  * fell back to the lead, which made `second` equal to `lead`; the highlight then failed the contrast floor
- * and fell back to `second`, which made `third` equal to both. Every mark came out a single flat tone —
- * and the modes that build depth from layered tones lost exactly the thing they are for.
+ * and fell back to `second`, which made `third` equal to both. Every mark came out a single flat tone 鈥? * and the modes that build depth from layered tones lost exactly the thing they are for.
  *
  * So the roles are drawn from the palette as a set rather than as a chain: a candidate is rejected if it
  * is illegible on the background *or* already spoken for. Only when the palette runs genuinely dry does a
@@ -477,51 +475,6 @@ function fillRoles(palette: PaletteEntry, canvas: string): [string, string, stri
     return lead
   }
   return [lead, take(), take()]
-}
-
-/**
- * Measures a group of elements and translates them so their ink is centred on the canvas.
- *
- * Returns the elements unchanged when they enclose no area, since there is nothing to centre.
- *
- * @param elements - Elements to re-centre.
- * @param size - Canvas side in user units.
- * @returns The elements, shifted so the ink box is centred.
- */
-function centreOnInk(elements: SVGElement[], size: number): SVGElement[] {
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-  for (const element of elements) {
-    const { d } = element.attrs
-    if (typeof d !== 'string') {
-      continue
-    }
-    const bounds = pathBounds(d)
-    if (bounds === null) {
-      continue
-    }
-    minX = Math.min(minX, bounds.minX)
-    minY = Math.min(minY, bounds.minY)
-    maxX = Math.max(maxX, bounds.maxX)
-    maxY = Math.max(maxY, bounds.maxY)
-  }
-  if (!Number.isFinite(minX) || !Number.isFinite(minY)) {
-    return elements
-  }
-  const dx = size / 2 - (minX + maxX) / 2
-  const dy = size / 2 - (minY + maxY) / 2
-  if (dx === 0 && dy === 0) {
-    return elements
-  }
-  return elements.map(element => {
-    const { d } = element.attrs
-    if (typeof d !== 'string') {
-      return element
-    }
-    return { ...element, attrs: { ...element.attrs, d: transformPath(d, 1, dx, dy) } }
-  })
 }
 
 /**

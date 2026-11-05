@@ -85,7 +85,16 @@ interface LogoConfig {
   name: string // required
   keywords?: string
   brief?: string
-  engine?: 'monogram' | 'wordmark' | 'abstract' | 'emblem' | 'lettermark'
+  engine?:
+    | 'monogram'
+    | 'wordmark'
+    | 'lettermark'
+    | 'apparatus'
+    | 'abstract'
+    | 'emblem'
+    | 'pictogram'
+    | 'halftone'
+    | 'scanline'
   palette?: string // palette id, or a colour list
   font?: string
   icon?: string
@@ -150,6 +159,9 @@ are normalised by rule size so a rule cannot win by listing more synonyms.
 | `apparatus`  | Technical, instrument or signage briefs              | Initials in a chamfered core, framed by hairlines |
 | `abstract`   | Abstract or generative concepts                      | Seed-driven pure geometry                         |
 | `emblem`     | Badge, manufacturing or hospitality concepts         | Pictogram and name inside one frame               |
+| `pictogram`  | Product, app or icon-led briefs                      | The pictogram alone, ringed or reversed out       |
+| `halftone`   | Print, craft or editorial briefs                     | The initial set as a dot screen                   |
+| `scanline`   | Developer, cyber or signal briefs                    | The initial cut into horizontal bars              |
 
 ### 4.4 Resolvers
 
@@ -182,6 +194,7 @@ ones it has candidates for:
 | `style`     | apparatus  | `dial`, `reticle`, `brackets`, `sector`           |
 | `frame`     | emblem     | `shield`, `hexagon`, `circle`, `banner`           |
 | `mode`      | abstract   | 15 modes, `orbit` … `stacked`                     |
+| `mode`      | pictogram  | `plain`, `ring`, `disc`                           |
 
 Three rules keep it safe, and all three are enforced by tests:
 
@@ -344,6 +357,39 @@ the long ticks; `reticle` runs crosshair arms through a ring; `brackets` sets fo
 base rule; `sector` puts a heavy arc over a thin ring, which is the only style with a direction. The
 initials are identical across all four, and a test asserts it: a style that nudged the letters would
 make the same name look like a different name in each.
+
+### Pictogram
+
+Modes: `plain`, `ring`, `disc`. The pictogram is the whole identity — no type at all — which is the
+grammar of an app icon or a favicon rather than of a lockup. `plain` sets the mark on the open page,
+`ring` seals it inside a band with clear space measured from the ring's _inner_ edge, and `disc`
+reverses it out of a filled plate in the page's own colour. The emblem engine is the one that puts a
+name under a pictogram; asking both to do it would produce two engines with the same reading.
+
+### Halftone
+
+The initial is not drawn, it is screened: the glyph is sampled into a grid (13, 15 or 17 rows, columns
+following the letter's own aspect), and one disc is set per filled cell, sized by how deeply the cell
+sits inside the shape. That is a halftone screen's own rule — a gradient of dot size across the field —
+applied to a letterform, and it is what makes the mark read as ink rather than as a stroke. The sample
+is taken with the nonzero winding rule, so a counter (`O`, `Q`, `A`) comes out open rather than filled.
+
+### Scanline
+
+The initial is cut instead of drawn: for each of 11, 13 or 15 rows the engine finds the runs of that
+scanline that fall inside the outline and paints a bar for each run, with a gap between rows. The runs
+are the _exact_ crossings of the scanline with the flattened outline, not a fixed-step sample, so a
+curve is cut where the curve is and the tips of a run stay honest. Ends are capsules or squares,
+chosen by the seed: the two read as two different registers of the same mark.
+
+Two properties are shared by the two ink engines:
+
+- **The glyph is sampled, never parsed as a font.** Outlines come from the brain like every other
+  letterform in the project (see constraint 4 in `AGENTS.md`); the sampler flattens them into edges and
+  asks a winding question per cell centre.
+- **The ink is centred on its measured box**, not on the glyph's advance: a screen or a stack of bars
+  built inside a run's advance box sits off-centre by the side bearings, which is the same failure the
+  monogram engine documents.
 
 ## 6. Flatness and safety
 

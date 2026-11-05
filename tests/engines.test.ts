@@ -74,7 +74,7 @@ function magnitude(elements: readonly { attrs: Record<string, string | number> }
 }
 
 describe('engineWeights', () => {
-  it('always returns a weight for all six engines', () => {
+  it('always returns a weight for every engine', () => {
     const request = normaliseConfig({ name: 'Acme' })
     const weights = engineWeights(request, moodResolver.resolve('tech'))
     for (const engine of ENGINE_NAMES) {

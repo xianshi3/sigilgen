@@ -17,7 +17,7 @@
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { generateLogos } from '../dist/index.js'
+import { ENGINE_NAMES, generateLogos } from '../dist/index.js'
 
 const OUT = new URL('../docs/images/', import.meta.url)
 
@@ -165,8 +165,8 @@ write(
   })
 )
 
-// 2. The range: the same short name through each engine, so the six readings are visible side by side.
-const ENGINES = ['monogram', 'wordmark', 'lettermark', 'apparatus', 'abstract', 'emblem']
+// 2. The range: the same short name through each engine, so every reading is visible side by side.
+const ENGINES = ENGINE_NAMES
 const engines = ENGINES.map(engine => {
   const [logo] = generateLogos({ name: 'Vela', engine, variations: 1, size: MARK })
   return logo === undefined ? null : { svg: logo.svg, caption: engine }
@@ -174,9 +174,9 @@ const engines = ENGINES.map(engine => {
 write(
   'engines.svg',
   sheet({
-    title: 'Six engines, one name',
+    title: 'Nine engines, one name',
     subtitle: 'A different structural reading of the same input — not a recolouring',
-    columns: 6,
+    columns: 5,
     marks: engines,
   })
 )

@@ -4,8 +4,9 @@
  * Icons are authored on a `0 0 24 24` grid as filled paths. The resolver only picks one; scaling and
  * placement belong to the engines, which know the space they are drawing into.
  *
- * Engines that draw no icon at all — `lettermark` and `abstract` — receive `null` rather than an
- * unused pictogram, so the concept notes stay honest about what was actually used.
+ * Engines that draw no icon at all — the typographic and geometric ones, see {@link ICONLESS_ENGINES} —
+ * receive `null` rather than an unused pictogram, so the concept notes stay honest about what was
+ * actually used.
  */
 
 import { ICONS, findIcon } from '../brain/index'
@@ -13,7 +14,13 @@ import { type EngineName, type IconEntry, type MoodMatch } from '../types'
 import type { SeedResolver } from '../seed-resolver'
 
 /** Engines that never draw a pictogram. */
-const ICONLESS_ENGINES: ReadonlySet<EngineName> = new Set(['lettermark', 'apparatus', 'abstract'])
+const ICONLESS_ENGINES: ReadonlySet<EngineName> = new Set([
+  'lettermark',
+  'apparatus',
+  'abstract',
+  'halftone',
+  'scanline',
+])
 
 /**
  * Chooses a pictogram.

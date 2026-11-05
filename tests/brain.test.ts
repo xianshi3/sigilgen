@@ -26,11 +26,15 @@ describe('brain contents', () => {
     expect(MOODS.length).toBeGreaterThanOrEqual(20)
   })
 
-  it('exposes exactly six engines in the mood weights', () => {
-    const engines = new Set(ENGINE_NAMES)
+  it('declares a weight for every engine in every mood', () => {
     for (const mood of MOODS) {
+      for (const engine of ENGINE_NAMES) {
+        expect(mood.engineWeights[engine], `${mood.id} has no weight for ${engine}`).toBeTypeOf(
+          'number'
+        )
+      }
       for (const engine of Object.keys(mood.engineWeights)) {
-        expect(engines.has(engine as never)).toBe(true)
+        expect(ENGINE_NAMES).toContain(engine)
       }
     }
   })

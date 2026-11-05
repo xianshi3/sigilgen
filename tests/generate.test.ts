@@ -296,9 +296,16 @@ describe('generateLogo', () => {
       const logo = generateLogo({ name: 'Acme', keywords: 'tech', engine })
       ;(logo.icon === null ? withoutIcon : withIcon).push(engine)
     }
-    // `abstract` draws only geometry, and `lettermark` and `apparatus` are type-only by definition.
-    expect(withoutIcon.toSorted()).toEqual(['abstract', 'apparatus', 'lettermark'])
-    expect(withIcon.toSorted()).toEqual(['emblem', 'monogram', 'wordmark'])
+    // `abstract` draws only geometry, and `lettermark`, `apparatus`, `halftone` and `scanline` are
+    // type-only by definition.
+    expect(withoutIcon.toSorted()).toEqual([
+      'abstract',
+      'apparatus',
+      'halftone',
+      'lettermark',
+      'scanline',
+    ])
+    expect(withIcon.toSorted()).toEqual(['emblem', 'monogram', 'pictogram', 'wordmark'])
   })
 
   it('explains every decision in the concept notes', () => {
