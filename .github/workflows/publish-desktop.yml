@@ -39,28 +39,44 @@ jobs:
           sha256sum * > SHA256SUMS.txt
           ls -lh
 
-      - name: Publish the GitHub release
+      - name: Ensure a draft release exists
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${{ inputs.tag }}"
+          version="${tag#desktop-v}"
+          release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+            --jq ".[] | select(.tag_name == \"${tag}\") | .id" | head -n 1)"
+          if [ -z "$release_id" ]; then
+            release_id="$(gh api -X POST "repos/${GITHUB_REPOSITORY}/releases" \
+              -f tag_name="$tag" \
+              -f name="Sigilgen Desktop ${version}" \
+              -f draft=true \
+              --jq .id)"
+          fi
+          echo "id=${release_id}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload installers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ inputs.tag }}" release-assets/* --clobber
+
+      - name: Publish the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${{ inputs.tag }}"
           version="${tag#desktop-v}"
           notes="docs/releases/desktop-${version}.md"
-          if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" release-assets/* --clobber
-            if [ -f "$notes" ]; then
-              gh release edit "$tag" --title "Sigilgen Desktop ${version}" --notes-file "$notes" --latest
-            else
-              gh release edit "$tag" --title "Sigilgen Desktop ${version}" --latest
-            fi
-          elif [ -f "$notes" ]; then
-            gh release create "$tag" release-assets/* \
-              --title "Sigilgen Desktop ${version}" \
-              --notes-file "$notes" \
-              --latest
+          release_id="${{ steps.release.outputs.id }}"
+          if [ -f "$notes" ]; then
+            body="$(cat "$notes")"
           else
-            gh release create "$tag" release-assets/* \
-              --title "Sigilgen Desktop ${version}" \
-              --generate-notes \
-              --latest
+            body="Sigilgen Desktop ${version}"
           fi
+          gh api -X PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" \
+            -f name="Sigilgen Desktop ${version}" \
+            -F draft=false \
+            -F make_latest=true \
+            -f body="$body"
