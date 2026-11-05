@@ -1,6 +1,6 @@
 # Sigilgen Studio
 
-A browser interface for the [Sigilgen](../README.md) generator. Type a brand name, get one to six
+A browser interface for the [Sigilgen](../../README.md) generator. Type a brand name, get one to six
 deterministic flat-SVG marks, and see the reasoning behind each one.
 
 This app is a **first-party client**, not a third-party integration: it imports the generator's source
