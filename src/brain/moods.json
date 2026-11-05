@@ -12,7 +12,10 @@
         "lettermark": 2,
         "apparatus": 0,
         "abstract": 1,
-        "emblem": 1
+        "emblem": 1,
+        "pictogram": 1,
+        "halftone": 0.5,
+        "scanline": 0
       }
     },
     {
@@ -40,7 +43,10 @@
         "lettermark": 4,
         "apparatus": 0,
         "abstract": 2,
-        "emblem": 0.5
+        "emblem": 0.5,
+        "pictogram": 1,
+        "halftone": 0.5,
+        "scanline": 0
       }
     },
     {
@@ -67,7 +73,10 @@
         "lettermark": 3,
         "apparatus": 0,
         "abstract": 2,
-        "emblem": 0.5
+        "emblem": 0.5,
+        "pictogram": 0.5,
+        "halftone": 2,
+        "scanline": 1
       }
     },
     {
@@ -102,7 +111,10 @@
         "lettermark": 3,
         "apparatus": 2,
         "abstract": 2,
-        "emblem": 0.5
+        "emblem": 0.5,
+        "pictogram": 1.5,
+        "halftone": 0.5,
+        "scanline": 1
       }
     },
     {
@@ -132,7 +144,10 @@
         "lettermark": 4,
         "apparatus": 2.5,
         "abstract": 3,
-        "emblem": 0.5
+        "emblem": 0.5,
+        "pictogram": 1.5,
+        "halftone": 0.5,
+        "scanline": 2
       }
     },
     {
@@ -161,7 +176,10 @@
         "lettermark": 3,
         "apparatus": 2.5,
         "abstract": 3,
-        "emblem": 1
+        "emblem": 1,
+        "pictogram": 1,
+        "halftone": 0.5,
+        "scanline": 1.5
       }
     },
     {
@@ -188,7 +206,10 @@
         "lettermark": 3,
         "apparatus": 2,
         "abstract": 4,
-        "emblem": 0.5
+        "emblem": 0.5,
+        "pictogram": 2,
+        "halftone": 0.5,
+        "scanline": 1
       }
     },
     {
@@ -214,7 +235,10 @@
         "lettermark": 3,
         "apparatus": 3,
         "abstract": 2,
-        "emblem": 2
+        "emblem": 2,
+        "pictogram": 1,
+        "halftone": 0.5,
+        "scanline": 2
       }
     },
     {
@@ -246,7 +270,10 @@
         "lettermark": 2.5,
         "apparatus": 0,
         "abstract": 1.5,
-        "emblem": 3
+        "emblem": 3,
+        "pictogram": 1.5,
+        "halftone": 0.5,
+        "scanline": 1
       }
     },
     {
@@ -273,7 +300,10 @@
         "lettermark": 2,
         "apparatus": 1,
         "abstract": 1.5,
-        "emblem": 1.5
+        "emblem": 1.5,
+        "pictogram": 1,
+        "halftone": 0.5,
+        "scanline": 0.5
       }
     },
     {
@@ -301,7 +331,10 @@
         "lettermark": 1.5,
         "apparatus": 0,
         "abstract": 1,
-        "emblem": 4
+        "emblem": 4,
+        "pictogram": 0.5,
+        "halftone": 2,
+        "scanline": 0
       }
     },
     {
@@ -333,7 +366,10 @@
         "lettermark": 1.5,
         "apparatus": 0,
         "abstract": 1,
-        "emblem": 4
+        "emblem": 4,
+        "pictogram": 0.5,
+        "halftone": 1.5,
+        "scanline": 0
       }
     },
     {
@@ -360,7 +396,10 @@
         "lettermark": 1.5,
         "apparatus": 0,
         "abstract": 1,
-        "emblem": 4
+        "emblem": 4,
+        "pictogram": 0.5,
+        "halftone": 1,
+        "scanline": 0
       }
     },
     {
@@ -387,7 +426,10 @@
         "lettermark": 2,
         "apparatus": 0,
         "abstract": 1,
-        "emblem": 4
+        "emblem": 4,
+        "pictogram": 0.5,
+        "halftone": 2,
+        "scanline": 0
       }
     },
     {
@@ -416,7 +458,10 @@
         "lettermark": 2,
         "apparatus": 0,
         "abstract": 1.5,
-        "emblem": 3
+        "emblem": 3,
+        "pictogram": 1.5,
+        "halftone": 0.5,
+        "scanline": 0
       }
     },
     {
@@ -443,7 +488,10 @@
         "lettermark": 2,
         "apparatus": 0,
         "abstract": 1.5,
-        "emblem": 3.5
+        "emblem": 3.5,
+        "pictogram": 1.5,
+        "halftone": 0.5,
+        "scanline": 0
       }
     },
     {
@@ -471,7 +519,10 @@
         "lettermark": 2,
         "apparatus": 0,
         "abstract": 2,
-        "emblem": 3
+        "emblem": 3,
+        "pictogram": 1,
+        "halftone": 0.5,
+        "scanline": 0
       }
     },
     {
@@ -498,7 +549,10 @@
         "lettermark": 2,
         "apparatus": 0,
         "abstract": 2,
-        "emblem": 2.5
+        "emblem": 2.5,
+        "pictogram": 1,
+        "halftone": 0.5,
+        "scanline": 0
       }
     },
     {
@@ -526,7 +580,10 @@
         "lettermark": 2.5,
         "apparatus": 0,
         "abstract": 1,
-        "emblem": 3
+        "emblem": 3,
+        "pictogram": 1.5,
+        "halftone": 0.5,
+        "scanline": 0.5
       }
     },
     {
@@ -554,7 +611,10 @@
         "lettermark": 3,
         "apparatus": 0,
         "abstract": 2.5,
-        "emblem": 3
+        "emblem": 3,
+        "pictogram": 1,
+        "halftone": 0.5,
+        "scanline": 0
       }
     },
     {
@@ -581,7 +641,10 @@
         "lettermark": 2,
         "apparatus": 0,
         "abstract": 2,
-        "emblem": 3
+        "emblem": 3,
+        "pictogram": 1,
+        "halftone": 0.5,
+        "scanline": 1
       }
     },
     {
@@ -608,7 +671,10 @@
         "lettermark": 3,
         "apparatus": 2.5,
         "abstract": 3.5,
-        "emblem": 1.5
+        "emblem": 1.5,
+        "pictogram": 2,
+        "halftone": 0,
+        "scanline": 1
       }
     },
     {
@@ -635,7 +701,10 @@
         "lettermark": 2.5,
         "apparatus": 0,
         "abstract": 2,
-        "emblem": 4
+        "emblem": 4,
+        "pictogram": 1,
+        "halftone": 0,
+        "scanline": 1
       }
     },
     {
@@ -661,7 +730,10 @@
         "lettermark": 3,
         "apparatus": 0,
         "abstract": 2.5,
-        "emblem": 2.5
+        "emblem": 2.5,
+        "pictogram": 1.5,
+        "halftone": 0,
+        "scanline": 1
       }
     },
     {
@@ -687,7 +759,10 @@
         "lettermark": 3,
         "apparatus": 1,
         "abstract": 3,
-        "emblem": 1.5
+        "emblem": 1.5,
+        "pictogram": 1.5,
+        "halftone": 1.5,
+        "scanline": 1
       }
     },
     {
@@ -713,7 +788,10 @@
         "lettermark": 3.5,
         "apparatus": 1.5,
         "abstract": 3,
-        "emblem": 1
+        "emblem": 1,
+        "pictogram": 2,
+        "halftone": 1.5,
+        "scanline": 2
       }
     },
     {
@@ -746,7 +824,10 @@
         "lettermark": 2.5,
         "apparatus": 1,
         "abstract": 4,
-        "emblem": 1
+        "emblem": 1,
+        "pictogram": 1.5,
+        "halftone": 2,
+        "scanline": 0.5
       }
     },
     {
@@ -773,7 +854,10 @@
         "lettermark": 3,
         "apparatus": 0,
         "abstract": 3,
-        "emblem": 2
+        "emblem": 2,
+        "pictogram": 2,
+        "halftone": 1.5,
+        "scanline": 0.5
       }
     },
     {
@@ -800,7 +884,10 @@
         "lettermark": 2.5,
         "apparatus": 0,
         "abstract": 2,
-        "emblem": 2
+        "emblem": 2,
+        "pictogram": 1,
+        "halftone": 1,
+        "scanline": 0
       }
     },
     {
@@ -826,7 +913,10 @@
         "lettermark": 2,
         "apparatus": 0,
         "abstract": 2,
-        "emblem": 3
+        "emblem": 3,
+        "pictogram": 1.5,
+        "halftone": 1,
+        "scanline": 0
       }
     },
     {
@@ -852,7 +942,10 @@
         "lettermark": 2.5,
         "apparatus": 0,
         "abstract": 1.5,
-        "emblem": 2.5
+        "emblem": 2.5,
+        "pictogram": 1,
+        "halftone": 1,
+        "scanline": 0
       }
     },
     {
@@ -877,7 +970,10 @@
         "lettermark": 2,
         "apparatus": 0,
         "abstract": 1.5,
-        "emblem": 3.5
+        "emblem": 3.5,
+        "pictogram": 1,
+        "halftone": 1,
+        "scanline": 0
       }
     },
     {
@@ -901,7 +997,10 @@
         "lettermark": 3,
         "apparatus": 0,
         "abstract": 4,
-        "emblem": 1
+        "emblem": 1,
+        "pictogram": 1,
+        "halftone": 0.5,
+        "scanline": 0.5
       }
     },
     {
@@ -929,7 +1028,10 @@
         "lettermark": 2,
         "apparatus": 1.5,
         "abstract": 5,
-        "emblem": 1
+        "emblem": 1,
+        "pictogram": 1,
+        "halftone": 1,
+        "scanline": 0.5
       }
     }
   ]

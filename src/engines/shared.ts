@@ -229,6 +229,58 @@ export function pick<T>(items: readonly T[], seed: SeedResolver, forced?: string
 }
 
 /**
+ * Measures a group of elements and translates them so their ink is centred on the canvas.
+ *
+ * Every engine builds its geometry around the canvas centre, and most of them are nevertheless not
+ * centred, because the filled pattern is asymmetric: a scatter of dots, a column of bars that happens to
+ * be wider at the top, a letter run whose last glyph carries a small bearing. The ink sits to one side of
+ * the centre the geometry was built on, which reads as "not quite right" without being visibly wrong.
+ * Measuring the ink and moving the whole composition is the only correction that does not depend on the
+ * construction happening to be symmetric.
+ *
+ * Returns the elements unchanged when they enclose no area, since there is nothing to centre.
+ *
+ * @param elements - Elements to re-centre.
+ * @param size - Canvas side in user units.
+ * @returns The elements, shifted so the ink box is centred.
+ */
+export function centreOnInk(elements: SVGElement[], size: number): SVGElement[] {
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  for (const element of elements) {
+    const { d } = element.attrs
+    if (typeof d !== 'string') {
+      continue
+    }
+    const bounds = pathBounds(d)
+    if (bounds === null) {
+      continue
+    }
+    minX = Math.min(minX, bounds.minX)
+    minY = Math.min(minY, bounds.minY)
+    maxX = Math.max(maxX, bounds.maxX)
+    maxY = Math.max(maxY, bounds.maxY)
+  }
+  if (!Number.isFinite(minX) || !Number.isFinite(minY)) {
+    return elements
+  }
+  const dx = size / 2 - (minX + maxX) / 2
+  const dy = size / 2 - (minY + maxY) / 2
+  if (dx === 0 && dy === 0) {
+    return elements
+  }
+  return elements.map(element => {
+    const { d } = element.attrs
+    if (typeof d !== 'string') {
+      return element
+    }
+    return { ...element, attrs: { ...element.attrs, d: transformPath(d, 1, dx, dy) } }
+  })
+}
+
+/**
  * Draws a short accent rule, used by lettermarks and wordmarks as an optical anchor.
  *
  * @param centreX - Centre x.

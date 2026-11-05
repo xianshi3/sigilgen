@@ -1,5 +1,5 @@
 /**
- * Chooses which of the six engines draws a concept.
+ * Chooses which of the nine engines draws a concept.
  *
  * Routing combines three inputs: the mood's declared engine weights, structural facts about the name
  * (how many letters, how many words), and any engine the caller forced.
@@ -14,13 +14,19 @@
  * | `apparatus` | technical, instrument or signage briefs | initials in a chamfered core, framed by hairlines |
  * | `abstract` | abstract or generative concepts | seed-driven pure geometry, no text |
  * | `emblem` | badge, manufacturing or hospitality concepts | icon inside a frame with the name below |
+ * | `pictogram` | product, app or icon-led briefs | the pictogram alone, sealed or reversed out |
+ * | `halftone` | print, craft or editorial briefs | the initial set as a dot screen |
+ * | `scanline` | developer, cyber or signal briefs | the initial cut into horizontal bars |
  */
 
 import { abstract } from './engines/abstract'
 import { apparatus } from './engines/apparatus'
 import { emblem } from './engines/emblem'
+import { halftone } from './engines/halftone'
 import { lettermark } from './engines/lettermark'
 import { monogram } from './engines/monogram'
+import { pictogram } from './engines/pictogram'
+import { scanline } from './engines/scanline'
 import { wordmark } from './engines/wordmark'
 import type { SeedResolver } from './seed-resolver'
 import {
@@ -44,6 +50,9 @@ export const ENGINES: Readonly<Record<EngineName, Engine>> = Object.freeze({
   apparatus,
   abstract,
   emblem,
+  pictogram,
+  halftone,
+  scanline,
 })
 
 /** Name length at or below which a monogram is the right default. */
@@ -71,6 +80,9 @@ export function engineWeights(
     apparatus: 0,
     abstract: 0,
     emblem: 0,
+    pictogram: 0,
+    halftone: 0,
+    scanline: 0,
   }
 
   for (const engine of ENGINE_NAMES) {
@@ -88,6 +100,12 @@ export function engineWeights(
     weights.wordmark = Math.max(0, weights.wordmark - 1)
     weights.abstract = Math.max(0, weights.abstract - 1)
     weights.emblem = Math.max(0, weights.emblem - 0.5)
+    // The ink engines draw the name too, but at two letters they spend their screen on almost nothing:
+    // a dot field or a bar stack is a texture, and a texture of two letters is a texture of noise. Kept
+    // possible, damped against the two engines that set those letters as letters.
+    weights.pictogram = Math.max(0, weights.pictogram - 0.75)
+    weights.halftone = Math.max(0, weights.halftone - 0.75)
+    weights.scanline = Math.max(0, weights.scanline - 0.75)
   } else if (nameLength <= WORDMARK_MAX) {
     weights.wordmark += 1.5
   } else {

@@ -7,7 +7,7 @@
 
 import type { SeedResolver } from './seed-resolver'
 
-/** Identifier of one of the six rendering engines. */
+/** Identifier of one of the nine rendering engines. */
 export type EngineName =
   | 'monogram'
   | 'wordmark'
@@ -15,6 +15,9 @@ export type EngineName =
   | 'apparatus'
   | 'abstract'
   | 'emblem'
+  | 'pictogram'
+  | 'halftone'
+  | 'scanline'
 
 /** Every engine, in the canonical order used for iteration and documentation. */
 export const ENGINE_NAMES: readonly EngineName[] = [
@@ -24,6 +27,9 @@ export const ENGINE_NAMES: readonly EngineName[] = [
   'apparatus',
   'abstract',
   'emblem',
+  'pictogram',
+  'halftone',
+  'scanline',
 ]
 
 /** Visual tone of a typeface family. */
@@ -150,7 +156,7 @@ export type DesignDimension =
   | 'accent'
   /** Emblem frame shape. */
   | 'frame'
-  /** Abstract composition mode. */
+  /** Composition mode of a pure-geometry engine: the abstract modes, or the pictogram's container. */
   | 'mode'
   /** Apparatus instrument grammar. */
   | 'style'

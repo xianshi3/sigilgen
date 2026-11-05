@@ -2,6 +2,7 @@ import { MODES } from '@sigilgen/engines/abstract'
 import { APPARATUS_STYLES } from '@sigilgen/engines/apparatus'
 import { FRAMES } from '@sigilgen/engines/emblem'
 import { ACCENTS } from '@sigilgen/engines/lettermark'
+import { PICTOGRAM_MODES } from '@sigilgen/engines/pictogram'
 import { CONTAINERS, LETTER_LAYOUTS } from '@sigilgen/engines/shared'
 import { LAYOUTS, TREATMENTS } from '@sigilgen/engines/wordmark'
 import type { DesignDimension, EngineName } from '@sigilgen/types'
@@ -41,6 +42,10 @@ export const DIMENSIONS: Record<EngineName, readonly DimensionSpec[]> = {
   apparatus: [{ dimension: 'style', label: 'dimension.style', values: APPARATUS_STYLES }],
   emblem: [{ dimension: 'frame', label: 'dimension.frame', values: FRAMES }],
   abstract: [{ dimension: 'mode', label: 'dimension.mode', values: MODES }],
+  pictogram: [{ dimension: 'mode', label: 'dimension.mode', values: PICTOGRAM_MODES }],
+  // The two letterform engines draw their ink from the glyph itself; there is nothing to hold still.
+  halftone: [],
+  scanline: [],
 }
 
 /**

@@ -7,6 +7,7 @@
  */
 
 import { letterAdvance, measureText, textInk, type TextInk } from '../text'
+import { pathBounds } from '../path'
 import type { FontEntry } from '../types'
 
 /** A fitted text run. */
@@ -137,4 +138,50 @@ export function capHeightForWidth(font: FontEntry, letters: string, targetWidth:
     return 0
   }
   return (targetWidth / natural) * font.metrics.capHeight
+}
+
+/**
+ * The scale at which a glyph run fills a canvas without leaving it.
+ *
+ * The ink engines size their run by cap height alone, which is enough for one letter and not for two:
+ * two wide initials at 0.58 of the canvas tall ran past the canvas edge, and the dots were clipped. This
+ * fits both axes — height against `field`, width against the same `field` — so a wide pair shrinks
+ * instead of overflowing. The width is measured from the glyphs' own ink boxes rather than from their
+ * advances, because the ink is what has to stay inside the page.
+ *
+ * @param font - The typeface.
+ * @param letters - Uppercase letters to fit.
+ * @param size - Canvas side in user units.
+ * @param field - Share of the canvas the ink may occupy.
+ * @param tracking - Extra tracking in font units, applied between letters only.
+ * @returns Font units to user units.
+ */
+export function fitGlyphRun(
+  font: FontEntry,
+  letters: string,
+  size: number,
+  field: number,
+  tracking = 0
+): number {
+  const byHeight = (size * field) / font.metrics.capHeight
+  const list = [...letters]
+  let cursor = 0
+  let minX = Number.POSITIVE_INFINITY
+  let maxX = Number.NEGATIVE_INFINITY
+  for (const [index, letter] of list.entries()) {
+    const glyph = font.glyphs[letter]
+    if (typeof glyph === 'string' && glyph !== '') {
+      const bounds = pathBounds(glyph)
+      if (bounds !== null) {
+        minX = Math.min(minX, cursor + bounds.minX)
+        maxX = Math.max(maxX, cursor + bounds.maxX)
+      }
+    }
+    cursor += letterAdvance(font, letter) + (index < list.length - 1 ? tracking : 0)
+  }
+  if (!Number.isFinite(minX) || !Number.isFinite(maxX) || maxX <= minX) {
+    return byHeight
+  }
+  const byWidth = (size * field) / (maxX - minX)
+  return Math.min(byHeight, byWidth)
 }

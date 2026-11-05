@@ -17,6 +17,9 @@ export const ENGINE_LABEL: Record<EngineName, MessageKey> = {
   apparatus: 'engine.apparatus',
   abstract: 'engine.abstract',
   emblem: 'engine.emblem',
+  pictogram: 'engine.pictogram',
+  halftone: 'engine.halftone',
+  scanline: 'engine.scanline',
 }
 
 /** One-line explanation shown under the picker. */
@@ -27,24 +30,30 @@ export const ENGINE_HINT: Record<EngineName, MessageKey> = {
   apparatus: 'engine.apparatusHint',
   abstract: 'engine.abstractHint',
   emblem: 'engine.emblemHint',
+  pictogram: 'engine.pictogramHint',
+  halftone: 'engine.halftoneHint',
+  scanline: 'engine.scanlineHint',
 }
 
 /**
  * Whether an engine places a pictogram.
  *
- * Only two of the six do: a wordmark pairs the name with one, and an emblem puts one inside its frame.
- * The other four draw letterforms or pure geometry and never touch `resources.icon`. Offering seventy
- * icons to those engines would be offering controls that do nothing.
+ * Three do: a wordmark pairs the name with one, an emblem puts one inside its frame, and a pictogram is
+ * nothing but one. The rest draw letterforms or pure geometry and never touch `resources.icon`. Offering
+ * seventy icons to those engines would be offering controls that do nothing.
  *
- * `'auto'` counts as using one, because the router may land on a wordmark or an emblem and the reader
- * is not in a position to know which before generating.
+ * `'auto'` counts as using one, because the router may land on an icon-led engine and the reader is not
+ * in a position to know which before generating.
  */
 export const ENGINE_USES_ICON: Record<EngineName | 'auto', boolean> = {
   monogram: false,
   lettermark: false,
   apparatus: false,
   abstract: false,
+  halftone: false,
+  scanline: false,
   wordmark: true,
   emblem: true,
+  pictogram: true,
   auto: true,
 }
