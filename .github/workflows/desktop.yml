@@ -3,7 +3,7 @@ name: desktop
 on:
   workflow_dispatch:
   push:
-    tags: ['v*']
+    tags: ['desktop-v*']
   pull_request:
     paths:
       - 'apps/desktop/**'
