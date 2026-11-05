@@ -3,8 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "description": "The Sigilgen desktop client: the studio, wrapped in a native cross-platform shell.",
+  "homepage": "https://github.com/xianshi3/sigilgen#readme",
   "license": "MIT",
   "author": "xianshi3 <vm1784257751@foxmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xianshi3/sigilgen.git",
+    "directory": "apps/desktop"
+  },
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",

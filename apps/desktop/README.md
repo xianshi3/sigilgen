@@ -10,12 +10,12 @@ that works outside a secure context, and a place to remember the window geometry
 The current build is published on [GitHub Releases](https://github.com/xianshi3/sigilgen/releases).
 The 0.1.0 assets are:
 
-| Platform              | Asset                                                                 |
-| --------------------- | --------------------------------------------------------------------- |
-| Windows x64           | `Sigilgen-0.1.0-setup-x64.exe` or `Sigilgen-0.1.0-portable-x64.exe`   |
-| macOS (Apple silicon) | `Sigilgen-0.1.0-mac-arm64.dmg`                                        |
-| macOS (Intel)         | `Sigilgen-0.1.0-mac-x64.dmg`                                          |
-| Linux x64             | `Sigilgen-0.1.0-linux-x64.AppImage` or `Sigilgen-0.1.0-linux-x64.deb` |
+| Platform              | Asset                                                                      |
+| --------------------- | -------------------------------------------------------------------------- |
+| Windows x64           | `Sigilgen-0.1.0-setup-x64.exe` or `Sigilgen-0.1.0-portable-x64.exe`        |
+| macOS (Apple silicon) | `Sigilgen-0.1.0-mac-arm64.dmg`                                             |
+| macOS (Intel)         | `Sigilgen-0.1.0-mac-x64.dmg`                                               |
+| Linux x64             | `Sigilgen-0.1.0-linux-x86_64.AppImage` or `Sigilgen-0.1.0-linux-amd64.deb` |
 
 `SHA256SUMS.txt` lists the checksums. Builds are **unsigned**: Windows shows SmartScreen, macOS needs
 the Control-click → Open confirmation, and the AppImage needs `chmod +x`. The full install notes and

@@ -10,7 +10,7 @@ native window controls, a real Save dialog, a localized menu and a window that r
 | Windows x64           | `Sigilgen-0.1.0-setup-x64.exe` (installer) or `Sigilgen-0.1.0-portable-x64.exe` |
 | macOS (Apple silicon) | `Sigilgen-0.1.0-mac-arm64.dmg`                                                  |
 | macOS (Intel)         | `Sigilgen-0.1.0-mac-x64.dmg`                                                    |
-| Linux x64             | `Sigilgen-0.1.0-linux-x64.AppImage` or `Sigilgen-0.1.0-linux-x64.deb`           |
+| Linux x64             | `Sigilgen-0.1.0-linux-x86_64.AppImage` or `Sigilgen-0.1.0-linux-amd64.deb`      |
 
 `SHA256SUMS.txt` carries the checksums for every asset.
 
@@ -37,7 +37,7 @@ These builds are **unsigned**.
   portable EXE needs no installation.
 - **macOS:** Gatekeeper blocks unsigned apps. Control-click the app → **Open**, or allow it under
   **System Settings → Privacy & Security**.
-- **Linux:** `chmod +x Sigilgen-0.1.0-linux-x64.AppImage` then run it. The DEB installs with the
+- **Linux:** `chmod +x Sigilgen-0.1.0-linux-x86_64.AppImage` then run it. The DEB installs with the
   system package manager.
 
 ## Verification
