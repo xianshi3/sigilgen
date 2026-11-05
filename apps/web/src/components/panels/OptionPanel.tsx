@@ -34,7 +34,7 @@ export function OptionPanel() {
               aria-label={t(spec.label)}
               // Two columns, not three: the candidates are two-word phrases in one case
               // (`side-by-side`) and one word in the other (`hexagon`), and a three-column track in a
-              // 288px sidebar truncates the long ones into nonsense.
+              // 300px sidebar truncates the long ones into nonsense.
               columns={2}
               value={preferences[spec.dimension] ?? 'random'}
               options={[

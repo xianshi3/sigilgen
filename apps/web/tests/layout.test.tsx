@@ -5,12 +5,18 @@ import App from '../src/App'
 import { I18nProvider } from '../src/i18n/I18nProvider'
 import { useStudio, panelsOpenByDefault } from '../src/store/useStudio'
 import { NARROW_QUERY } from '../src/hooks/useMediaQuery'
-import { MIN_STAGE_WIDTH, NARROW_BREAKPOINT, PANELS_TOTAL_WIDTH } from '../src/lib/layout'
+import {
+  MIN_STAGE_WIDTH,
+  NARROW_BREAKPOINT,
+  PANELS_TOTAL_WIDTH,
+  PANEL_WIDTH_LEFT,
+  PANEL_WIDTH_RIGHT,
+} from '../src/lib/layout'
 
 /**
  * The layout at narrow viewports.
  *
- * The panels are 288 and 300 units wide and do not shrink, so between them they need 588 before the stage
+ * The panels are 300 units wide each and do not shrink, so between them they need 600 before the stage
  * gets anything. At a 390px phone the whole three-column layout was laid out un-reflowed: the stage was
  * squeezed to nothing and the right panel's text was cut off mid-word. Nothing tested the layout, because
  * the tests only covered `lib` and the store.
@@ -199,6 +205,22 @@ describe('narrow viewports', () => {
     const { queries } = setViewport(true)
     renderApp()
     expect(queries).toContain(NARROW_QUERY)
+  })
+
+  it('uses one width for both panels, so the stage is centred in the window', () => {
+    expect(PANEL_WIDTH_LEFT).toBe(PANEL_WIDTH_RIGHT)
+    expect(PANELS_TOTAL_WIDTH).toBe(PANEL_WIDTH_LEFT * 2)
+  })
+
+  it('reserves the scrollbar gutter on each panel, not on the document', () => {
+    setViewport(false)
+    renderApp()
+    const scrollers = [...document.querySelectorAll('aside .overflow-y-auto')]
+    expect(scrollers.length).toBeGreaterThan(0)
+    for (const scroller of scrollers) {
+      expect(scroller.className).toContain('scroll-gutter')
+    }
+    expect(document.documentElement.className).not.toContain('scroll-gutter')
   })
 
   it('puts the breakpoint where the panels leave room for a usable stage', () => {

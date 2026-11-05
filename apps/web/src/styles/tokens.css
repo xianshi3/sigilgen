@@ -276,12 +276,13 @@
    * else. WebKit cannot animate a scrollbar pseudo-element, so the change of state *is* the effect — there
    * is nothing to tween.
    *
-   * `scrollbar-width`/`scrollbar-color` give Firefox the same quiet thumb, and `scrollbar-gutter` keeps a
-   * panel from shifting sideways the moment its content becomes tall enough to scroll. */
+   * `scrollbar-width`/`scrollbar-color` give Firefox the same quiet thumb. The gutter is reserved by
+   * each scroll container (`.scroll-gutter`), not by `html`: a stable gutter on the root reserves the
+   * scrollbar's width on the right of the whole window even when nothing scrolls, which pushed the
+   * layout 10px off-centre. */
   html {
     scrollbar-width: thin;
     scrollbar-color: var(--hairline-strong) transparent;
-    scrollbar-gutter: stable;
   }
 
   ::-webkit-scrollbar {
@@ -302,6 +303,12 @@
     background: var(--ink-faint);
     background-clip: content-box;
   }
+}
+
+/* Reserve the scrollbar's track only inside a container that can scroll, so a panel's content does
+   not jump when its length crosses the scroll threshold — and the document never reserves one. */
+@utility scroll-gutter {
+  scrollbar-gutter: stable;
 }
 
 /* Honour the system request for less motion rather than animating regardless. */

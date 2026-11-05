@@ -19,7 +19,7 @@ export interface ChoiceGridProps<T extends string> {
  * Mutually exclusive choices that wrap onto several rows.
  *
  * `Segmented` slides a single highlight along one track, which needs every option on one line. Six
- * engine names will not fit a 288px panel in any language, so this variant wraps and marks the chosen
+ * engine names will not fit a 300px panel in any language, so this variant wraps and marks the chosen
  * cell instead — the selection has to survive the wrap, and a sliding highlight cannot cross rows.
  */
 export function ChoiceGrid<T extends string>({

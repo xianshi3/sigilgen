@@ -141,3 +141,13 @@ describe('the token sheet on contrast', () => {
     }
   })
 })
+
+describe('scroll layout', () => {
+  it('reserves the gutter inside panels, never on the document', () => {
+    // The actual regression this guards: `html { scrollbar-gutter: stable }` reserved the scrollbar's
+    // width on the right of the whole window even when nothing scrolled, so the right margin was ~10px
+    // wider than the left. Scroll containers own their gutters; the document has none to reserve.
+    expect(bodies(sheet, 'html').join('\n')).not.toContain('scrollbar-gutter')
+    expect(sheet).toContain('@utility scroll-gutter')
+  })
+})
