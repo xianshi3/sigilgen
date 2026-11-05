@@ -1,0 +1,66 @@
+name: publish-desktop
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Desktop workflow run whose artifacts should be published'
+        required: true
+      tag:
+        description: 'Release tag, e.g. desktop-v0.1.0'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: publish a built release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the built artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release-assets/raw
+          gh run download "${{ inputs.run_id }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern 'sigilgen-desktop-*' \
+            --dir release-assets/raw
+          find release-assets/raw -type f -exec mv {} release-assets/ \;
+          rm -rf release-assets/raw
+          # Keep the installers and drop the updater metadata, block maps and debug files.
+          find release-assets -maxdepth 1 -type f \
+            ! \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.AppImage' -o -name '*.deb' \) \
+            -delete
+          cd release-assets
+          sha256sum * > SHA256SUMS.txt
+          ls -lh
+
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${{ inputs.tag }}"
+          version="${tag#desktop-v}"
+          notes="docs/releases/desktop-${version}.md"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" release-assets/* --clobber
+            if [ -f "$notes" ]; then
+              gh release edit "$tag" --title "Sigilgen Desktop ${version}" --notes-file "$notes" --latest
+            else
+              gh release edit "$tag" --title "Sigilgen Desktop ${version}" --latest
+            fi
+          elif [ -f "$notes" ]; then
+            gh release create "$tag" release-assets/* \
+              --title "Sigilgen Desktop ${version}" \
+              --notes-file "$notes" \
+              --latest
+          else
+            gh release create "$tag" release-assets/* \
+              --title "Sigilgen Desktop ${version}" \
+              --generate-notes \
+              --latest
+          fi
