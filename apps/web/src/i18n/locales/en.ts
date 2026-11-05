@@ -66,6 +66,8 @@ export const en: Record<MessageKey, string> = {
   'action.export': 'Export',
   'action.copySvg': 'Copy SVG',
   'action.downloadSvg': 'Download SVG',
+  'action.saveSvg': 'Save SVG…',
+  'action.saved': 'Saved',
   'action.downloadPng': 'Download PNG',
   'action.copied': 'Copied',
 

@@ -3,6 +3,7 @@ dist/
 coverage/
 out/
 apps/web/dist/
+apps/desktop/release/
 .openchamber/
 *.log
 

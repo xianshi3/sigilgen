@@ -1,16 +1,26 @@
 import type { LogoResult } from '@sigilgen/types'
+import { desktopBridge } from './desktop'
 
 /**
  * Copies text to the clipboard.
  *
  * The async Clipboard API needs a secure context, which a local dev server on plain HTTP is not, so
  * there is a `execCommand` fallback. It is deprecated but remains the only thing that works in that
- * case, and losing the copy silently would be worse than using it.
+ * case, and losing the copy silently would be worse than using it. Inside the desktop shell the native
+ * clipboard is used instead, because that path has no secure-context caveat at all.
  *
  * @param text - Text to place on the clipboard.
  * @returns `true` when the text reached the clipboard.
  */
 export async function copyText(text: string): Promise<boolean> {
+  const bridge = desktopBridge()
+  if (bridge !== null) {
+    try {
+      return await bridge.copyText(text)
+    } catch {
+      return false
+    }
+  }
   try {
     if (navigator.clipboard !== undefined) {
       await navigator.clipboard.writeText(text)
@@ -78,7 +88,25 @@ export function fileStem(name: string): string {
   return slug === '' ? 'logo' : slug
 }
 
-/** Triggers a download of a concept's SVG. */
-export function downloadSvg(concept: LogoResult, stem: string, svg?: string): void {
-  download(`${stem}.svg`, new Blob([svg ?? concept.svg], { type: 'image/svg+xml' }))
+/**
+ * Saves a concept's SVG, through the native dialog in the desktop shell or a download in a browser.
+ *
+ * @param concept - The generated concept.
+ * @param stem - File name without the extension.
+ * @param svg - Edited SVG to save instead of the generated one.
+ * @returns `true` when the file was saved, `false` when the reader cancelled.
+ */
+export async function downloadSvg(
+  concept: LogoResult,
+  stem: string,
+  svg?: string
+): Promise<boolean> {
+  const contents = svg ?? concept.svg
+  const bridge = desktopBridge()
+  if (bridge !== null) {
+    const result = await bridge.saveSvg(`${stem}.svg`, contents)
+    return result.saved
+  }
+  download(`${stem}.svg`, new Blob([contents], { type: 'image/svg+xml' }))
+  return true
 }

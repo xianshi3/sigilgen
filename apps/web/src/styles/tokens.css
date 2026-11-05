@@ -468,3 +468,17 @@
   background-position: 0 0;
   animation: stage-grid-breathe 18s var(--ease-apple) infinite;
 }
+
+/* The desktop shell's drag strip.
+   Electron treats a drag region like a caption, so double-click-to-maximize and window snapping still
+   come from the OS. Anything the reader can press inside it has to opt back out. */
+.desktop-chrome {
+  -webkit-app-region: drag;
+}
+
+.desktop-chrome button,
+.desktop-chrome a,
+.desktop-chrome input,
+.desktop-chrome [data-no-drag] {
+  -webkit-app-region: no-drag;
+}
