@@ -8,12 +8,24 @@ CLI flags) and writes files.
 
 ## Supported Versions
 
-| Version | Supported | Notes                                         |
-| ------- | --------- | --------------------------------------------- |
-| `1.x`   | ✅        | Current stable line. Receives security fixes. |
-| `< 1.0` | ❌        | Pre-release milestones are not patched.       |
+| Version         | Supported | Notes                                        |
+| --------------- | --------- | -------------------------------------------- |
+| `1.x`           | ✅        | Current stable library line.                 |
+| Desktop `0.1.x` | ✅        | First desktop line. Receives security fixes. |
+| `< 1.0`         | ❌        | Pre-release milestones are not patched.      |
 
-Only the latest `1.x` release line is supported. Pin your dependency and upgrade promptly.
+Only the latest release in each supported line is patched. Pin your dependency and upgrade promptly.
+
+## Desktop client
+
+The Electron client in `apps/desktop` is part of the supported surface. It adds a webview, a narrow
+preload bridge, a file dialog and an application menu. Its threat model and the validation applied to
+every IPC message are documented in [apps/desktop/README.md](apps/desktop/README.md#security). It makes
+no network request except opening an `http(s)` URL the reader explicitly activates.
+
+Reports about the desktop app should include the version, the operating system and whether the build
+came from a signed installer. The `0.1.x` builds are unsigned and are published only through this
+repository's GitHub Releases.
 
 ## Reporting a Vulnerability
 

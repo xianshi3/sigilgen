@@ -42,6 +42,8 @@ and its rehydration, the clipboard fallbacks, locale detection and switching.
 | `studio.test.ts`     | the store, persistence, generation and file naming      |
 | `i18n.test.tsx`      | the provider, rendered rather than merely imported      |
 | `desktop.test.tsx`   | the shell bridge, native save and the window strip      |
+| `layout.test.tsx`    | wide/narrow branches, panel symmetry and drawer rules   |
+| `tokens.test.ts`     | contrast contract and scrollbar-gutter placement        |
 
 Three assertions are worth keeping an eye on, because each catches a way this app can quietly break:
 
@@ -76,6 +78,20 @@ src/
 ├── store/useStudio.ts           all application state, persisted to localStorage
 └── styles/tokens.css            every colour, radius, shadow and type step
 ```
+
+## Responsive layout
+
+The three columns are built from one panel width:
+
+- Both side panels are **300px** (`PANEL_WIDTH` in `src/lib/layout.ts`). Equal widths keep the stage,
+  the titlebar island and the sheet centred on the window.
+- The narrow breakpoint is **derived**: `300 + 300 + 420 = 1020px`. Below it the panels become drawers
+  over the stage, one at a time. At exactly 1020px all three columns still fit.
+- Scrollbar gutters are reserved by the panel scrollers (`.scroll-gutter`), never by `html`: a gutter on
+  the document reserves ~10px on the right even when nothing scrolls, which makes the side margins
+  asymmetric.
+- The desktop client adds a 38px drag strip above this layout; it does not change the panel widths or
+  the breakpoint.
 
 ## What the panels do
 
@@ -147,13 +163,13 @@ removed the accent _and_ the letter carrying it, which both mangled the name and
 collapse onto one file. Folding still converges "Café" and "Cafe", which is correct — they are the same
 brand to a reader.
 
-**The panels become drawers below 900px.** They are 288 and 300 units wide and do not shrink, so between
-them they need 588 before the stage gets anything. At a 390px phone the three-column layout rendered
-un-reflowed: the stage was squeezed to zero width and the right panel's text was cut off mid-word. Past
-that width the panels overlay the stage and only one opens at a time — two open at once would cover the
-mark, which is the one thing the app exists to show. Narrowing records which panels were open and closes
-them; widening puts them back. Forgetting them instead would mean a reader who briefly shrank the window
-lost both panels until they reloaded.
+**The panels become drawers below 1020px.** They are 300 each and do not shrink, so between them they
+need 600 before the stage gets the 420 pixels it needs to be judgeable. At a 390px phone the three-column
+layout rendered un-reflowed: the stage was squeezed to zero width and the right panel's text was cut off
+mid-word. Past that width the panels overlay the stage and only one opens at a time — two open at once
+would cover the mark, which is the one thing the app exists to show. Narrowing records which panels were
+open and closes them; widening puts them back. Forgetting them instead would mean a reader who briefly
+shrank the window lost both panels until they reloaded.
 
 **The panel toggles sit above the drawers in the stacking order.** A toggle underneath an open drawer is
 unreachable, and the reader has no way to close it at all.

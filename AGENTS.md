@@ -141,6 +141,20 @@ These are the invariants the test suite enforces. Breaking one is a bug, not a t
    bearing's width of slack on one side; centring on the construction leaves an orbit whose satellites
    happen to fall one way pushed off to one side.
 
+### Studio Layout Contract
+
+These are enforced by `apps/web` tests, and they are about what a reader sees rather than style taste.
+
+- **Both side panels share one width** (`PANEL_WIDTH`, 300px). Unequal widths shift the stage, the
+  titlebar island and the sheet off the window's centre.
+- **The narrow breakpoint is derived** from the panel widths plus `MIN_STAGE_WIDTH` (currently 1020px).
+  Never type a breakpoint literal into a class; branch on `narrow` or use the exported constants.
+- **Scrollbar gutters belong to scroll containers** (`.scroll-gutter`), never to `html`. A stable gutter
+  on the document reserves about 10px on the right of the window even when nothing scrolls, which makes
+  the side margins asymmetric.
+- **The desktop shell adds a 38px strip above this layout** on Windows and macOS; it must not change the
+  studio's internal widths or breakpoint.
+
 ### Determinism Rules
 
 - Every random-looking decision must come from a `SeedResolver` stream.

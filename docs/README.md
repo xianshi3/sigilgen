@@ -14,19 +14,30 @@ inspectable rather than implicit.
 
 ## Design
 
-| Document                                                                         | What it covers                                                                                                             |
-| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| [design/001-logo-engine-architecture.md](design/001-logo-engine-architecture.md) | The original design document: goals, non-goals, data structures, and the specification each of the five engines implements |
-| [design/002-brain-schema.md](design/002-brain-schema.md)                         | The curated JSON brain: schemas, authoring rules, and how a mood rule turns into a design decision                         |
+| Document                                                                         | What it covers                                                                                                |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| [design/001-logo-engine-architecture.md](design/001-logo-engine-architecture.md) | The original design document: goals, non-goals, data structures, and the specification each engine implements |
+| [design/002-brain-schema.md](design/002-brain-schema.md)                         | The curated JSON brain: schemas, authoring rules, and how a mood rule turns into a design decision            |
+| [design/003-studio-visual-language.md](design/003-studio-visual-language.md)     | The studio's archive-terminal visual language, motion rules and responsive layout contract                    |
 
 ## Architecture decisions
 
 Each ADR records a decision that was not obvious, including the alternatives that were rejected.
 
-| ADR                                                                                   | Decision                                                                                   |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [ADR-001: TypeScript baseline](architecture/decisions/ADR-001-typescript-baseline.md) | TypeScript, oxc-standard, tsup, Vitest, pnpm — and why SHA-256 is hand-rolled              |
-| [ADR-002: No elliptical arcs](architecture/decisions/ADR-002-no-elliptical-arcs.md)   | Why all generated geometry is cubic Béziers, and the renderer-dependent bug that forced it |
+| ADR                                                                                         | Decision                                                                                   |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [ADR-001: TypeScript baseline](architecture/decisions/ADR-001-typescript-baseline.md)       | TypeScript, oxc-standard, tsup, Vitest, pnpm — and why SHA-256 is hand-rolled              |
+| [ADR-002: No elliptical arcs](architecture/decisions/ADR-002-no-elliptical-arcs.md)         | Why all generated geometry is cubic Béziers, and the renderer-dependent bug that forced it |
+| [ADR-003: Electron desktop shell](architecture/decisions/ADR-003-electron-desktop-shell.md) | Electron 45 around the studio source, native caption buttons, and why not Tauri            |
+
+## Clients
+
+| Document                                                     | What it covers                                                         |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| [../apps/web/README.md](../apps/web/README.md)               | The browser studio: layout contract, panels, tests and dev commands    |
+| [../apps/desktop/README.md](../apps/desktop/README.md)       | The desktop client: window behaviour, native bridge, packaging         |
+| [../apps/desktop/CHANGELOG.md](../apps/desktop/CHANGELOG.md) | Desktop release history                                                |
+| [releases/desktop-0.1.0.md](releases/desktop-0.1.0.md)       | Download, install notes and verification for the first desktop release |
 
 ## Concepts worth understanding
 
@@ -69,3 +80,5 @@ pushed off to one side.
 | `src/brain/`                            | Curated JSON data and its loader                           |
 | `scripts/build-brain.mjs`               | Compiles glyph outlines into `src/brain/fonts.json`        |
 | `apps/web/`                             | The bilingual studio: a separate package with its own gate |
+| `apps/desktop/`                         | The Electron client; its renderer is `apps/web` source     |
+| `apps/mcp/`                             | The Model Context Protocol server                          |
