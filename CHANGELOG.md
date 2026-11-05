@@ -9,6 +9,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **A desktop client.** `apps/desktop` wraps the studio in an Electron 45 shell with native window
+  controls on Windows and macOS, a localized menu, a native Save dialog, remembered geometry and
+  installers for Windows, macOS and Linux. The renderer is `apps/web` itself, so the two clients cannot
+  drift. See [apps/desktop/CHANGELOG.md](apps/desktop/CHANGELOG.md).
+
 - **Real typefaces, extracted from real fonts.** The 18 "families" were parameter variants of one
   constructed skeleton: 1,600 lines of code drawing 26 letters out of overlapping bars and arcs. That is
   why every letter was a bug waiting to be found — `J`'s hook was centred on its own stem, `K`'s arms
@@ -165,6 +170,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   that assert on a decision still read it.
 
 ### Fixed
+
+- **The studio's side margins differed by the width of a scrollbar.** `html { scrollbar-gutter: stable }`
+  reserved a scrollbar's track on the document even when nothing scrolled, and the panels were 288px and
+  300px wide. The right edge was about 10px wider than the left and the stage sat 6px left of the window's
+  centre. The gutter now belongs to the panel scrollers (`.scroll-gutter`) and both panels share one
+  300px width; the narrow breakpoint stays derived at 1020px.
 
 - **Five letters were drawn wrong in every family.** A wordmark containing any of them showed it, and the
   cause in each case was the same: a stroke placed where it looked right rather than against the thing it

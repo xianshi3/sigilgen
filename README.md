@@ -148,6 +148,10 @@ context, and window geometry that survives a restart. It runs on Windows, macOS 
 <sub>Captured from the packaged Windows build. Like the studio image above, this one is a photograph
 of a user interface rather than generated art.</sub>
 
+**Download:** [GitHub Releases](https://github.com/xianshi3/sigilgen/releases) has the Windows x64,
+macOS x64/arm64 and Linux x64 packages. The 0.1.0 install notes and checksums policy are in
+[docs/releases/desktop-0.1.0.md](docs/releases/desktop-0.1.0.md).
+
 ```bash
 pnpm install
 pnpm --dir apps/web install

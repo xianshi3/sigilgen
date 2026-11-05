@@ -1,6 +1,7 @@
 # Studio visual language: archive terminal
 
-> Status: proposed, on `feat/ui-archive-terminal`. Nothing in `src/` is affected; this is the studio only.
+> Status: implemented in `apps/web` and reused by the desktop client. Nothing in `src/` is affected;
+> this is the studio only.
 
 ## What the reference does
 
@@ -45,6 +46,22 @@ inspector. The rework is a _reskin plus spacing grammar_, not a re-architecture.
 | `PERSONAL WORKSPACE` | Section headings: 10–11px, uppercase, tracking `.08em`                             |
 | `25:00`              | Zoom readout and any numeral that carries state                                    |
 | Solid black button   | Primary actions (reroll, export)                                                   |
+
+## Layout and responsive behaviour
+
+The three-column layout is built from one panel width, not two:
+
+- **Both side panels are 300px** (`PANEL_WIDTH` in `apps/web/src/lib/layout.ts`). Equal widths keep the
+  stage, the titlebar island and the sheet centred on the window. The earlier 288/300 pair put all
+  three six pixels left of centre.
+- **The narrow breakpoint is derived**, not typed: two panels plus a 420px stage is 1020px. Below that
+  the panels become drawers over the stage, one at a time, because two overlays would hide the mark.
+  At exactly 1020px the three columns still fit.
+- **Scrollbar gutters belong to scroll containers** (`.scroll-gutter`), never to `html`. A stable
+  gutter on the document reserves the scrollbar's width on the right of the whole window even when
+  nothing scrolls, which made the right margin about 10px wider than the left.
+- **The desktop shell adds a 38px drag strip** above this layout on Windows and macOS; the studio's
+  internal geometry is unchanged.
 
 ## Motion
 

@@ -37,6 +37,10 @@ pnpm run check      # lint + format check + typecheck + tests
 pnpm --dir apps/web install   # the studio is a separate package
 pnpm --dir apps/web run check # its own gate: lint, format, typecheck, tests, build
 pnpm --dir apps/web dev       # the studio on http://localhost:5173
+
+pnpm --dir apps/desktop install   # the Electron client
+pnpm --dir apps/desktop run check # its own gate
+pnpm --dir apps/desktop dev       # Electron + studio HMR
 ```
 
 `pnpm run links` creates `CLAUDE.md`, `.cursorrules`, `.windsurfrules` and
@@ -48,6 +52,11 @@ root `pnpm run check` does not cover it, so a change that touches the studio has
 `pnpm --dir apps/web run check` as well. The studio imports `@sigilgen/*` from the library's TypeScript
 source rather than its build output, so a change in the library is a change in the studio with no
 rebuild in between.
+
+`apps/desktop` is the third package and uses the studio source as its renderer. It has its own
+lockfile and gate (`pnpm --dir apps/desktop run check`), and a change to `apps/web` is also a change to
+the desktop app. Packaging and release steps are in
+[apps/desktop/README.md](apps/desktop/README.md#releasing).
 
 ## Everyday Commands
 
@@ -86,6 +95,8 @@ rebuild in between.
 | New or edited curated data | `src/brain/` (generated fonts via `scripts/build-brain.mjs`) |
 | New test                   | `tests/<module-name>.test.ts`                                |
 | Studio test                | `apps/web/tests/<area>.test.ts`                              |
+| Desktop shell code         | `apps/desktop/src/`                                          |
+| Desktop test               | `apps/desktop/tests/<module-name>.test.ts`                   |
 | New CLI flag               | `src/cli.ts` plus the README CLI table                       |
 | Public API change          | JSDoc in `src/` plus the README API section                  |
 
