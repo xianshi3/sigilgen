@@ -216,7 +216,7 @@ export default function App() {
                 ${narrow ? 'absolute top-2 bottom-2 left-2' : 'my-2 ml-2'}`}
               >
                 <div
-                  className="h-full overflow-y-auto max-[1007px]:pt-14"
+                  className={`h-full overflow-y-auto scroll-gutter ${narrow ? 'pt-14' : ''}`}
                   style={{ width: LEFT_WIDTH }}
                 >
                   {/* The panel owns its padding, so the four groups below it share one rhythm instead of
@@ -283,7 +283,7 @@ export default function App() {
                 ${narrow ? 'absolute top-2 bottom-2 right-2' : 'my-2 mr-2'}`}
               >
                 <div
-                  className="h-full overflow-y-auto max-[1007px]:pt-14"
+                  className={`h-full overflow-y-auto scroll-gutter ${narrow ? 'pt-14' : ''}`}
                   style={{ width: RIGHT_WIDTH }}
                 >
                   <div className="flex flex-col gap-10 px-gutter py-gutter">

@@ -66,7 +66,7 @@ export function FontPicker() {
  * The letters set in each specimen.
  *
  * Taken from the reader's own brand name so the list previews the mark they are about to make. Two
- * letters show proportion and joint without wrapping a 288px column; a name with no letters at all
+ * letters show proportion and joint without wrapping a 300px column; a name with no letters at all
  * falls back to `AG`, which is the classic type specimen and shows the two most distinct letterforms.
  */
 function specimenLetters(name: string): string {

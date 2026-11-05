@@ -7,11 +7,20 @@
  * boundary with it instead of silently reintroducing a stage too small to judge a mark in.
  */
 
-/** Width of the left panel, in CSS pixels. Fixed: it holds inputs with no meaningful minimum width. */
-export const PANEL_WIDTH_LEFT = 288
+/**
+ * Width of a side panel, in CSS pixels.
+ *
+ * Both sides use the same width so the stage is centred in the window. The inspector sets the number:
+ * its label/value rows need 300, and the input panel is comfortable with the same measure. Different
+ * left and right widths shifted the canvas six pixels left of the window's centre.
+ */
+export const PANEL_WIDTH = 300
 
-/** Width of the right panel, in CSS pixels. Fixed, for the same reason. */
-export const PANEL_WIDTH_RIGHT = 300
+/** Width of the left panel; see {@link PANEL_WIDTH}. */
+export const PANEL_WIDTH_LEFT = PANEL_WIDTH
+
+/** Width of the right panel; see {@link PANEL_WIDTH}. */
+export const PANEL_WIDTH_RIGHT = PANEL_WIDTH
 
 /**
  * Narrowest stage the studio is willing to show.

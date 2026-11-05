@@ -58,7 +58,7 @@ export function IconPicker() {
         <div
           role="radiogroup"
           aria-label={t('resource.icon')}
-          className="grid max-h-56 grid-cols-6 gap-1 overflow-y-auto pr-0.5"
+          className="scroll-gutter grid max-h-56 grid-cols-6 gap-1 overflow-y-auto pr-0.5"
         >
           <IconTile
             label={t('resource.auto')}
