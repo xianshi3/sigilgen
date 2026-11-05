@@ -48,6 +48,7 @@ mac:
 linux:
   icon: build/icon.png
   category: Graphics
+  executableName: sigilgen
   synopsis: Deterministic flat geometric SVG logos
   description: |
     Sigilgen generates deterministic, flat geometric SVG logo concepts from a brand name and
