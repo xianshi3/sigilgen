@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { pathBounds } from '@sigilgen/path'
 import type { LogoResult } from '@sigilgen/types'
@@ -7,6 +7,7 @@ import { useI18n } from '../../i18n/I18nProvider'
 import { MIN_CONTRAST, readPaper, worstContrast } from '../../lib/contrast'
 import { bestPaletteFor } from '../../lib/resources'
 import { emptyEdit, parseSvgParts, partTransform } from '../../lib/svgParts'
+import { snapDrag, type ScreenBox } from '../../lib/snapping'
 import { DURATION_BASE, EASE_APPLE } from '../../lib/motion'
 import { paperIsDark, useStudio, type Backdrop } from '../../store/useStudio'
 import { ReadabilityNotice } from './ReadabilityNotice'
@@ -20,6 +21,16 @@ export interface StageProps {
   index?: number
   /** How many concepts this run produced. */
   total?: number
+}
+
+/**
+ * Reads a DOM rectangle into the screen-space shape the snapper uses.
+ *
+ * @param rect - The rectangle.
+ * @returns Its four edges.
+ */
+function toScreenBox(rect: DOMRect): ScreenBox {
+  return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom }
 }
 
 /** Backdrop fills. Fixed paper colours, not themed tokens — see `--paper-light` in the token sheet. */
@@ -83,6 +94,7 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
   const selectPart = useStudio(state => state.selectPart)
   const beginEdit = useStudio(state => state.beginEdit)
   const updatePart = useStudio(state => state.updatePart)
+  const snap = useStudio(state => state.snap)
   const setField = useStudio(state => state.setField)
   const pinnedPalette = useStudio(state => state.palette)
 
@@ -99,14 +111,24 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
   // An edit session's drag: where it started, the part's transform at that moment, and whether the
   // pointer has moved far enough yet to count as a drag rather than as a click.
   const drag = useRef<{
-    x: number
-    y: number
+    startX: number
+    startY: number
     dx: number
     dy: number
     engaged: boolean
+    base: ScreenBox
+    canvas: ScreenBox
+    others: ScreenBox[]
   } | null>(null)
-  /** How far the pointer must travel, as a fraction of the viewBox, for a drag to count. */
-  const DRAG_THRESHOLD = 0.0075
+  /** How far the pointer must travel, in screen pixels, for a drag to count rather than a click. */
+  const DRAG_THRESHOLD_PX = 4
+  /** How close, in screen pixels, an edge or centre must come to a guide before it snaps. */
+  const SNAP_THRESHOLD_PX = 6
+  /** The active alignment guides, in SVG user units. */
+  const [guides, setGuides] = useState<{ x: number | null; y: number | null }>({
+    x: null,
+    y: null,
+  })
 
   const parts = useMemo(
     () => (concept === undefined ? null : parseSvgParts(concept.svg)),
@@ -188,19 +210,6 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
         }
       : null
 
-  /** Converts a pointer position to the SVG's own user units, so a drag means the same thing at any zoom. */
-  const toUserUnits = (clientX: number, clientY: number): { x: number; y: number } => {
-    const svg = svgRef.current
-    if (svg === null || parts === null) {
-      return { x: 0, y: 0 }
-    }
-    const rect = svg.getBoundingClientRect()
-    return {
-      x: ((clientX - rect.left) / rect.width) * parts.viewBox[2],
-      y: ((clientY - rect.top) / rect.height) * parts.viewBox[3],
-    }
-  }
-
   const onPointerDown =
     (partIndex: number) =>
     (event: React.PointerEvent): void => {
@@ -212,10 +221,30 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
       // No snapshot here: a click that selects a part is not an edit, and every pointer-down used to push
       // one, filling the history with steps that revert nothing. The snapshot is taken in onPointerMove,
       // once the pointer has actually travelled.
-      const point = toUserUnits(event.clientX, event.clientY)
+      const svg = svgRef.current
+      if (svg === null || parts === null) {
+        return
+      }
+      const base = event.currentTarget.getBoundingClientRect()
+      const canvas = svg.getBoundingClientRect()
+      const others = [...svg.querySelectorAll<SVGPathElement>('path[data-part-index]')]
+        .filter(path => Number(path.dataset['partIndex']) !== partIndex)
+        .map(path => path.getBoundingClientRect())
+        .filter(rect => rect.width > 0 && rect.height > 0)
+        .map(rect => toScreenBox(rect))
       const edit = edits?.[partIndex] ?? emptyEdit()
-      drag.current = { x: point.x, y: point.y, dx: edit.dx, dy: edit.dy, engaged: false }
-      svgRef.current?.setPointerCapture(event.pointerId)
+      drag.current = {
+        startX: event.clientX,
+        startY: event.clientY,
+        dx: edit.dx,
+        dy: edit.dy,
+        engaged: false,
+        base: toScreenBox(base),
+        canvas: toScreenBox(canvas),
+        others,
+      }
+      setGuides({ x: null, y: null })
+      svg.setPointerCapture(event.pointerId)
     }
 
   const onPointerMove = (event: React.PointerEvent): void => {
@@ -223,27 +252,61 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
     if (active === null || concept === undefined || parts === null || selectedPart === null) {
       return
     }
-    const point = toUserUnits(event.clientX, event.clientY)
+    const deltaX = event.clientX - active.startX
+    const deltaY = event.clientY - active.startY
     // Below the threshold the pointer is hovering on the way to somewhere else: moving the part a
     // fraction of a pixel is worse than moving it not at all, and every pointer-down used to push an
     // undo snapshot on top of that. The drag engages once, then stays engaged for the gesture.
+    if (!active.engaged && Math.hypot(deltaX, deltaY) < DRAG_THRESHOLD_PX) {
+      return
+    }
+
+    const width = active.canvas.right - active.canvas.left
+    const height = active.canvas.bottom - active.canvas.top
+    const snapped =
+      snap && width > 0 && height > 0
+        ? snapDrag({
+            moving: active.base,
+            targets: active.others,
+            canvas: active.canvas,
+            deltaX,
+            deltaY,
+            threshold: SNAP_THRESHOLD_PX,
+          })
+        : { deltaX, deltaY, guideX: null, guideY: null }
+
+    const scaleX = width > 0 ? parts.viewBox[2] / width : 1
+    const scaleY = height > 0 ? parts.viewBox[3] / height : 1
+    const nextDx = Math.round((active.dx + snapped.deltaX * scaleX) * 100) / 100
+    const nextDy = Math.round((active.dy + snapped.deltaY * scaleY) * 100) / 100
+    setGuides({
+      x:
+        snapped.guideX === null || width <= 0
+          ? null
+          : parts.viewBox[0] + ((snapped.guideX - active.canvas.left) / width) * parts.viewBox[2],
+      y:
+        snapped.guideY === null || height <= 0
+          ? null
+          : parts.viewBox[1] + ((snapped.guideY - active.canvas.top) / height) * parts.viewBox[3],
+    })
+    // Snapping can hold the part exactly where it was for the first few pixels of a gesture. That is a
+    // guide being shown, not an edit: pushing a snapshot and a patch that both say "unchanged" would hand
+    // the reader an undo step that reverts nothing.
+    if (nextDx === active.dx && nextDy === active.dy) {
+      return
+    }
     if (!active.engaged) {
-      if (Math.hypot(point.x - active.x, point.y - active.y) < parts.viewBox[2] * DRAG_THRESHOLD) {
-        return
-      }
       active.engaged = true
       // One snapshot for the whole drag, taken before the first actual move — undo restores the position
       // the part was in before it moved, not one pixel into it, and clicks produce no step at all.
       beginEdit()
     }
-    updatePart(concept.seed, selectedPart, {
-      dx: Math.round((active.dx + point.x - active.x) * 100) / 100,
-      dy: Math.round((active.dy + point.y - active.y) * 100) / 100,
-    })
+    updatePart(concept.seed, selectedPart, { dx: nextDx, dy: nextDy })
   }
 
   const endDrag = (): void => {
     drag.current = null
+    setGuides({ x: null, y: null })
   }
 
   return (
@@ -340,6 +403,7 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
                   <g key={pathIndex} transform={transform ?? undefined}>
                     <path
                       d={part.d}
+                      data-part-index={pathIndex}
                       fill={edit?.fill ?? part.fill ?? 'none'}
                       // The highlight is a stroke on a copy rather than on the part itself, so the part's
                       // own fill and geometry are untouched and the outline reads as a selection rather
@@ -353,6 +417,36 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
                   </g>
                 )
               })}
+              {/* Alignment guides. Drawn after the parts so the line is never hidden behind a shape, and
+                  inert so it cannot intercept the pointer that is dragging. */}
+              {guides.x === null ? null : (
+                <line
+                  x1={guides.x}
+                  y1={parts.viewBox[1]}
+                  x2={guides.x}
+                  y2={parts.viewBox[1] + parts.viewBox[3]}
+                  stroke="var(--sheet-accent)"
+                  strokeWidth={1}
+                  strokeDasharray="5 4"
+                  vectorEffect="non-scaling-stroke"
+                  pointerEvents="none"
+                  aria-hidden="true"
+                />
+              )}
+              {guides.y === null ? null : (
+                <line
+                  x1={parts.viewBox[0]}
+                  y1={guides.y}
+                  x2={parts.viewBox[0] + parts.viewBox[2]}
+                  y2={guides.y}
+                  stroke="var(--sheet-accent)"
+                  strokeWidth={1}
+                  strokeDasharray="5 4"
+                  vectorEffect="non-scaling-stroke"
+                  pointerEvents="none"
+                  aria-hidden="true"
+                />
+              )}
             </svg>
           </motion.div>
         )}

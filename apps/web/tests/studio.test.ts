@@ -40,6 +40,7 @@ beforeEach(() => {
       zoom: 'fit',
       leftPanelOpen: true,
       rightPanelOpen: true,
+      snap: true,
     })
   })
 })
@@ -163,6 +164,18 @@ describe('persistence', () => {
     expect(stored.activeConcept).toBeUndefined()
     expect(stored.zoom).toBeUndefined()
     expect(stored.leftPanelOpen).toBeUndefined()
+  })
+
+  it('persists the snapping preference', () => {
+    // Unlike the zoom, snapping is a working preference rather than a place the reader happens to be
+    // looking: turning it off is a statement about how they want to place parts, not a transient view.
+    act(() => useStudio.getState().setSnap(false))
+    const stored = JSON.parse(localStorage.getItem('sigilgen.studio') as string).state
+    expect(stored.snap).toBe(false)
+
+    act(() => useStudio.getState().setSnap(true))
+    const restored = JSON.parse(localStorage.getItem('sigilgen.studio') as string).state
+    expect(restored.snap).toBe(true)
   })
 
   it('does not persist the actions themselves', () => {

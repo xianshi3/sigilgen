@@ -120,6 +120,13 @@ metrics instead, set in the reader's own brand name.
 `DIMENSIONS[engine]` declares, and `ENGINE_USES_ICON` disables the pictogram group for the four
 engines that draw no pictogram. A control that silently does nothing is worse than no control.
 
+**Alignment guides are a preference, not a mode.** In edit mode a drag snaps a part's left/centre/right
+and top/middle/bottom to the sheet's own three lines and to every other visible part's, within six
+screen pixels, and draws a dashed guide on each captured axis. The edit-time guides and the undo
+snapshot share one boundary: the snapshot is taken when the drag engages, so a click still records
+nothing. The toggle lives in the Edit section, and the store persists it beside the design because a
+reader who turned snapping off did so for a reason.
+
 ### Decisions worth knowing
 
 **The core is imported as source, not as a package.** `vite.config.ts` aliases `@sigilgen` to `../../src`,

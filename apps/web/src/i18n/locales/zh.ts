@@ -130,6 +130,7 @@ export const zh = {
   'edit.title': '编辑',
   'edit.start': '开始编辑',
   'edit.done': '完成',
+  'edit.snap': '吸附参考线',
   'edit.part': '部件 {index}',
   'edit.hidden': '已隐藏',
   'edit.pick': '点击画布中的形状进行选择',

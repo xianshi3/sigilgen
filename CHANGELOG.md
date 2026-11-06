@@ -14,6 +14,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   installers for Windows, macOS and Linux. The renderer is `apps/web` itself, so the two clients cannot
   drift. See [apps/desktop/CHANGELOG.md](apps/desktop/CHANGELOG.md).
 
+- **Alignment guides in the editor.** Dragging a part now snaps its edges and centre to the sheet's
+  centre and to every other part's edges and centres, and draws a dashed guide on each axis that has
+  captured it. Distance is measured in screen pixels (six of them), so the gesture feels the same at
+  every zoom. Snapping is a toggle in the Edit section and is persisted with the design, so a reader
+  who prefers free placement keeps that choice across reloads.
+
 - **Real typefaces, extracted from real fonts.** The 18 "families" were parameter variants of one
   constructed skeleton: 1,600 lines of code drawing 26 letters out of overlapping bars and arcs. That is
   why every letter was a bug waiting to be found — `J`'s hook was centred on its own stem, `K`'s arms

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { I18nProvider } from '../src/i18n/I18nProvider'
 import { useStudio } from '../src/store/useStudio'
@@ -317,5 +317,114 @@ describe('Disclosure', () => {
     expect(button).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getByText('Pictogram')).toBeTruthy()
     expect(screen.queryByText('body content')).toBeNull()
+  })
+})
+
+/** A `DOMRect` from its edges, for stubbing jsdom's always-zero layout. */
+function rect(left: number, top: number, width: number, height: number): DOMRect {
+  return {
+    left,
+    top,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height,
+    x: left,
+    y: top,
+    toJSON: () => ({}),
+  }
+}
+
+/** The stubbed layout: a 500px sheet and two parts, the first centred on it. */
+function stageRect(this: Element): DOMRect {
+  if (this.tagName.toLowerCase() === 'svg') {
+    return rect(0, 0, 500, 500)
+  }
+  if (this.tagName.toLowerCase() === 'path') {
+    const index = Number((this as SVGPathElement).dataset['partIndex'] ?? 0)
+    return index === 0 ? rect(200, 200, 100, 100) : rect(350, 50, 50, 50)
+  }
+  return rect(0, 0, 0, 0)
+}
+
+/**
+ * Gives the sheet and two parts a real layout.
+ *
+ * jsdom reports every rectangle as zero, so without this the drag threshold and the snapper both make
+ * no sense. The dimensions are chosen so the first part's centre is the sheet's centre and the second
+ * part is far away on both axes, leaving the canvas lines as the only candidates.
+ */
+function stubGeometry(): void {
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(stageRect)
+  // jsdom implements PointerEvent but not pointer capture; the stage captures the pointer so a drag
+  // keeps reporting even when it leaves the sheet.
+  SVGSVGElement.prototype.setPointerCapture = () => {}
+}
+
+describe('edit-mode alignment guides', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    Reflect.deleteProperty(SVGSVGElement.prototype, 'setPointerCapture')
+    act(() => {
+      useStudio.setState({
+        editMode: false,
+        snap: true,
+        edits: {},
+        selectedPart: null,
+        past: [],
+        future: [],
+      })
+    })
+  })
+
+  it('snaps to the sheet centre and shows a guide on each captured axis', () => {
+    const concept = aConcept()
+    act(() => {
+      useStudio.setState({ editMode: true, snap: true, edits: {}, selectedPart: null })
+    })
+    stubGeometry()
+    const { container } = render(
+      <I18nProvider initialLocale="en">
+        <Stage concept={concept} errorKey={null} errorDetail={null} />
+      </I18nProvider>
+    )
+    const svg = container.querySelector('svg') as SVGSVGElement
+    const part = container.querySelector('path[data-part-index="0"]') as SVGPathElement
+
+    fireEvent.pointerDown(part, { pointerId: 1, clientX: 250, clientY: 250 })
+    fireEvent.pointerMove(svg, { pointerId: 1, clientX: 255, clientY: 250 })
+
+    const lines = [...container.querySelectorAll('line')]
+    expect(lines).toHaveLength(2)
+    expect(lines.some(line => line.getAttribute('x1') === line.getAttribute('x2'))).toBe(true)
+    expect(lines.some(line => line.getAttribute('y1') === line.getAttribute('y2'))).toBe(true)
+    // The part was already centred, so the gesture is a guide being shown rather than an edit. A snapshot
+    // and a patch that both say "unchanged" would leave an undo step that reverts nothing.
+    expect(useStudio.getState().edits[concept?.seed ?? '']).toBeUndefined()
+
+    fireEvent.pointerUp(svg, { pointerId: 1 })
+    expect(container.querySelector('line')).toBeNull()
+  })
+
+  it('records the drag and draws no guide when snapping is off', () => {
+    const concept = aConcept()
+    act(() => {
+      useStudio.setState({ editMode: true, snap: false, edits: {}, selectedPart: null })
+    })
+    stubGeometry()
+    const { container } = render(
+      <I18nProvider initialLocale="en">
+        <Stage concept={concept} errorKey={null} errorDetail={null} />
+      </I18nProvider>
+    )
+    const svg = container.querySelector('svg') as SVGSVGElement
+    const part = container.querySelector('path[data-part-index="0"]') as SVGPathElement
+
+    fireEvent.pointerDown(part, { pointerId: 1, clientX: 250, clientY: 250 })
+    fireEvent.pointerMove(svg, { pointerId: 1, clientX: 255, clientY: 250 })
+
+    const edit = useStudio.getState().edits[concept?.seed ?? '']?.[0]
+    expect(edit?.dx).toBeGreaterThan(0)
+    expect(container.querySelector('line')).toBeNull()
   })
 })

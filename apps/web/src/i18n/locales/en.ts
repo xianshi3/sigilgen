@@ -130,6 +130,7 @@ export const en: Record<MessageKey, string> = {
   'edit.title': 'Edit',
   'edit.start': 'Start editing',
   'edit.done': 'Done',
+  'edit.snap': 'Snap to guides',
   'edit.part': 'Part {index}',
   'edit.hidden': 'Hidden',
   'edit.pick': 'Click a shape on the canvas to select it',

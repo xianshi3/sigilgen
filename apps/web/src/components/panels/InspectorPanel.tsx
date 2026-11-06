@@ -9,6 +9,7 @@ import { useStudio } from '../../store/useStudio'
 import { Button } from '../primitives/Button'
 import { RangeField } from '../primitives/RangeField'
 import { Section } from '../primitives/Section'
+import { Toggle } from '../primitives/Toggle'
 
 export interface InspectorPanelProps {
   concept: LogoResult | undefined
@@ -51,6 +52,8 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
 
   const editMode = useStudio(state => state.editMode)
   const setEditMode = useStudio(state => state.setEditMode)
+  const snap = useStudio(state => state.snap)
+  const setSnap = useStudio(state => state.setSnap)
   const selectedPart = useStudio(state => state.selectedPart)
   const selectPart = useStudio(state => state.selectPart)
   const beginEdit = useStudio(state => state.beginEdit)
@@ -104,6 +107,10 @@ export function InspectorPanel({ concept }: InspectorPanelProps) {
 
         {editMode ? (
           <>
+            {/* Guides are a preference, not a mode: a reader who wants free placement turns them off and
+                expects that answer to survive a reload, which is why the store persists it. */}
+            <Toggle checked={snap} onChange={setSnap} label={t('edit.snap')} />
+
             {/* The parts, so one can be picked without hitting it on the canvas — which is hard when a
                 part is small or sits behind another. */}
             <div className="flex flex-col gap-1">

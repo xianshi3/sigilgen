@@ -219,6 +219,13 @@ export interface StudioState extends StudioConfig {
    * paths selectable and draggable.
    */
   editMode: boolean
+  /**
+   * Whether a drag snaps to the sheet's centre and to the other parts' edges and centres.
+   *
+   * A preference rather than a transient mode: readers either want the mark aligned or they want to
+   * place it freely, and the answer tends to stay the same from one session to the next.
+   */
+  snap: boolean
   edits: ConceptEdits
   selectedPart: number | null
   past: HistoryEntry[]
@@ -245,6 +252,7 @@ export interface StudioState extends StudioConfig {
   reroll: () => void
 
   setEditMode: (on: boolean) => void
+  setSnap: (on: boolean) => void
   selectPart: (index: number | null) => void
   /**
    * Snapshots the current edits so the next change can be undone.
@@ -338,6 +346,7 @@ type PersistedStudio = Pick<
   | 'backdrop'
   | 'preferences'
   | 'edits'
+  | 'snap'
 >
 
 /**
@@ -366,6 +375,9 @@ function persisted(state: StudioState): PersistedStudio {
     // The reader's edits are their work, so they survive a reload like the design does. The undo
     // history is deliberately left out: it is transient, and restoring it would put the app back mid-gesture.
     edits: state.edits,
+    // Snapping is a working preference, not transient interface state: a reader who turned it off did so
+    // because it fought their placement, and turning it back on every launch would make them repeat it.
+    snap: state.snap,
   }
 }
 
@@ -382,6 +394,7 @@ export const useStudio = create<StudioState>()(
       rightPanelOpen: INITIAL_PANELS_OPEN,
 
       editMode: false,
+      snap: true,
       edits: {},
       selectedPart: null,
       past: [],
@@ -468,6 +481,8 @@ export const useStudio = create<StudioState>()(
           // edited reads as a promise the interface is not keeping.
           selectedPart: on ? state.selectedPart : null,
         })),
+
+      setSnap: on => set({ snap: on }),
 
       selectPart: index => set({ selectedPart: index }),
 

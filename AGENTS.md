@@ -158,6 +158,16 @@ These are enforced by `apps/web` tests, and they are about what a reader sees ra
 - **The desktop shell adds a 38px strip above this layout** on Windows and macOS; it must not change the
   studio's internal widths or breakpoint.
 
+### Studio Editing Contract
+
+- **Snapping is measured in screen pixels.** Six of them, so the gesture feels the same at every zoom.
+  A drag captures the sheet's left/centre/right and top/middle/bottom plus every other visible part's,
+  and draws a guide only on the axis it captured.
+- **The guide toggle is persisted.** It belongs beside the design, not with transient view state: a
+  reader who turned it off did so deliberately.
+- **A snap that changes nothing is not an edit.** The undo snapshot is taken when the part first moves,
+  not when the pointer first moves.
+
 ### Determinism Rules
 
 - Every random-looking decision must come from a `SeedResolver` stream.
