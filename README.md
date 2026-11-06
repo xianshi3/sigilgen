@@ -67,7 +67,8 @@ every one of them is reported back to you in words. That buys three things an im
 - **Deterministic.** The same input always produces byte-identical output. Not "visually similar" —
   the same bytes.
 - **Zero AI dependency.** Every decision comes from a curated JSON knowledge base: 33 palettes, 18
-  typeface families with 468 pre-generated glyph outlines, 70 pictograms and 34 mood rules.
+  typeface families with 468 pre-generated glyph outlines, 70 pictograms from Material Design Icons, and
+  34 mood rules.
 - **Zero runtime dependencies.** SVG output needs nothing installed. PNG output is optional.
 - **Explainable.** Every concept carries notes naming the mood that matched, the pool it drew from, and
   the structural reason for the engine it chose.
@@ -510,3 +511,8 @@ private reporting channel, supported versions, response expectations and scope.
 ## License
 
 [MIT](LICENSE) © Sigilgen contributors
+
+The pictogram paths in `src/brain/icons.json` are from
+[Material Design Icons](https://materialdesignicons.com) by [Pictogrammers](https://pictogrammers.com),
+licensed under Apache 2.0; the full text is in [src/brain/icons.LICENSE](src/brain/icons.LICENSE).
+The vendored typefaces under `assets/fonts/` keep their own OFL licences.

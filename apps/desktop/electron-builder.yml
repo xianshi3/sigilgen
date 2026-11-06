@@ -10,6 +10,10 @@ files:
   - out/**/*
   - package.json
 
+extraResources:
+  - from: ../../src/brain/icons.LICENSE
+    to: licenses/icons.LICENSE
+
 asar: true
 compression: maximum
 npmRebuild: false

@@ -42,7 +42,7 @@ function contours(d: string): Point[][] {
   }
 
   for (const segment of parsePath(d)) {
-    const values = segment.values
+    const { values } = segment
     switch (segment.cmd) {
       case 'M': {
         finish()
@@ -130,17 +130,17 @@ describe('icons', () => {
   })
 
   it('keeps the counters of the icons that rely on one open', () => {
-    // These are the icons whose meaning depends on a counter: a leaf's vein, a keyhole, a rocket window,
-    // a road's arrow, a blueprint's lines, a heart's pulse. A sub-path wound with its parent fills the
-    // counter solid, which is invisible to `pathBounds` and obvious to a reader.
+    // The icons whose meaning depends on a counter: a keyhole, a rocket window, a road, a receipt's
+    // lines, a terminal screen, a cog's hub, a server's bays. The vendored Material Design Icons paths
+    // are authored with holes; a regeneration that loses their orientation would fill them solid.
     const withCounters = [
-      'leaf',
       'shield-lock',
       'rocket',
       'road-arrow',
-      'blueprint-draft',
-      'heart-pulse',
       'receipt',
+      'terminal-window',
+      'gear-cog',
+      'cloud-server',
     ]
     for (const key of withCounters) {
       const icon = ICONS.find(entry => entry.key === key)

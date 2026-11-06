@@ -163,3 +163,9 @@ scripts/build-icon.mjs    draws build/icon.png and build/icon.ico with Sigilgen
 The renderer is `apps/web` itself: `electron.vite.config.ts` points Vite's root there and bundles
 `apps/web/index.html`. A change to the studio is a change to the desktop app with no copy to keep in
 step.
+
+## Credits
+
+The pictograms are [Material Design Icons](https://materialdesignicons.com) by
+[Pictogrammers](https://pictogrammers.com), Apache-2.0. The licence ships inside the app at
+`resources/licenses/icons.LICENSE`.

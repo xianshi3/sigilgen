@@ -52,6 +52,7 @@
   "scripts": {
     "build": "tsup",
     "build:brain": "node scripts/build-brain.mjs",
+    "build:icons": "node scripts/build-icons.mjs",
     "docs:images": "pnpm run build && node scripts/build-docs-images.mjs",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "dev": "tsup --watch",
@@ -64,14 +65,16 @@
     "test:coverage": "vitest run --coverage",
     "test:coverage:gaps": "vitest run --coverage && node scripts/coverage-gaps.mjs",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm run lint:check && pnpm run fmt:check && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:brain && pnpm run check:determinism",
+    "check": "pnpm run lint:check && pnpm run fmt:check && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:brain && pnpm run check:icons && pnpm run check:determinism",
     "check:brain": "node scripts/build-brain.mjs --check",
+    "check:icons": "node scripts/build-icons.mjs --check",
     "check:determinism": "node scripts/check-determinism.mjs",
     "links": "node scripts/link-ai-files.mjs",
     "prepare": "pnpm run build",
     "prepublishOnly": "pnpm run build && pnpm run test"
   },
   "devDependencies": {
+    "@mdi/js": "^7.4.47",
     "@types/node": "^22.15.0",
     "@vitest/coverage-v8": "^3.2.4",
     "fontkit": "^2.0.4",

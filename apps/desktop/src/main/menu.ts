@@ -135,7 +135,7 @@ export function installApplicationMenu(options: {
                   type: 'info' as const,
                   title: labels.about,
                   message: 'Sigilgen',
-                  detail: `Version ${app.getVersion()}\nDeterministic, flat geometric SVG logos.`,
+                  detail: `Version ${app.getVersion()}\nDeterministic, flat geometric SVG logos.\n\nPictograms: Material Design Icons (Apache-2.0).`,
                 }
                 if (window === null) {
                   void dialog.showMessageBox(message)
