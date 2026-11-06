@@ -145,10 +145,11 @@ export function partTransform(d: string, edit: PartEdit): string | null {
  * keeps an unedited concept's output identical to the generator's.
  *
  * @param svg - The original SVG document.
- * @param edits - One entry per part, in document order. Missing entries mean "unedited".
+ * @param edits - One entry per part, in document order. Missing entries, and `null` holes left by an
+ *   older persisted sparse array, mean "unedited".
  * @returns A new SVG document.
  */
-export function applyEdits(svg: string, edits: readonly PartEdit[]): string {
+export function applyEdits(svg: string, edits: readonly (PartEdit | null | undefined)[]): string {
   const { viewBox, parts } = parseSvgParts(svg)
   const children: string[] = []
   parts.forEach((part, index) => {
@@ -159,7 +160,7 @@ export function applyEdits(svg: string, edits: readonly PartEdit[]): string {
     if (edit?.hidden === true) {
       return
     }
-    const transform = edit === undefined ? null : partTransform(part.d, edit)
+    const transform = edit === undefined || edit === null ? null : partTransform(part.d, edit)
     const fill = edit?.fill ?? part.fill
     const attributes = [`d="${part.d}"`]
     if (fill !== null) {

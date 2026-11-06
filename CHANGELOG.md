@@ -171,6 +171,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **A saved part edit could white-screen the studio.** Editing a part other than the first wrote into
+  a sparse array; JSON serialised the holes as `null`, and the next launch crashed reading `dx` from
+  one before the first paint. Edits are now written densely, the persisted map is repaired on load
+  (null or malformed entries become the identity edit), and the stage and export treat a null hole as
+  untouched. Covered by a rehydration test and a dense-write test.
+
 - **The studio's side margins differed by the width of a scrollbar.** `html { scrollbar-gutter: stable }`
   reserved a scrollbar's track on the document even when nothing scrolled, and the panels were 288px and
   300px wide. The right edge was about 10px wider than the left and the stage sat 6px left of the window's

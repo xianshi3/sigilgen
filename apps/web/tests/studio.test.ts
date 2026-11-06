@@ -3,6 +3,7 @@ import { act } from '@testing-library/react'
 import { useStudio } from '../src/store/useStudio'
 import { fileStem } from '../src/lib/export'
 import { generate, type StudioConfig } from '../src/lib/generate'
+import { emptyEdit } from '../src/lib/svgParts'
 
 /**
  * The store, the persistence contract and the browser-only helpers.
@@ -182,6 +183,33 @@ describe('persistence', () => {
         'reroll',
       ]).not.toContain(key)
     }
+  })
+
+  it('repairs null holes in a persisted edits array', async () => {
+    // Editing a part other than the first used to leave holes in the array; JSON wrote them as null and
+    // the next launch crashed on `null.dx`. The merge hook fills them with the identity edit.
+    const edit = { dx: -1.25, dy: -6.44, rotate: 0, scale: 1, fill: null, hidden: false }
+    localStorage.setItem(
+      'sigilgen.studio',
+      JSON.stringify({ state: { edits: { seed: [null, null, null, edit] } }, version: 0 })
+    )
+    await act(async () => {
+      await useStudio.persist.rehydrate()
+    })
+    const edits = useStudio.getState().edits['seed']
+    expect(edits).toHaveLength(4)
+    expect(edits?.[0]).toEqual(emptyEdit())
+    expect(edits?.[3]).toEqual(edit)
+  })
+
+  it('writes a dense edit array when a later part is edited', () => {
+    act(() => {
+      useStudio.getState().updatePart('seed', 3, { dx: 2 })
+    })
+    const edits = useStudio.getState().edits['seed']
+    expect(edits).toHaveLength(4)
+    expect(edits?.every(entry => entry !== null && entry !== undefined)).toBe(true)
+    expect(edits?.[3]?.dx).toBe(2)
   })
 
   it('survives storage that holds something unrecognisable', () => {

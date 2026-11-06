@@ -101,7 +101,7 @@ function sameEdits(a: ConceptEdits, b: ConceptEdits): boolean {
     for (let index = 0; index < aParts.length; index++) {
       const aPart = aParts[index]
       const bPart = bParts[index]
-      if (aPart === undefined || bPart === undefined) {
+      if (aPart === undefined || bPart === undefined || aPart === null || bPart === null) {
         if (aPart !== bPart) {
           return false
         }
@@ -120,6 +120,87 @@ function sameEdits(a: ConceptEdits, b: ConceptEdits): boolean {
     }
   }
   return true
+}
+
+/**
+ * Whether a value from storage is a complete part edit.
+ *
+ * Persisted state is untrusted: a hand-edited file, an older build or a sparse array that JSON turned
+ * into `null` holes can all reach this point. A malformed entry becomes the identity edit rather than
+ * producing a white screen on the next render.
+ *
+ * @param value - A candidate entry.
+ * @returns `true` when every field has the right shape.
+ */
+function isPartEdit(value: unknown): value is PartEdit {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+  const edit = value as Partial<PartEdit>
+  return (
+    typeof edit.dx === 'number' &&
+    Number.isFinite(edit.dx) &&
+    typeof edit.dy === 'number' &&
+    Number.isFinite(edit.dy) &&
+    typeof edit.rotate === 'number' &&
+    Number.isFinite(edit.rotate) &&
+    typeof edit.scale === 'number' &&
+    Number.isFinite(edit.scale) &&
+    (edit.fill === null || typeof edit.fill === 'string') &&
+    typeof edit.hidden === 'boolean'
+  )
+}
+
+/**
+ * Whether an edit changes nothing.
+ *
+ * @param edit - The edit to test.
+ * @returns `true` for the identity edit.
+ */
+function isNoopEdit(edit: PartEdit): boolean {
+  return (
+    edit.dx === 0 &&
+    edit.dy === 0 &&
+    edit.rotate === 0 &&
+    edit.scale === 1 &&
+    edit.fill === null &&
+    !edit.hidden
+  )
+}
+
+/**
+ * Repairs the persisted edits map.
+ *
+ * `updatePart` used to write into a sparse array when a part other than the first was edited. JSON
+ * serialised the holes as `null`, and the next launch crashed reading `dx` from one. A null or malformed
+ * entry is now the identity edit, and trailing no-op entries are removed so a concept that was never
+ * really edited still exports byte-identically to the generator.
+ *
+ * @param value - The persisted edits value, of unknown shape.
+ * @returns A dense edits map with valid entries.
+ */
+function sanitiseEdits(value: unknown): ConceptEdits {
+  if (typeof value !== 'object' || value === null) {
+    return {}
+  }
+  const out: ConceptEdits = {}
+  for (const [seed, entries] of Object.entries(value)) {
+    if (!Array.isArray(entries)) {
+      continue
+    }
+    const cleaned = entries.map(entry => (isPartEdit(entry) ? entry : emptyEdit()))
+    for (;;) {
+      const last = cleaned.at(-1)
+      if (last === undefined || !isNoopEdit(last)) {
+        break
+      }
+      cleaned.pop()
+    }
+    if (cleaned.length > 0) {
+      out[seed] = cleaned
+    }
+  }
+  return out
 }
 
 export interface StudioState extends StudioConfig {
@@ -409,10 +490,11 @@ export const useStudio = create<StudioState>()(
       updatePart: (conceptSeed, index, patch) =>
         set(state => {
           const conceptEdits = state.edits[conceptSeed] ?? []
-          const current = conceptEdits[index] ?? emptyEdit()
-          const next = { ...current, ...patch }
-          const updated = [...conceptEdits]
-          updated[index] = next
+          const updated = Array.from(
+            { length: Math.max(conceptEdits.length, index + 1) },
+            (_, part) => conceptEdits[part] ?? emptyEdit()
+          )
+          updated[index] = { ...(updated[index] as PartEdit), ...patch }
           return { edits: { ...state.edits, [conceptSeed]: updated } }
         }),
 
@@ -457,6 +539,14 @@ export const useStudio = create<StudioState>()(
     {
       name: 'sigilgen.studio',
       partialize: persisted,
+      // Repair the edits map before the first render. A sparse array from an older build is stored as
+      // nulls by JSON, and a null entry used to crash the stage while it looked up `dx`.
+      merge: (stored, current) => {
+        const state = (
+          typeof stored === 'object' && stored !== null ? stored : {}
+        ) as Partial<StudioState>
+        return { ...current, ...state, edits: sanitiseEdits(state.edits) }
+      },
       // A pair persisted before this rule existed can still be contradictory — a palette drawn for a pale
       // page and a dark backdrop — and it would come back on every reload. Correct it once on the way in,
       // so a returning reader's first frame is already readable rather than a warning.

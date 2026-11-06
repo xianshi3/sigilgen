@@ -14,6 +14,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   SVG and call are in `build/icon-source.svg` and `build/icon-source.md`; the browser favicon uses the
   same artwork. This will ship in the next desktop version.
 
+### Fixed
+
+- **Launching with an old part-edit array no longer shows a white window.** The studio now repairs the
+  null holes left by the sparse array before rendering; see the root changelog.
+
 ## [0.1.0] — 2026-11-05
 
 First release of the desktop client.

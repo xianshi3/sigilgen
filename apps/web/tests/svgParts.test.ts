@@ -144,6 +144,16 @@ describe('applyEdits', () => {
     expect(pathElements(restored)[0]).toBe(pathElements(svg)[0])
   })
 
+  it('treats a null hole in persisted edits as untouched', () => {
+    // A sparse edits array used to be serialised by JSON as nulls; the next launch then read `dx` from
+    // one and crashed before the first paint. Null is not an edit, so the document passes through.
+    const svg = aConcept()
+    const { parts } = parseSvgParts(svg)
+    const holes = parts.map(() => null) as unknown as Parameters<typeof applyEdits>[1]
+    expect(() => applyEdits(svg, holes)).not.toThrow()
+    expect(pathElements(applyEdits(svg, holes))).toEqual(pathElements(svg))
+  })
+
   it('applies each edit to its own part', () => {
     const svg = aConcept()
     const { parts } = parseSvgParts(svg)

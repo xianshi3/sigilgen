@@ -330,12 +330,12 @@ export function Stage({ concept, errorKey, errorDetail, index = 0, total = 1 }: 
               aria-label={`${concept.engine} — ${concept.palette.id}`}
             >
               {parts.parts.map((part, pathIndex) => {
-                const edit = edits?.[pathIndex]
-                if (edit?.hidden === true) {
+                const edit = edits?.[pathIndex] ?? emptyEdit()
+                if (edit.hidden) {
                   return null
                 }
                 const selected = editMode && selectedPart === pathIndex
-                const transform = edit === undefined ? null : partTransform(part.d, edit)
+                const transform = partTransform(part.d, edit)
                 return (
                   <g key={pathIndex} transform={transform ?? undefined}>
                     <path
