@@ -19,6 +19,14 @@ const MAX_BRIEF = 400
 const MAX_WORDS = 64
 
 /**
+ * Weight of a name-word match relative to an explicit keyword.
+ *
+ * The name is real evidence, but a reader who typed `tech` on a coffee brand meant the style, not the
+ * bean; explicit keywords therefore win a tie. The name still wins when no keyword speaks.
+ */
+const NAME_WEIGHT = 0.65
+
+/**
  * Extracts lowercase alphanumeric words from a string.
  *
  * @param text - Arbitrary user text.
@@ -131,10 +139,14 @@ export class MoodResolver {
    *
    * @param keywords - Comma or space separated keywords.
    * @param brief - Optional free text; its words are considered too.
+   * @param name - Optional brand name. Its words are considered at {@link NAME_WEIGHT}, so a
+   *   descriptive name can steer the mood even when no keywords were typed.
    * @returns The winning mood, all scored candidates, the words considered, and human-readable notes.
    */
-  resolve(keywords: string, brief = ''): MoodMatch {
-    const words = extractWords(`${keywords} ${brief}`)
+  resolve(keywords: string, brief = '', name = ''): MoodMatch {
+    const keywordWords = extractWords(`${keywords} ${brief}`)
+    const nameWords = extractWords(name)
+    const words = [...new Set([...keywordWords, ...nameWords])]
     /** @type {Record<string, number>} */
     const scores: Record<string, number> = {}
     /** @type {MoodRule[]} */
@@ -144,7 +156,7 @@ export class MoodResolver {
       if (mood.keywords.length === 0) {
         continue
       }
-      const raw = scoreMood(mood, words)
+      const raw = scoreMood(mood, keywordWords) + NAME_WEIGHT * scoreMood(mood, nameWords)
       if (raw === 0) {
         continue
       }
@@ -172,7 +184,7 @@ export class MoodResolver {
         scores: {},
         words,
         notes: [
-          'No keyword matched a mood rule, so the neutral baseline was used.',
+          'No keyword or name word matched a mood rule, so the neutral baseline was used.',
           `Palette pool: ${mood.paletteIds.join(', ')}.`,
         ],
       }
@@ -182,12 +194,18 @@ export class MoodResolver {
     const matchedKeywords = winner.keywords.filter(keyword =>
       words.some(word => matchesWord(word, keyword))
     )
+    const matchedByName = nameWords.filter(word =>
+      winner.keywords.some(keyword => matchesWord(word, keyword))
+    )
 
     const notes = [
       `Mood "${winner.id}" matched on ${matchedKeywords.slice(0, 6).join(', ')}.`,
       `Palette pool: ${winner.paletteIds.join(', ')}.`,
       `Typeface pool: ${winner.fontIds.join(', ')}.`,
     ]
+    if (matchedByName.length > 0) {
+      notes.splice(1, 0, `Name cue: ${matchedByName.slice(0, 4).join(', ')}.`)
+    }
     if (ranked.length > 1) {
       const runnerUp = ranked[1] as MoodRule
       notes.push(`Runner-up mood: ${runnerUp.id}.`)

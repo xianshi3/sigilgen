@@ -124,8 +124,8 @@ multi-concept run, which is what you need in order to reproduce exactly that one
 ```text
 LogoConfig
   → normaliseConfig     validate, clamp, derive letters and words
-  → MoodResolver        keywords + brief → MoodMatch
-  → EngineRouter        mood weights + name structure → engine
+  → MoodResolver        keywords + brief + name words → MoodMatch
+  → EngineRouter        mood weights + name structure + name cue → engine
   → Resolvers           FontResolver / PaletteResolver / IconResolver
   → Engine              SVGElement[]
   → serialiseDocument   SVGElement[] → SVG string
@@ -147,7 +147,9 @@ published FIPS 180-4 vectors.
 
 Scores every mood rule against the words found in the name, keywords and brief. Matching is prefix
 based rather than substring based — see [002 — brain schema](002-brain-schema.md) for why — and scores
-are normalised by rule size so a rule cannot win by listing more synonyms.
+are normalised by rule size so a rule cannot win by listing more synonyms. Name words carry `0.65` of a
+keyword's weight: a reader who typed `tech` on a coffee brand meant the style, while a name that says
+`coffee` should still reach the coffee mood when no keyword speaks.
 
 ### 4.3 EngineRouter
 
@@ -163,13 +165,18 @@ are normalised by rule size so a rule cannot win by listing more synonyms.
 | `halftone`   | Print, craft or editorial briefs                     | The initial set as a dot screen                   |
 | `scanline`   | Developer, cyber or signal briefs                    | The initial cut into horizontal bars              |
 
+When the name itself names an object, the router lifts `wordmark`, `emblem` and `pictogram` and trims
+`abstract`: an abstract mark cannot carry a name. A coined name has no cue and keeps the normal weights,
+so `Zephyr` is free to become a wordmark or an abstract composition.
+
 ### 4.4 Resolvers
 
 - **Palette** — a palette id, or a colour list such as `"#2B1B12,cream,rust"` where names come from
   `src/brain/colors.json`. An unrecognised value falls back to the mood pool rather than failing the run.
 - **Font** — letter marks drop serif and display faces. A slab serif has no personality at 24px, which is
   exactly where a letter mark has to work.
-- **Icon** — a pictogram from the mood pool, or `null` for the engines that draw none.
+- **Icon** — a pictogram named by a brand-name word first (key segment or tag), then the mood pool, or
+  `null` for the engines that draw none.
 
 ### 4.5 serialiseDocument
 

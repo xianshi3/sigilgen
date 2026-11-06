@@ -28,6 +28,7 @@ import { monogram } from './engines/monogram'
 import { pictogram } from './engines/pictogram'
 import { scanline } from './engines/scanline'
 import { wordmark } from './engines/wordmark'
+import { findNameCue } from './name-cues'
 import type { SeedResolver } from './seed-resolver'
 import {
   ENGINE_NAMES,
@@ -120,6 +121,17 @@ export function engineWeights(
     weights.monogram += 1
     weights.emblem += 0.5
     weights.abstract += 0.5
+  }
+
+  // When the name itself names an object, lift the engines that can show that object. The abstract
+  // engine cannot: however good it looks, it carries no part of the name. A name with no concrete cue
+  // is left alone, because there is nothing to depict and the abstract mark is a legitimate answer.
+  const cue = findNameCue(request.nameWords)
+  if (cue !== null) {
+    weights.wordmark += 1.5
+    weights.emblem += 1.5
+    weights.pictogram += 1.5
+    weights.abstract = Math.max(0, weights.abstract - 0.5)
   }
 
   return weights

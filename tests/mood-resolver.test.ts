@@ -157,7 +157,22 @@ describe('MoodResolver', () => {
     expect(moodResolver.resolve('coffee').mood.id).toBe('coffee')
   })
 
-  it('uses only the keywords of a normalised request', () => {
+  it('uses the brand name when no keywords are typed', () => {
+    const match = resolver.resolve('', '', 'Northwind Coffee')
+    expect(match.mood.id).toBe('coffee')
+    expect(match.notes.join(' ')).toContain('Name cue: coffee')
+  })
+
+  it('lets explicit keywords outrank a descriptive name', () => {
+    const match = resolver.resolve('finance', '', 'Northwind Coffee')
+    expect(match.mood.id).toBe('fintech')
+  })
+
+  it('does not invent a mood from a coined name', () => {
+    expect(resolver.resolve('', '', 'Zephyr').mood.id).toBe('neutral')
+  })
+
+  it('resolves a normalised request’s keywords', () => {
     const request = normaliseConfig({ name: 'Acme', keywords: 'coffee, cafe', variations: 1 })
     const match = resolver.resolve(request.keywords, request.brief)
     expect(match.mood.id).toBe('coffee')

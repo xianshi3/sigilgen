@@ -72,6 +72,10 @@ every one of them is reported back to you in words. That buys three things an im
 - **Zero runtime dependencies.** SVG output needs nothing installed. PNG output is optional.
 - **Explainable.** Every concept carries notes naming the mood that matched, the pool it drew from, and
   the structural reason for the engine it chose.
+- **Name-aware.** The brand name is evidence too. Its words carry 0.65 of a keyword's weight in mood
+  matching, and a name that says `coffee`, `rocket`, `forge` or `leaf` selects that pictogram directly
+  and lifts the engines that can show it. A coined name gets no invented meaning; it falls back to the
+  wordmark, lettermark or monogram that spells it.
 - **Nine engines.** `monogram`, `wordmark`, `lettermark`, `apparatus`, `abstract`, `emblem`,
   `pictogram`, `halftone` and `scanline` — each a different structural reading of the same input, not a
   recolouring. `apparatus` is the technical one: initials reversed out of a chamfered core, with the
@@ -383,18 +387,18 @@ Throws `RasterSupportError` with an actionable message when `sharp` is absent.
 
 Also exported, for building your own pipeline:
 
-| Export                                         | Purpose                                      |
-| ---------------------------------------------- | -------------------------------------------- |
-| `SeedResolver`                                 | The reproducible numeric stream              |
-| `MoodResolver`                                 | Keywords and brief to a design direction     |
-| `route`, `engineWeights`, `ENGINES`            | Engine selection                             |
-| `resolvePalette`, `resolveFont`, `resolveIcon` | Resource selection                           |
-| `serialiseDocument`                            | The serializer, including its safety checks  |
-| `BRAIN`, `PALETTES`, `FONTS`, `ICONS`, `MOODS` | The curated data                             |
-| `sha256`, `fmt`, `parsePath`, `transformPath`  | Primitives                                   |
-| `measureText`, `textPath`                      | Setting and drawing a run from brain metrics |
-| `textInk`                                      | The ink a run will actually draw             |
-| `fitText`, `naturalWidth`, `opticalTracking`   | Fitting type into a box                      |
+| Export                                         | Purpose                                                    |
+| ---------------------------------------------- | ---------------------------------------------------------- |
+| `SeedResolver`                                 | The reproducible numeric stream                            |
+| `MoodResolver`                                 | Keywords, brief and brand-name words to a design direction |
+| `route`, `engineWeights`, `ENGINES`            | Engine selection                                           |
+| `resolvePalette`, `resolveFont`, `resolveIcon` | Resource selection                                         |
+| `serialiseDocument`                            | The serializer, including its safety checks                |
+| `BRAIN`, `PALETTES`, `FONTS`, `ICONS`, `MOODS` | The curated data                                           |
+| `sha256`, `fmt`, `parsePath`, `transformPath`  | Primitives                                                 |
+| `measureText`, `textPath`                      | Setting and drawing a run from brain metrics               |
+| `textInk`                                      | The ink a run will actually draw                           |
+| `fitText`, `naturalWidth`, `opticalTracking`   | Fitting type into a box                                    |
 
 #### `textInk(font, letters, scale, tracking?): TextInk`
 
@@ -411,8 +415,11 @@ The pipeline is a pure function, and every stage says what it did.
 1. **Normalise.** The name is validated, letters and words are extracted, numbers are clamped. Word
    splitting distinguishes the name's own words from keywords, so `Ledgerly` with a `fintech` brief
    produces an `L` monogram rather than an accidental `LF`.
-2. **Match a mood.** Words are matched against 34 mood rules by prefix. `sustainable outdoor` selects the
-   `nature` mood; its pools narrow the choice to a handful of palettes, typefaces and pictograms.
+2. **Match a mood.** Keywords, the brief and the name's own words are matched against 34 mood rules by
+   prefix; name words count at 0.65 of a keyword, so explicit direction still wins. `sustainable
+outdoor` selects the `nature` mood, and `Northwind Coffee` reaches `coffee` without a keyword. The
+   mood's pools narrow the choice to a handful of palettes, typefaces and pictograms; a name that
+   literally says `rocket` or `coffee` also selects that pictogram.
 3. **Route to an engine.** Mood weights are adjusted for the shape of the name. Three letters or fewer
    strongly favours a monogram; more than twelve favours a lettermark.
 4. **Resolve resources.** Letter marks drop serif and display faces, because a slab serif has no
@@ -458,12 +465,12 @@ file is parsed at runtime, no text is measured through a canvas, and no `measure
 
 All design decisions live in data, under `src/brain/`.
 
-| Data       | Size                    | Purpose                                                   |
-| ---------- | ----------------------- | --------------------------------------------------------- |
-| Palettes   | 33                      | Colour schemes with matching tags                         |
-| Typefaces  | 18 families, 468 glyphs | Generated by `pnpm run build:brain`                       |
-| Pictograms | 70                      | Flat icons on a `0 0 24 24` grid                          |
-| Mood rules | 34                      | Keywords to palettes, typefaces, icons and engine weights |
+| Data       | Size                    | Purpose                                                                  |
+| ---------- | ----------------------- | ------------------------------------------------------------------------ |
+| Palettes   | 33                      | Colour schemes with matching tags                                        |
+| Typefaces  | 18 families, 468 glyphs | Generated by `pnpm run build:brain`                                      |
+| Pictograms | 70                      | Flat icons on a `0 0 24 24` grid                                         |
+| Mood rules | 34                      | Keywords and name words to palettes, typefaces, icons and engine weights |
 
 Browse it:
 

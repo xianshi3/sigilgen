@@ -10,6 +10,7 @@
  */
 
 import { ICONS, findIcon } from '../brain/index'
+import { findNameCue } from '../name-cues'
 import { type EngineName, type IconEntry, type MoodMatch } from '../types'
 import type { SeedResolver } from '../seed-resolver'
 
@@ -29,13 +30,15 @@ const ICONLESS_ENGINES: ReadonlySet<EngineName> = new Set([
  * @param mood - The resolved mood.
  * @param seed - The deterministic stream for this concept.
  * @param forced - A caller-supplied icon key, or `null`.
+ * @param nameWords - Lowercase words from the brand name.
  * @returns The icon to use, or `null` when the engine draws none.
  */
 export function resolveIcon(
   engine: EngineName,
   mood: MoodMatch,
   seed: SeedResolver,
-  forced: string | null
+  forced: string | null,
+  nameWords: readonly string[] = []
 ): IconEntry | null {
   if (ICONLESS_ENGINES.has(engine)) {
     return null
@@ -46,6 +49,13 @@ export function resolveIcon(
     if (explicit) {
       return explicit
     }
+  }
+
+  // A name that literally says `rocket` or `coffee` should draw that object, not a generic mark from
+  // the mood pool. The cue is checked after an explicit request, which still wins.
+  const cue = findNameCue(nameWords)
+  if (cue !== null) {
+    return cue.icon
   }
 
   const pool = mood.mood.iconKeys
@@ -67,12 +77,23 @@ export function resolveIcon(
  *
  * @param icon - The chosen icon, or `null`.
  * @param forced - A caller-supplied icon key, or `null`.
+ * @param nameWords - Lowercase words from the brand name.
  * @returns A short rationale.
  */
-export function explainIcon(icon: IconEntry | null, forced: string | null): string {
+export function explainIcon(
+  icon: IconEntry | null,
+  forced: string | null,
+  nameWords: readonly string[] = []
+): string {
   if (icon === null) {
     return 'Pictogram: none, because this engine is typographic by definition.'
   }
-  const source = forced === null ? 'mood pool' : 'requested'
+  const cue = findNameCue(nameWords)
+  const source =
+    forced !== null
+      ? 'requested'
+      : cue !== null && cue.icon.key === icon.key
+        ? `name cue "${cue.word}"`
+        : 'mood pool'
   return `Pictogram "${icon.key}" from the ${icon.category} group (${source}).`
 }

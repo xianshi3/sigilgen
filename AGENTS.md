@@ -100,8 +100,8 @@ JSON Brain driven deterministic generation pipeline.
 ```text
 LogoConfig
   → SeedResolver        hash(name, keywords, seed) → deterministic numeric stream
-  → MoodResolver        keywords/brief → MoodMatch (mood rules + notes)
-  → EngineRouter        mood weights + name length → engine id
+  → MoodResolver        keywords/brief + name words → MoodMatch (mood rules + notes)
+  → EngineRouter        mood weights + name length + name cue → engine id
   → Resolvers           FontResolver / PaletteResolver / IconResolver → Brain resources
   → Engine              SVGElement[] (pure geometry, no I/O)
   → SVGSerializer       SVGElement[] → flat SVG string

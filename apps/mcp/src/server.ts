@@ -164,12 +164,15 @@ export function createServer(): McpServer {
       description:
         'Generate between one and six deterministic logo concepts for a brand. Returns each concept ' +
         'with its SVG (default), or a JSON summary without the SVG. Output is byte-identical for ' +
-        'identical input.',
+        'identical input. The brand name\'s own words are matched too: "Northwind Coffee" reaches the ' +
+        'coffee mood and a coffee pictogram without repeating the word in keywords.',
       inputSchema: {
         name: z
           .string()
           .min(1)
-          .describe('Brand name. Letters A–Z are used; other characters are ignored.'),
+          .describe(
+            'Brand name. Letters A–Z are used; other characters are ignored. Its words also steer the mood and pictogram.'
+          ),
         keywords: z
           .string()
           .optional()

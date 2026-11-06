@@ -452,6 +452,14 @@ max-h-full w-full max-w-full`, and neither half of that works: `width: 100%` onl
 
 ### Changed
 
+- **The brand name now steers the design.** Name words score at 0.65 of a keyword in mood matching, a
+  name that says `coffee`, `rocket`, `forge`, `leaf` or `lumen` selects that pictogram directly, and the
+  router lifts `wordmark`, `emblem` and `pictogram` (and trims `abstract`) when a cue exists. So
+  `Northwind Coffee` gets the coffee palette and a coffee-cup without repeating `coffee` in keywords,
+  `Iron Forge` gets construction and a hammer, and `Lumen` gets the creative-studio pools and a sun.
+  Coined names invent no meaning and keep the normal wordmark/lettermark/abstract route. Generated SVG
+  changes for descriptive names; the determinism manifest was re-recorded.
+
 - **Two-letter monograms stay inside their containers.** A pair like `SG` was budgeted against the
   container's widest row, so it could poke out through a hexagon's shoulders or a shield's taper. The
   width budget now uses the cap band and a safety factor, in both side-by-side and stacked layouts.

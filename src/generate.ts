@@ -225,7 +225,7 @@ function generateConcept(request: ResolvedRequest, mood: MoodMatch, index: numbe
   const engine = route(request, mood, root.derive('engine'))
   const font = resolveFont(engine, mood, root.derive('font'), request.font)
   const palette = resolvePalette(request, mood, root.derive('palette'), index)
-  const icon = resolveIcon(engine, mood, root.derive('icon'), request.icon)
+  const icon = resolveIcon(engine, mood, root.derive('icon'), request.icon, request.nameWords)
 
   // Engines append to the notes, so each concept gets its own copy rather than mutating the shared mood.
   const conceptMood: MoodMatch = { ...mood, notes: [] }
@@ -251,7 +251,7 @@ function generateConcept(request: ResolvedRequest, mood: MoodMatch, index: numbe
     explainRoute(request, mood, engine),
     explainFont(font, engine, request.font),
     explainPalette(palette, request),
-    explainIcon(icon, request.icon),
+    explainIcon(icon, request.icon, request.nameWords),
     ...conceptMood.notes,
   ]
 
@@ -285,7 +285,7 @@ function generateConcept(request: ResolvedRequest, mood: MoodMatch, index: numbe
  */
 export function generateLogos(config: GenerateOptions): LogoResult[] {
   const request = normaliseConfig(config)
-  const mood = new MoodResolver().resolve(request.keywords, request.brief)
+  const mood = new MoodResolver().resolve(request.keywords, request.brief, request.name)
   const results: LogoResult[] = []
   for (let index = 0; index < request.variations; index++) {
     results.push(generateConcept(request, mood, index))

@@ -93,7 +93,10 @@
         "dashboard",
         "productivity",
         "workspace",
-        "startup"
+        "startup",
+        "code",
+        "pixel",
+        "byte"
       ],
       "paletteIds": ["electric-signal", "azure-current", "graphite-signal", "ink-monolith"],
       "fontIds": ["inter-semibold", "archivo-bold", "plex-mono-regular"],
@@ -447,7 +450,12 @@
         "ecology",
         "sustainability",
         "green",
-        "wilderness"
+        "wilderness",
+        "leaf",
+        "plant",
+        "tree",
+        "garden",
+        "bloom"
       ],
       "paletteIds": ["forest-canopy", "sage-herbarium", "deep-ocean", "kiwi-sport"],
       "fontIds": ["archivo-regular", "work-sans-medium", "work-sans-light", "plex-serif-regular"],
@@ -508,7 +516,10 @@
         "beach",
         "boat",
         "yacht",
-        "fishing"
+        "fishing",
+        "wave",
+        "tide",
+        "anchor"
       ],
       "paletteIds": ["deep-ocean", "glacier-ice", "turquoise-tide", "azure-current"],
       "fontIds": ["inter-regular", "work-sans-medium", "space-grotesk-medium"],
@@ -569,7 +580,11 @@
         "dental",
         "therapy",
         "patient",
-        "pharma"
+        "pharma",
+        "heart",
+        "pulse",
+        "tooth",
+        "smile"
       ],
       "paletteIds": ["clinic-mint", "glacier-ice", "forest-canopy", "azure-current"],
       "fontIds": ["work-sans-medium", "archivo-regular", "work-sans-light", "inter-semibold"],
@@ -690,7 +705,13 @@
         "hardware",
         "fabrication",
         "civil",
-        "structural"
+        "structural",
+        "forge",
+        "metal",
+        "steel",
+        "iron",
+        "anvil",
+        "smith"
       ],
       "paletteIds": ["steel-forge", "cobalt-forge", "signal-amber", "carbon-transit"],
       "fontIds": ["inter-semibold", "inter-bold", "plex-serif-semibold"],
@@ -808,7 +829,10 @@
         "studio",
         "motion",
         "animation",
-        "graphics"
+        "graphics",
+        "light",
+        "lumen",
+        "glow"
       ],
       "paletteIds": ["violet-studio", "plum-editorial", "bubble-pop", "ink-monolith"],
       "fontIds": [

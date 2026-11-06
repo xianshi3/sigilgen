@@ -102,6 +102,12 @@ describe('resolveFont', () => {
 })
 
 describe('resolveIcon', () => {
+  it('prefers a pictogram the brand name actually names', () => {
+    const mood = moodResolver.resolve('minimal')
+    const cue = resolveIcon('wordmark', mood, new SeedResolver('cue', 0), null, ['rocket'])
+    expect(cue?.key).toBe('rocket')
+  })
+
   it('returns an icon the brain ships for every engine that draws one', () => {
     const mood = moodResolver.resolve('coffee')
     for (const engine of ['monogram', 'wordmark', 'emblem'] as EngineName[]) {

@@ -137,6 +137,14 @@ describe('engineWeights', () => {
     )
     expect(multi.monogram).toBeGreaterThan(single.monogram)
   })
+
+  it('lifts icon-bearing engines when the brand name names an object', () => {
+    const mood = moodResolver.resolve('minimal')
+    const rocket = engineWeights(normaliseConfig({ name: 'Rocket' }), mood)
+    const zephyr = engineWeights(normaliseConfig({ name: 'Zephyr' }), mood)
+    expect(rocket.pictogram).toBeGreaterThan(zephyr.pictogram)
+    expect(rocket.emblem).toBeGreaterThan(zephyr.emblem)
+  })
 })
 
 describe('route', () => {

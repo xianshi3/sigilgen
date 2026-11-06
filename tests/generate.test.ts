@@ -612,3 +612,17 @@ describe('hostile input', () => {
     expectWellFormed(logo.svg)
   })
 })
+
+describe('name cues', () => {
+  it('draws the object a descriptive brand name names', () => {
+    const logos = generateLogos({ name: 'Coffee', variations: 6, seed: 0 })
+    expect(logos[0]?.conceptNotes.join(' ')).toContain('Name cue: coffee')
+    expect(logos.some(logo => logo.icon?.key === 'coffee-cup')).toBe(true)
+  })
+
+  it('finds a mood for a name even with no keywords', () => {
+    const [logo] = generateLogos({ name: 'Northwind Coffee', variations: 1, seed: 0 })
+    expect(logo?.conceptNotes.join(' ')).toContain('Mood "coffee"')
+    expect(logo?.conceptNotes.join(' ')).toContain('Name cue: coffee')
+  })
+})

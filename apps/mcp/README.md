@@ -14,6 +14,10 @@ curated JSON brain, and the same call always returns the same bytes.
 | `generate_logo` | Generate 1–6 concepts for a brand. Returns each concept's SVG (default) or a JSON summary. Can write files into a directory. |
 | `list_options`  | The ids the generator accepts, one catalogue at a time: `engines`, `palettes`, `fonts`, `icons`, `moods`.                    |
 
+The brand name's own words are matched as well: `Northwind Coffee` reaches the coffee mood and a
+coffee-cup pictogram without repeating `coffee` in `keywords`. Explicit keywords still outrank the name
+when the two disagree.
+
 ### `generate_logo` arguments
 
 | Argument        | Type               | Notes                                                                                                                          |
