@@ -5,6 +5,15 @@ All notable changes to the Sigilgen desktop client are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **A new application mark.** The orange single-letter tile is replaced by an `SG` hexagon generated
+  through the MCP server (`name: "Sigil Gen"`, monogram, hexagon container, seed 1). The exact source
+  SVG and call are in `build/icon-source.svg` and `build/icon-source.md`; the browser favicon uses the
+  same artwork. This will ship in the next desktop version.
+
 ## [0.1.0] — 2026-11-05
 
 First release of the desktop client.

@@ -47,6 +47,16 @@ const OVERLAP_TIGHTENING = 0.7
 const PAIR_TRACKING = -0.025
 
 /**
+ * Safety factor for a multi-letter run's width.
+ *
+ * A container is widest at the band through its centre, but the letters are not a line: their cap top
+ * and baseline sit above and below that band, where a hexagon or shield has already narrowed. Budgeting
+ * the run against the widest row is what let an `SG` monogram poke out through a hexagon's shoulders.
+ * The factor leaves room for the slope at both ends of the cap height.
+ */
+const MULTI_LETTER_WIDTH_SAFETY = 0.82
+
+/**
  * Widest a letter run may be, as a fraction of the container's radius.
  *
  * @param kind - One of {@link CONTAINERS}.
@@ -89,16 +99,29 @@ export const monogram: Engine = (input: EngineInput): SVGElement[] => {
     // Two half-height letters read as one block, so the stack occupies the same cap height as a
     // single letter would.
     const singleHeight = capHeight / 2.02
-    const oneScale = singleHeight / font.metrics.capHeight
+    const baseScale = singleHeight / font.metrics.capHeight
     const first = letters[0] as string
     const second = letters[1] as string
-    const firstWidth = measureText(font, first, oneScale).width
-    const secondWidth = measureText(font, second, oneScale).width
-    const stackTop = centre - capHeight / 2
+    const firstWidth = measureText(font, first, baseScale).width
+    const secondWidth = measureText(font, second, baseScale).width
+    // A stacked pair is tall rather than wide, but a hexagon's shoulders can still catch a wide run.
+    const available = radius * 2 * innerWidthRatio(kind) * MULTI_LETTER_WIDTH_SAFETY
+    const widest = Math.max(firstWidth, secondWidth)
+    const fit = widest > available ? available / widest : 1
+    const oneScale = baseScale * fit
+    const scaledFirst = measureText(font, first, oneScale).width
+    const scaledSecond = measureText(font, second, oneScale).width
+    const stackTop = centre - (singleHeight * fit) / 2
     elements.push(
       path(
-        textPath(font, first, centre - firstWidth / 2, stackTop, oneScale) +
-          textPath(font, second, centre - secondWidth / 2, stackTop + singleHeight, oneScale),
+        textPath(font, first, centre - scaledFirst / 2, stackTop, oneScale) +
+          textPath(
+            font,
+            second,
+            centre - scaledSecond / 2,
+            stackTop + singleHeight * fit,
+            oneScale
+          ),
         letterFill
       )
     )
@@ -118,7 +141,8 @@ export const monogram: Engine = (input: EngineInput): SVGElement[] => {
     // Two wide letters can be wider than the container is across the band they occupy. Scaling the whole
     // run down is the only remedy that keeps it centred, since the tracking is in font units and scales
     // with everything else.
-    const available = radius * 2 * innerWidthRatio(kind)
+    const available =
+      radius * 2 * innerWidthRatio(kind) * (letters.length > 1 ? MULTI_LETTER_WIDTH_SAFETY : 1)
     const runScale = metrics.width > available ? (available / metrics.width) * scale : scale
     // Centred on the ink, not on the advance box. A real typeface gives a letter different side
     // bearings on each side — `B` in Inter has 96 units on the left and 63 on the right — so centring the

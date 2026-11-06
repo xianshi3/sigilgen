@@ -288,14 +288,14 @@ which puts two of the four outside the square.
 
 Fifteen seed-driven modes with no type at all.
 
-| Group        | Modes                               | Reads as                                                   |
-| ------------ | ----------------------------------- | ---------------------------------------------------------- |
-| Orbital      | `orbit`, `scatter`                  | a body with satellites; systems, orbits, planets           |
-| Interference | `venn`, `lattice`                   | overlapping fields; collaboration, data, grids             |
-| Radiating    | `arcs`, `portal`, `burst`           | nested crescents and rays; signal, energy, launch          |
-| Continuous   | `waves`, `helix`                    | a smooth ribbon or a double strand; flow, sound, molecules |
-| Faceted      | `aperture`, `prism`, `stacked`      | blades and nested polygons; optics, depth, gems            |
-| Instrument   | `gridframe`, `meridian`, `chevrons` | a frame, a globe, a signal bar; precision                  |
+| Group        | Modes                               | Reads as                                                 |
+| ------------ | ----------------------------------- | -------------------------------------------------------- |
+| Orbital      | `orbit`, `scatter`                  | a body with satellites; a phyllotactic dot field         |
+| Interference | `venn`, `lattice`                   | overlapping circles; a dot grid                          |
+| Radiating    | `arcs`, `portal`, `burst`           | nested crescents and rays; signal, energy, launch        |
+| Continuous   | `waves`, `helix`                    | stacked ribbons; a double strand; flow, sound, molecules |
+| Faceted      | `aperture`, `prism`, `stacked`      | blades and nested polygons; optics, depth, gems          |
+| Instrument   | `gridframe`, `meridian`, `chevrons` | a frame, a globe, a signal bar; precision                |
 
 Ten of these were added for space and technology briefs, where the library was thin. Two rules keep the
 set coherent rather than merely larger:
@@ -312,6 +312,11 @@ pushes `second` onto `lead` and `third` onto both. On `azure-current`, whose acc
 `#f0f9ff` on an `#f0f9ff` background, every mark came out one flat tone, and the layered modes lost the
 depth that is the whole point of them. Measured across the brain: 2 palettes offer three legible tones,
 26 offer two, and 5 are genuinely monochrome.
+
+The floor is **3:1**, the WCAG non-text threshold, not the 4.5:1 text threshold. These are large
+graphic shapes, and the text floor discarded a rust accent on white (about 4.3:1), flattening every
+layered mode on a light page. Three still rejects a tone that would disappear and keeps the palette's
+second colour available.
 
 A palette that is dark-background will still come out flat when rendered transparent, because a
 transparent mark is judged against an assumed white and only one of its tones clears the floor there.

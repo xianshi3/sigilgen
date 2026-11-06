@@ -2,15 +2,9 @@
  * Abstract engine 鈥?seed-driven pure geometry, no type.
  *
  * Some brands want a mark that is not a container, an initial or a pictogram: a shape that stands on
- * its own. That is what this engine produces. Five modes cover a wide range of visual languages:
- *
- * | Mode | Reads as |
- * | ---- | -------- |
- * | `orbit` | a body with satellites; systems, orbits, planets |
- * | `venn` | overlapping fields; collaboration, chemistry, data |
- * | `arcs` | nested crescents; motion, signal, layering |
- * | `burst` | radiating spikes; energy, launch, celebration |
- * | `waves` | a smooth ribbon; flow, water, sound |
+ * its own. Fifteen modes cover a wide range of visual languages, from orbital bodies and overlapping
+ * fields to ribbons, facets and instrument frames. The full table is in
+ * `docs/design/001-logo-engine-architecture.md`.
  *
  * Every parameter is derived from the seed stream, so the same request always yields the same mark and
  * `variations` yields genuinely different ones.
@@ -28,7 +22,6 @@ import {
   regularPolygonPath,
   ringPath,
   segmentPath,
-  smoothClosedPath,
   type Point,
 } from '../geometry'
 import type { SeedResolver } from '../seed-resolver'
@@ -331,12 +324,19 @@ const prism: CentredMode = (size, seed, colours) => {
 const scatter: CentredMode = (size, seed, colours) => {
   const centre = size / 2
   const r = size * 0.3
-  const count = seed.int(3, 4)
-  const out: SVGElement[] = [path(ringPath(centre, centre, r, r, r * 0.09), colours[0] as string)]
+  const count = seed.int(5, 8)
   const tilt = seed.range(0, 360)
+  const out: SVGElement[] = []
   for (let i = 0; i < count; i++) {
-    const at = polar(centre, centre, r, tilt + (360 / count) * i)
-    out.push(path(discPath(at.x, at.y, r * 0.26), colours[(i + 1) % 3] as string))
+    // Phyllotaxis rather than a ring: successive points turn by the golden angle and move outward, so
+    // the cluster is balanced without a container. The ring belonged to `orbit`; this mode is the loose
+    // alternative, not the same mark with fewer satellites.
+    const t = (i + 0.5) / count
+    const angle = tilt + i * 137.508
+    const distance = r * (0.28 + 0.62 * Math.sqrt(t))
+    const dot = r * seed.range(0.09, 0.16)
+    const at = polar(centre, centre, distance, angle)
+    out.push(path(discPath(at.x, at.y, dot), colours[i % 3] as string))
   }
   return out
 }
@@ -417,10 +417,45 @@ const stacked: CentredMode = (size, seed, colours) => {
 }
 
 /**
- * The modes that build from the canvas centre outward, keyed by the name the seed picks.
+ * Three or four horizontal ribbons, each a closed wave band.
  *
- * Anything absent from this table falls through to the original `waves` branch, so the five modes that
- * existed before behave exactly as they did for any mode name that is not here.
+ * The old implementation sampled a radius around the centre, which produced a flower/blob rather than
+ * a wave. A wave is a horizontal band whose two edges share the same phase; drawing it as a closed
+ * polygon keeps the edges parallel and lets the seed vary frequency, amplitude and phase.
+ */
+const waves: CentredMode = (size, seed, colours) => {
+  const centre = size / 2
+  const bands = seed.int(3, 4)
+  const width = size * 0.7
+  const thickness = size * 0.075
+  const gap = size * 0.035
+  const amplitude = size * 0.035
+  const total = bands * thickness + (bands - 1) * gap
+  const phase = seed.range(0, Math.PI * 2)
+  const frequency = seed.int(2, 3)
+  const out: SVGElement[] = []
+  for (let band = 0; band < bands; band++) {
+    const base = centre - total / 2 + band * (thickness + gap)
+    const top: Point[] = []
+    const bottom: Point[] = []
+    for (let step = 0; step <= 48; step++) {
+      const t = step / 48
+      const x = centre - width / 2 + width * t
+      const offset = Math.sin(t * Math.PI * 2 * frequency + phase + band * 0.9) * amplitude
+      top.push({ x, y: base + offset })
+      bottom.push({ x, y: base + thickness + offset })
+    }
+    const points = [...top, ...bottom.reverse()]
+    const d = `${points
+      .map((point, index) => `${index === 0 ? 'M' : 'L'} ${fmt(point.x)} ${fmt(point.y)}`)
+      .join(' ')} Z`
+    out.push(path(d, colours[band % 3] as string))
+  }
+  return out
+}
+
+/**
+ * The modes that build from the canvas centre outward, keyed by the name the seed picks.
  */
 const CENTRED_MODES: Record<string, CentredMode> = {
   lattice,
@@ -433,7 +468,18 @@ const CENTRED_MODES: Record<string, CentredMode> = {
   meridian,
   chevrons,
   stacked,
+  waves,
 }
+
+/**
+ * Minimum contrast for an abstract fill on the canvas.
+ *
+ * These shapes are large graphics, not body text, so WCAG's 3:1 non-text floor is the relevant one.
+ * Using the 4.5:1 text floor rejected every palette accent on a light canvas — a rust accent on white
+ * measures about 4.3:1 — and collapsed layered modes to a single flat tone. Three still rejects a tone
+ * that would disappear, and leaves the palette's second colour available.
+ */
+const MIN_SHAPE_CONTRAST = 3
 
 /**
  * Picks the abstract engine's three fill roles, as distinct colours that each clear the legibility floor.
@@ -465,7 +511,7 @@ function fillRoles(palette: PaletteEntry, canvas: string): [string, string, stri
       if (candidate === undefined || taken.has(candidate)) {
         continue
       }
-      if (candidate === canvas || contrastRatio(candidate, canvas) < 4.5) {
+      if (candidate === canvas || contrastRatio(candidate, canvas) < MIN_SHAPE_CONTRAST) {
         continue
       }
       taken.add(candidate)
@@ -520,16 +566,16 @@ export const abstractEngine: Engine = (input: EngineInput): SVGElement[] => {
     case 'venn': {
       const count = seed.int(2, 3)
       const offset = radius * seed.range(0.36, 0.5)
-      const shape = seed.chance(0.5) ? 'circle' : 'hexagon'
       for (let index = 0; index < count; index++) {
         const spread = count === 1 ? 0 : (index / (count - 1) - 0.5) * 2
         const cx = centre + spread * offset
         const lift = index % 2 === 0 ? -1 : 1
         const cy = centre + lift * offset * 0.18
         const r = radius * seed.range(0.6, 0.76)
-        const d = shape === 'circle' ? discPath(cx, cy, r) : regularPolygonPath(cx, cy, r, 6, -90)
+        // A Venn diagram is overlapping circles. Offering a hexagon here made the mode read as a blob
+        // with a waist; the polygon belongs to `prism` and `stacked`.
         const fill = resolveRole(VENN_ROLES[index] ?? 'lead', { lead, second, third })
-        elements.push(path(d, fill))
+        elements.push(path(discPath(cx, cy, r), fill))
       }
       break
     }
@@ -575,31 +621,14 @@ export const abstractEngine: Engine = (input: EngineInput): SVGElement[] => {
     }
     case 'waves':
     default: {
-      if (mode !== 'waves') {
-        const build = CENTRED_MODES[mode]
-        if (build !== undefined) {
-          elements.push(...build(size, seed, [lead, second, third]))
-          break
-        }
+      const build = CENTRED_MODES[mode]
+      if (build !== undefined) {
+        elements.push(...build(size, seed, [lead, second, third]))
+        break
       }
-      const lobes = seed.int(3, 5)
-      const phase = seed.range(0, 360)
-      const layers: SVGElement[] = []
-      for (let layer = 0; layer < 2; layer++) {
-        const points: Point[] = []
-        const count = 72
-        const base = radius * (0.98 - layer * 0.26)
-        // `depth` is a proportion of the base radius, not an absolute length.
-        const depth = 0.18 - layer * 0.06
-        for (let index = 0; index < count; index++) {
-          const t = (Math.PI * 2 * index) / count
-          const wave = Math.sin(t * lobes + (phase * Math.PI) / 180 + layer * 1.1)
-          const r = base * (1 - depth + depth * wave)
-          points.push(polar(centre, centre, r, (t * 180) / Math.PI))
-        }
-        layers.push(path(smoothClosedPath(points), layer === 0 ? lead : second))
-      }
-      elements.push(...layers, path(discPath(centre, centre, radius * 0.16), third))
+      // Unreachable through `pick`, which only returns entries from MODES. Kept as a defensive mark
+      // rather than a second, accidental mode if a caller passes an unknown preference.
+      elements.push(path(discPath(centre, centre, radius * 0.5), lead))
       break
     }
   }

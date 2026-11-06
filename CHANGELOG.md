@@ -446,6 +446,21 @@ max-h-full w-full max-w-full`, and neither half of that works: `width: 100%` onl
 
 ### Changed
 
+- **Two-letter monograms stay inside their containers.** A pair like `SG` was budgeted against the
+  container's widest row, so it could poke out through a hexagon's shoulders or a shield's taper. The
+  width budget now uses the cap band and a safety factor, in both side-by-side and stacked layouts.
+  `tests/engines.test.ts` checks the worst-case `MW` pair against the hexagon and shield.
+
+- **The abstract modes now match their names.** `waves` draws stacked horizontal ribbons instead of a
+  radial blob, `venn` is overlapping circles rather than hexagons, and `scatter` is a phyllotactic dot
+  field rather than a second `orbit`. The fill-role floor is now 3:1 — the non-text threshold — so a
+  rust accent on a light page survives and the layered modes keep their depth.
+
+- **Sigilgen's app icon is an SG hexagon.** The mark was generated through the MCP server's
+  `generate_logo` tool (`name: "Sigil Gen"`, monogram, hexagon container, seed 1, dark/cream/rust
+  palette), replacing the single-letter tile. It is flat, centred, legible at 32 px, and ships as both
+  the desktop icon and the browser favicon; the exact call is in `apps/desktop/build/icon-source.md`.
+
 - **The pictogram set now comes from Material Design Icons.** All 70 path values in
   `src/brain/icons.json` are from Material Design Icons 7.4.47 (Apache-2.0, Pictogrammers), replacing
   the hand-drawn silhouettes. The keys, categories, tags and mood mapping remain Sigilgen's; only the

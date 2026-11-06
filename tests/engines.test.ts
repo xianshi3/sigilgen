@@ -336,6 +336,31 @@ describe('monogram', () => {
     }
   })
 
+  it('fits a two-letter run inside a sloped container', () => {
+    // The box test above could not see this: a hexagon's shoulders narrow above and below its widest
+    // row, so an SG run that fits the bounding box can still poke out through the slope. The fit is
+    // measured against the cap band, with a width safety for the two ends of the letters.
+    const size = 512
+    for (const [container, limit] of [
+      ['hexagon', size * 0.62],
+      ['shield', size * 0.7],
+    ] as const) {
+      const input = makeInput({
+        engine: 'monogram',
+        size,
+        letters: 'MW',
+        request: normaliseConfig({ name: 'M W', size, preferences: { container } }),
+      })
+      const elements = ENGINES.monogram(input)
+      const ink = pathBounds(elements[1]?.attrs['d'] as string)
+      expect(ink, container).not.toBeNull()
+      expect(
+        (ink as NonNullable<typeof ink>).maxX - (ink as NonNullable<typeof ink>).minX,
+        container
+      ).toBeLessThanOrEqual(limit)
+    }
+  })
+
   it('falls back to a disc for a container it does not recognise', () => {
     // A container name can only come from CONTAINERS today, so this branch is a safety net. It must
     // still produce a closed, safe path rather than an empty `d`, which the serializer would reject.
@@ -597,6 +622,24 @@ describe('abstract', () => {
       )
     }
     expect(shapes.size).toBeGreaterThan(4)
+  })
+
+  it('uses the palette’s second tone for large shapes on a light page', () => {
+    // The old 4.5:1 text floor rejected a rust accent on white (about 4.3:1), so every layered mode
+    // collapsed to one tone. The shapes are graphics, not text; 3:1 is the correct floor.
+    const input = makeInput({
+      engine: 'abstract',
+      palette: {
+        id: 'proof',
+        primary: '#141210',
+        secondary: '#f3ecdf',
+        accent: '#c65a32',
+        background: null,
+        tags: [],
+      },
+      request: normaliseConfig({ name: 'Acme', preferences: { mode: 'prism' } }),
+    })
+    expect(new Set(fills(ENGINES.abstract(input))).size).toBeGreaterThan(1)
   })
 
   it('offers every mode in its published list, and draws each one', () => {
