@@ -446,6 +446,16 @@ max-h-full w-full max-w-full`, and neither half of that works: `width: 100%` onl
 
 ### Changed
 
+- **Fifteen pictograms now read at a glance.** `leaf`, `sprout`, `feather`, `cloud`, `cloud-server`,
+  `rocket`, `hot-air-balloon`, `road-arrow`, `blueprint-draft`, `compass-draft`, `dumbbell`, `wheat`,
+  `sun`, `leaf-herb` and `star-burst` were redrawn on the same 24-unit grid: the cloud has lobes, the
+  rocket has a body and fins, the compass is a divider rather than a table, and the sun has a disc
+  instead of a gear silhouette. Three of them also had counters wound with their parent, so the road's
+  arrow, the blueprint's grid and the leaf's vein were filled solid; those are real holes now. The
+  pictogram engine's placement is unchanged, but generated SVG changes for any brand that draws one of
+  these icons, so the determinism manifest was re-recorded. `tests/icons.test.ts` now holds every icon
+  to the grid, to centred placement and to an open counter where the drawing depends on one.
+
 - **The mark sits on a sheet.** The stage was an edge-to-edge fill, which puts the artwork in the middle
   of a large undifferentiated rectangle and reads as an unfinished canvas rather than a presentation. The
   paper is now a square, inset, rounded and lifted — an artboard on a desk, the way macOS presents a photo
