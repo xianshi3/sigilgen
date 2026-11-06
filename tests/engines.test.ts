@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import { ENGINES, engineWeights, explainRoute, route } from '../src/engine-router'
 import { MoodResolver } from '../src/mood-resolver'
 import { SeedResolver } from '../src/seed-resolver'
@@ -256,7 +256,7 @@ describe('engines', () => {
       )
     }
     // Every engine should offer real variation, not just one frozen composition. The wordmark has six
-    // layout × treatment × emphasis combinations by design, so it should reach at least as far as the
+    // layout 脳 treatment 脳 emphasis combinations by design, so it should reach at least as far as the
     // rest; the geometric engines have far more continuous degrees of freedom.
     expect(variants.size, `${engine} produced ${variants.size} variants`).toBeGreaterThan(3)
   })
@@ -359,6 +359,29 @@ describe('monogram', () => {
         container
       ).toBeLessThanOrEqual(limit)
     }
+  })
+
+  it('centres a stacked monogram on its container', () => {
+    const size = 512
+    const input = makeInput({
+      engine: 'monogram',
+      size,
+      letters: 'SG',
+      request: normaliseConfig({
+        name: 'Sigil Gen',
+        size,
+        preferences: { layout: 'stacked', container: 'circle' },
+      }),
+    })
+    const elements = ENGINES.monogram(input)
+    const container = pathBounds(elements[0]?.attrs['d'] as string)
+    const ink = pathBounds(elements[1]?.attrs['d'] as string)
+    expect(container, 'container').not.toBeNull()
+    expect(ink, 'letters').not.toBeNull()
+    const box = container as NonNullable<typeof container>
+    const letters = ink as NonNullable<typeof ink>
+    expect((letters.minY + letters.maxY) / 2).toBeCloseTo((box.minY + box.maxY) / 2, 0)
+    expect((letters.minX + letters.maxX) / 2).toBeCloseTo((box.minX + box.maxX) / 2, 0)
   })
 
   it('falls back to a disc for a container it does not recognise', () => {
@@ -624,7 +647,7 @@ describe('abstract', () => {
     expect(shapes.size).toBeGreaterThan(4)
   })
 
-  it('uses the palette’s second tone for large shapes on a light page', () => {
+  it('uses the palette鈥檚 second tone for large shapes on a light page', () => {
     // The old 4.5:1 text floor rejected a rust accent on white (about 4.3:1), so every layered mode
     // collapsed to one tone. The shapes are graphics, not text; 3:1 is the correct floor.
     const input = makeInput({
@@ -669,7 +692,7 @@ describe('abstract', () => {
     // The modes construct their geometry around the canvas centre, but that is only nominal: a lattice
     // that fades along a diagonal, arcs that sweep one side, a polygon rotated off its own symmetry axis
     // and a satellite arc starting at a random tilt all bias the ink. Measured before the centring pass,
-    // the worst was 69.6 units off on a 512 canvas — about 14% of the width, which reads as loose rather
+    // the worst was 69.6 units off on a 512 canvas 鈥?about 14% of the width, which reads as loose rather
     // than as wrong.
     //
     // The check is on the union of the mark's ink, because that is what the eye centres on. It cannot be
@@ -678,7 +701,7 @@ describe('abstract', () => {
     //
     // The tolerance is one coordinate rounding step rather than zero, because the centring is exact in
     // real arithmetic but the emitted path is rounded to `PRECISION` decimals on the way out. Half a unit
-    // in the last place is 0.005 here, and averaging two rounded coordinates doubles it — still a hundred
+    // in the last place is 0.005 here, and averaging two rounded coordinates doubles it 鈥?still a hundred
     // times tighter than the 69.6-unit defect this guards.
     const rounding = 0.5 * 10 ** -PRECISION
     for (const mode of MODES) {
@@ -749,7 +772,7 @@ describe('abstract', () => {
   it('does not collapse its three fill roles onto one colour', () => {
     // Roles were resolved one at a time, each falling back to the one before it, which meant a palette
     // whose accent equals its background pushed `second` onto `lead` and then `third` onto both. On
-    // `azure-current` every mark came out a single flat tone — and the modes that build depth out of
+    // `azure-current` every mark came out a single flat tone 鈥?and the modes that build depth out of
     // layered tones lost exactly the thing they are for.
     //
     // `azure-current` is the palette that reproduces it: its accent is literally the background colour.

@@ -111,7 +111,10 @@ export const monogram: Engine = (input: EngineInput): SVGElement[] => {
     const oneScale = baseScale * fit
     const scaledFirst = measureText(font, first, oneScale).width
     const scaledSecond = measureText(font, second, oneScale).width
-    const stackTop = centre - (singleHeight * fit) / 2
+    // Two cap heights stacked, so the top is one full (scaled) cap above the centre. Subtracting half
+    // a cap put the whole pair half a letter low; the earlier code got this right by accident through
+    // `capHeight / 2`, which is also one half of the *total* two-letter stack.
+    const stackTop = centre - singleHeight * fit
     elements.push(
       path(
         textPath(font, first, centre - scaledFirst / 2, stackTop, oneScale) +
