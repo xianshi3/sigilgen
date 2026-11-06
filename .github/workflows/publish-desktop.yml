@@ -60,7 +60,36 @@ jobs:
       - name: Upload installers
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ inputs.tag }}" release-assets/* --clobber
+        run: |
+          tag="${{ inputs.tag }}"
+          release_id="${{ steps.release.outputs.id }}"
+          assets_url="repos/${GITHUB_REPOSITORY}/releases/${release_id}/assets?per_page=100"
+          failed=0
+          for file in release-assets/*; do
+            name="$(basename "$file")"
+            state="$(gh api "$assets_url" --jq ".[] | select(.name == \"${name}\") | .state" | head -n 1)"
+            if [ "$state" = "uploaded" ]; then
+              echo "already uploaded: $name"
+              continue
+            fi
+            if [ -n "$state" ]; then
+              asset_id="$(gh api "$assets_url" --jq ".[] | select(.name == \"${name}\") | .id" | head -n 1)"
+              gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}"
+            fi
+            uploaded=0
+            for attempt in 1 2 3 4 5 6; do
+              if gh release upload "$tag" "$file"; then
+                uploaded=1
+                break
+              fi
+              echo "retry ${attempt} for ${name}"
+              sleep 15
+            done
+            if [ "$uploaded" -ne 1 ]; then
+              failed=1
+            fi
+          done
+          exit "$failed"
 
       - name: Publish the release
         env:
