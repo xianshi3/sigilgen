@@ -30,6 +30,8 @@ export function Titlebar({ canReroll }: TitlebarProps) {
   const { t, locale, setLocale } = useI18n()
   const name = useStudio(state => state.name)
   const reroll = useStudio(state => state.reroll)
+  const mode = useStudio(state => state.mode)
+  const setMode = useStudio(state => state.setMode)
   const theme = useStudio(state => state.theme)
   const setTheme = useStudio(state => state.setTheme)
   const leftOpen = useStudio(state => state.leftPanelOpen)
@@ -79,6 +81,17 @@ export function Titlebar({ canReroll }: TitlebarProps) {
               className="hidden h-5 w-px shrink-0 bg-[var(--hairline-strong)] min-[1250px]:block"
             />
 
+            <Segmented<'generate' | 'draw'>
+              aria-label={t('mode.label')}
+              value={mode}
+              options={[
+                { value: 'generate', label: t('mode.generate') },
+                { value: 'draw', label: t('mode.draw') },
+              ]}
+              onChange={setMode}
+              className="border-b-0"
+            />
+
             <Segmented<Locale>
               aria-label={t('locale.label')}
               value={locale}
@@ -102,15 +115,17 @@ export function Titlebar({ canReroll }: TitlebarProps) {
               className="border-b-0"
             />
 
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={reroll}
-              disabled={!canReroll}
-              title={t('action.rerollHint')}
-            >
-              {t('action.reroll')}
-            </Button>
+            {mode === 'generate' ? (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={reroll}
+                disabled={!canReroll}
+                title={t('action.rerollHint')}
+              >
+                {t('action.reroll')}
+              </Button>
+            ) : null}
           </div>
 
           <button

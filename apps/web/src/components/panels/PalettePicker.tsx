@@ -62,6 +62,8 @@ export function PalettePicker() {
 interface SwatchGridProps {
   selected: string
   onSelect: (id: string) => void
+  /** Offer the empty "automatic" choice. Off for a scene, where roles need a real palette. */
+  allowAuto?: boolean
 }
 
 /**
@@ -72,20 +74,22 @@ interface SwatchGridProps {
  * equal split claims three equal roles, and the whole point of a primary/secondary/accent system is
  * that they are not equal.
  */
-function SwatchGrid({ selected, onSelect }: SwatchGridProps) {
+export function SwatchGrid({ selected, onSelect, allowAuto = true }: SwatchGridProps) {
   const { t } = useI18n()
-  const auto = selected.trim() === ''
+  const auto = allowAuto && selected.trim() === ''
 
   return (
     <div role="radiogroup" aria-label={t('resource.palette')} className="grid grid-cols-6 gap-1.5">
-      <Swatch
-        label={t('resource.auto')}
-        title={t('resource.autoHint')}
-        selected={auto}
-        onClick={() => {
-          onSelect('')
-        }}
-      />
+      {allowAuto ? (
+        <Swatch
+          label={t('resource.auto')}
+          title={t('resource.autoHint')}
+          selected={auto}
+          onClick={() => {
+            onSelect('')
+          }}
+        />
+      ) : null}
       {ALL_PALETTES.map(palette => (
         <Swatch
           key={palette.id}

@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import type { LogoResult } from '@sigilgen/types'
+import { renderScene } from '@sigilgen/scene'
 import { desktopBridge } from '../lib/desktop'
-import { downloadSvg, fileStem } from '../lib/export'
+import { downloadSvg, fileStem, saveSvg } from '../lib/export'
 import { applyEdits } from '../lib/svgParts'
 import { isTypingTarget } from '../lib/typing'
 import { useStudio } from '../store/useStudio'
@@ -24,11 +25,22 @@ export function useDesktopCommands(concept: LogoResult | undefined, name: string
       return
     }
     return bridge.onMenuAction(action => {
+      const state = useStudio.getState()
       if (action === 'save') {
+        if (state.mode === 'draw') {
+          if (state.scene === null) {
+            return
+          }
+          void saveSvg(
+            `${fileStem(state.scene.title?.trim() || name || 'scene')}.svg`,
+            renderScene(state.scene)
+          )
+          return
+        }
         if (concept === undefined) {
           return
         }
-        const edits = useStudio.getState().edits[concept.seed] ?? []
+        const edits = state.edits[concept.seed] ?? []
         void downloadSvg(concept, fileStem(name), applyEdits(concept.svg, edits))
         return
       }
@@ -40,7 +52,6 @@ export function useDesktopCommands(concept: LogoResult | undefined, name: string
         return
       }
 
-      const state = useStudio.getState()
       if (action === 'undo') {
         state.undo()
       } else {

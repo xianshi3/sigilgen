@@ -48,6 +48,15 @@ describe('public API', () => {
       'naturalWidth',
       'capHeightForWidth',
       'ENGINE_NAMES',
+      'SceneError',
+      'normaliseScene',
+      'renderScene',
+      'sceneFromLogo',
+      'sceneElementToSvg',
+      'sceneElementBounds',
+      'sceneElementTransform',
+      'sceneToSvgElements',
+      'SCENE_DEFAULT_SIZE',
     ]) {
       expect(sigilgen, `missing export: ${name}`).toHaveProperty(name)
     }
@@ -61,6 +70,15 @@ describe('public API', () => {
     const logo = sigilgen.generateLogo({ name: 'Acme', keywords: 'tech, minimal' })
     expect(logo.svg).toContain('<svg')
     expect(logo.engine).toBeTruthy()
+  })
+
+  it('renders a scene through the same public entry point', () => {
+    const svg = sigilgen.renderScene({
+      palette: 'ink-monolith',
+      elements: [{ type: 'circle', cx: 256, cy: 256, r: 120, fill: 'accent' }],
+    })
+    expect(svg).toContain('<svg')
+    expect(svg).toContain('<circle')
   })
 
   it('produces the same output whether reached via the namespace or a direct import', () => {

@@ -34,14 +34,14 @@ function toScreenBox(rect: DOMRect): ScreenBox {
 }
 
 /** Backdrop fills. Fixed paper colours, not themed tokens — see `--paper-light` in the token sheet. */
-const BACKDROP_STYLE: Record<Backdrop, string> = {
+export const BACKDROP_STYLE: Record<Backdrop, string> = {
   light: 'bg-[var(--paper-light)]',
   dark: 'bg-[var(--paper-dark)]',
   board: 'bg-[var(--paper-checker-b)]',
 }
 
 /** Which sort of paper each backdrop is, so the ink drawn on it can follow the paper. See `--sheet-ink`. */
-const BACKDROP_PAPER: Record<Backdrop, 'light' | 'dark'> = {
+export const BACKDROP_PAPER: Record<Backdrop, 'light' | 'dark'> = {
   light: 'light',
   dark: 'dark',
   board: 'light',

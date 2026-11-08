@@ -1,9 +1,10 @@
 # Sigilgen Desktop
 
 The native desktop client for Sigilgen. It is a shell around the studio in [`apps/web`](../web), not
-a second interface: the same React components, the same generator bundle and the same tests. The shell
-adds what a browser cannot give it — a real window, a native menu, a native Save dialog, a clipboard
-that works outside a secure context, and a place to remember the window geometry.
+a second interface: the same React components, the same generator bundle and the same tests. Both
+studio workspaces — the curated generator and the freeform Draw scene editor — are available inside the
+shell. The shell adds what a browser cannot give it — a real window, a native menu, a native Save
+dialog, a clipboard that works outside a secure context, and a place to remember the window geometry.
 
 ## Download
 

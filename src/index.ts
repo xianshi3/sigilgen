@@ -17,6 +17,46 @@
 
 export { generateLogo, generateLogos, normaliseConfig } from './generate'
 
+export {
+  SceneError,
+  SCENE_COLOUR_ROLES,
+  SCENE_DEFAULT_SIZE,
+  SCENE_MAX_ELEMENTS,
+  SCENE_MAX_PATH,
+  SCENE_MAX_POINTS,
+  SCENE_MAX_SIZE,
+  SCENE_MAX_TEXT,
+  SCENE_MIN_SIZE,
+  duplicateSceneElement,
+  normaliseScene,
+  renderScene,
+  resolveSceneColour,
+  sceneElementBounds,
+  sceneElementToSvg,
+  sceneElementTransform,
+  sceneFromLogo,
+  sceneToSvgElements,
+} from './scene'
+export type {
+  LogoScene,
+  LogoSceneSpec,
+  SceneBounds,
+  SceneCircle,
+  SceneColour,
+  SceneColourRole,
+  SceneElement,
+  SceneElementBase,
+  SceneElementSpec,
+  SceneEllipse,
+  SceneIcon,
+  ScenePath,
+  ScenePolygon,
+  SceneRect,
+  SceneRing,
+  SceneStar,
+  SceneText,
+} from './scene'
+
 export { SeedResolver, seeded } from './seed-resolver'
 
 export { MoodResolver, extractWords, moodResolver, scoreMood } from './mood-resolver'

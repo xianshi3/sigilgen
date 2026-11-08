@@ -58,8 +58,36 @@ export function useHotkeys(conceptCount: number): void {
         if (state.leftPanelOpen || state.rightPanelOpen) {
           state.setLeftPanelOpen(false)
           state.setRightPanelOpen(false)
+        } else if (state.mode === 'draw' && state.sceneSelection !== null) {
+          state.selectSceneElement(null)
         } else if (state.selectedPart !== null) {
           state.selectPart(null)
+        }
+        return
+      }
+
+      const state = useStudio.getState()
+
+      if (state.mode === 'draw' && (key === 'Delete' || key === 'Backspace')) {
+        if (state.sceneSelection !== null) {
+          event.preventDefault()
+          state.removeSceneElement(state.sceneSelection)
+        }
+        return
+      }
+
+      if (state.mode === 'draw') {
+        // The draw workspace keeps the two view shortcuts and leaves the generator's own keys alone: a
+        // digit, `R` or `E` would otherwise change something that is not on screen.
+        if (key === '-' || key === '_') {
+          event.preventDefault()
+          state.zoomBy(-0.25)
+        } else if (key === '=' || key === '+') {
+          event.preventDefault()
+          state.zoomBy(0.25)
+        } else if (key === '0') {
+          event.preventDefault()
+          state.setZoom('fit')
         }
         return
       }
@@ -72,8 +100,6 @@ export function useHotkeys(conceptCount: number): void {
         }
         return
       }
-
-      const state = useStudio.getState()
 
       switch (key) {
         case ',':

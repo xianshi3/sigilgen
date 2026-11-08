@@ -20,6 +20,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   every zoom. Snapping is a toggle in the Edit section and is persisted with the design, so a reader
   who prefers free placement keeps that choice across reloads.
 
+- **Scenes, and a Draw workspace in the studio.** A scene is a second document type — a square canvas of
+  ordered rectangles, circles, ellipses, polygons, stars, rings, paths, text runs and brain pictograms —
+  rendered through the same flat-SVG serializer as the generator. The studio gains a Generate/Draw
+  switch, a layer list, a canvas inspector, one-shot shape tools, import of the current generated
+  concept as editable paths, and SVG/scene-JSON export under the same undo history. Text is compiled
+  from the brain's outlines; palette roles let a palette change recolour a whole drawing. The scene and
+  the workspace persist, and an invalid stored scene is dropped rather than white-screening the app.
+  See [docs/design/004-scene-document.md](docs/design/004-scene-document.md).
+
+- **The MCP server can draw, not only choose.** `render_scene` accepts a complete scene and returns SVG
+  plus a PNG preview; `import_logo` runs the curated generator once and hands back the concept as an
+  editable scene. `sigilgen://scene/schema` documents the grammar and a worked example. The calls stay
+  stateless and byte-identical for identical input, and PNG still uses the optional `sharp` dependency.
+
 - **Real typefaces, extracted from real fonts.** The 18 "families" were parameter variants of one
   constructed skeleton: 1,600 lines of code drawing 26 letters out of overlapping bars and arcs. That is
   why every letter was a bug waiting to be found — `J`'s hook was centred on its own stem, `K`'s arms

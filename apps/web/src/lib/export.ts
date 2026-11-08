@@ -89,6 +89,36 @@ export function fileStem(name: string): string {
 }
 
 /**
+ * Saves an SVG document, through the native dialog in the desktop shell or a download in a browser.
+ *
+ * @param filename - Suggested file name, including `.svg`.
+ * @param contents - SVG markup.
+ * @returns `true` when the file was saved, `false` when the reader cancelled.
+ */
+export async function saveSvg(filename: string, contents: string): Promise<boolean> {
+  const bridge = desktopBridge()
+  if (bridge !== null) {
+    const result = await bridge.saveSvg(filename, contents)
+    return result.saved
+  }
+  download(filename, new Blob([contents], { type: 'image/svg+xml' }))
+  return true
+}
+
+/**
+ * Saves a JSON document through the browser's download path.
+ *
+ * @param filename - Suggested file name, including `.json`.
+ * @param value - The value to serialise.
+ */
+export function downloadJson(filename: string, value: unknown): void {
+  download(
+    filename,
+    new Blob([`${JSON.stringify(value, null, 2)}\n`], { type: 'application/json' })
+  )
+}
+
+/**
  * Saves a concept's SVG, through the native dialog in the desktop shell or a download in a browser.
  *
  * @param concept - The generated concept.
@@ -101,12 +131,5 @@ export async function downloadSvg(
   stem: string,
   svg?: string
 ): Promise<boolean> {
-  const contents = svg ?? concept.svg
-  const bridge = desktopBridge()
-  if (bridge !== null) {
-    const result = await bridge.saveSvg(`${stem}.svg`, contents)
-    return result.saved
-  }
-  download(`${stem}.svg`, new Blob([contents], { type: 'image/svg+xml' }))
-  return true
+  return saveSvg(`${stem}.svg`, svg ?? concept.svg)
 }

@@ -64,6 +64,49 @@ function texts(result: unknown): string[] {
     .map(block => block.text)
 }
 
+/** Image blocks from a tool result, in order. */
+function images(result: unknown): { data: string; mimeType: string }[] {
+  if (typeof result !== 'object' || result === null) {
+    return []
+  }
+  const content = (result as { content?: unknown }).content
+  if (!Array.isArray(content)) {
+    return []
+  }
+  return content
+    .filter((block): block is { type: 'image'; data: string; mimeType: string } => {
+      return (
+        typeof block === 'object' &&
+        block !== null &&
+        (block as { type?: string }).type === 'image' &&
+        typeof (block as { data?: unknown }).data === 'string' &&
+        typeof (block as { mimeType?: unknown }).mimeType === 'string'
+      )
+    })
+    .map(block => ({ data: block.data, mimeType: block.mimeType }))
+}
+
+/** A small scene shared by the render tests. */
+const DEMO_SCENE = {
+  version: 1 as const,
+  title: 'Demo',
+  size: 256,
+  palette: 'ink-monolith',
+  elements: [
+    { type: 'rect' as const, x: 24, y: 24, width: 208, height: 208, rx: 24, fill: 'primary' },
+    { type: 'circle' as const, cx: 128, cy: 120, r: 52, fill: 'accent' },
+    {
+      type: 'text' as const,
+      text: 'DEMO',
+      x: 48,
+      y: 196,
+      width: 160,
+      height: 28,
+      fill: 'background',
+    },
+  ],
+}
+
 afterEach(async () => {
   while (open.length > 0) {
     await open.pop()?.close()
@@ -71,14 +114,16 @@ afterEach(async () => {
 })
 
 describe('handshake', () => {
-  it('announces itself and its two tools', async () => {
+  it('announces itself and its tools', async () => {
     const { client } = await connect()
     expect(client.getServerVersion()?.name).toBe(SERVER_NAME)
     const { tools } = await client.listTools()
     const names = tools.map(tool => tool.name).toSorted()
-    expect(names).toEqual(['generate_logo', 'list_options'])
+    expect(names).toEqual(['generate_logo', 'import_logo', 'list_options', 'render_scene'])
     const generate = tools.find(tool => tool.name === 'generate_logo')
     expect(generate?.inputSchema.required).toContain('name')
+    const render = tools.find(tool => tool.name === 'render_scene')
+    expect(render?.inputSchema.required).toContain('scene')
   })
 })
 
@@ -170,6 +215,108 @@ describe('generate_logo', () => {
   })
 })
 
+describe('render_scene', () => {
+  it('returns SVG and a PNG preview by default', async () => {
+    const { client } = await connect()
+    const result = await client.callTool({
+      name: 'render_scene',
+      arguments: { scene: DEMO_SCENE },
+    })
+    expect(result.isError).toBeFalsy()
+    const text = texts(result).join('\n')
+    expect(text).toContain('<svg')
+    expect(text).toContain('<rect')
+    const preview = images(result)
+    expect(preview).toHaveLength(1)
+    expect(preview[0]?.mimeType).toBe('image/png')
+    expect((preview[0]?.data.length ?? 0) > 100).toBe(true)
+  })
+
+  it('is byte-identical for identical input', async () => {
+    const { client } = await connect()
+    const args = { scene: DEMO_SCENE, format: 'svg' as const }
+    const first = await client.callTool({ name: 'render_scene', arguments: args })
+    const second = await client.callTool({ name: 'render_scene', arguments: args })
+    expect(texts(first)).toEqual(texts(second))
+  })
+
+  it('returns a summary without markup', async () => {
+    const { client } = await connect()
+    const result = await client.callTool({
+      name: 'render_scene',
+      arguments: { scene: DEMO_SCENE, format: 'summary' },
+    })
+    const summary = JSON.parse(texts(result).join('')) as {
+      elementCount: number
+      palette: string
+    }
+    expect(summary.elementCount).toBe(3)
+    expect(summary.palette).toBe('ink-monolith')
+  })
+
+  it('reports a bad scene instead of throwing', async () => {
+    const { client } = await connect()
+    const result = await client.callTool({
+      name: 'render_scene',
+      arguments: { scene: { elements: [{ type: 'circle', cx: 10, cy: 10 }] } },
+    })
+    expect(result.isError).toBe(true)
+    expect(texts(result).join(' ')).toContain('scene')
+  })
+
+  it('writes the SVG, editable scene and preview', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'sigilgen-scene-'))
+    try {
+      const { client } = await connect()
+      const result = await client.callTool({
+        name: 'render_scene',
+        arguments: { scene: DEMO_SCENE, outputDir: directory },
+      })
+      expect(result.isError).toBeFalsy()
+      const files = (await readdir(directory)).toSorted()
+      expect(files).toContain('demo.svg')
+      expect(files).toContain('demo.scene.json')
+      const written = await readFile(join(directory, 'demo.scene.json'), 'utf8')
+      const scene = JSON.parse(written) as { elementCount?: number; elements: unknown[] }
+      expect(scene.elements).toHaveLength(3)
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('import_logo', () => {
+  it('returns an editable scene and a preview', async () => {
+    const { client } = await connect()
+    const result = await client.callTool({
+      name: 'import_logo',
+      arguments: { name: 'Northwind Coffee', seed: 1 },
+    })
+    expect(result.isError).toBeFalsy()
+    const block = texts(result).find(text => text.includes('"elements"')) ?? ''
+    const json = block.slice(block.indexOf('{'))
+    const scene = JSON.parse(json) as {
+      palette: string
+      font: string
+      elements: unknown[]
+    }
+    expect(scene.palette).toBeTruthy()
+    expect(scene.font).toBeTruthy()
+    expect(scene.elements.length).toBeGreaterThan(0)
+    expect(images(result)).toHaveLength(1)
+  })
+
+  it('can return the equivalent SVG instead of the scene', async () => {
+    const { client } = await connect()
+    const result = await client.callTool({
+      name: 'import_logo',
+      arguments: { name: 'Northwind Coffee', format: 'svg' },
+    })
+    expect(result.isError).toBeFalsy()
+    expect(texts(result).join('\n')).toContain('<svg')
+  })
+})
+
 describe('list_options', () => {
   it('lists every engine with a hint', async () => {
     const { client } = await connect()
@@ -204,6 +351,7 @@ describe('resources', () => {
       'sigilgen://options/icons',
       'sigilgen://options/moods',
       'sigilgen://options/palettes',
+      'sigilgen://scene/schema',
     ])
   })
 
@@ -215,5 +363,18 @@ describe('resources', () => {
     const fonts = JSON.parse(first.text ?? '[]') as { id: string; family: string }[]
     expect(fonts.length).toBeGreaterThanOrEqual(12)
     expect(fonts[0]?.family).toBeTruthy()
+  })
+
+  it('serves the scene grammar and a worked example', async () => {
+    const { client } = await connect()
+    const { contents } = await client.readResource({ uri: 'sigilgen://scene/schema' })
+    const first = contents[0] as { text?: string; mimeType?: string }
+    expect(first.mimeType).toBe('application/json')
+    const guide = JSON.parse(first.text ?? '{}') as {
+      elementTypes?: Record<string, string>
+      example?: { elements?: unknown[] }
+    }
+    expect(guide.elementTypes?.rect).toContain('width')
+    expect(guide.example?.elements?.length).toBeGreaterThan(0)
   })
 })

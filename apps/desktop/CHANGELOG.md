@@ -14,6 +14,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   SVG and call are in `build/icon-source.svg` and `build/icon-source.md`; the browser favicon uses the
   same artwork. This will ship in the next desktop version.
 
+- **The Draw workspace.** The shell inherits the studio's scene editor, including import of the
+  generated concept, shapes, text, pictograms, layers, the scene inspector, SVG/scene-JSON export and
+  the scene-aware undo stack. The native Save item writes the scene SVG when Draw is active.
+
 ### Fixed
 
 - **Launching with an old part-edit array no longer shows a white window.** The studio now repairs the

@@ -36,14 +36,17 @@ Other scripts:
 `tests/` runs in `jsdom`, which is the only way the browser-only surface is testable at all: persistence
 and its rehydration, the clipboard fallbacks, locale detection and switching.
 
-| File                 | What it holds                                           |
-| -------------------- | ------------------------------------------------------- |
-| `dimensions.test.ts` | the dictionaries agree, and every offered value is real |
-| `studio.test.ts`     | the store, persistence, generation and file naming      |
-| `i18n.test.tsx`      | the provider, rendered rather than merely imported      |
-| `desktop.test.tsx`   | the shell bridge, native save and the window strip      |
-| `layout.test.tsx`    | wide/narrow branches, panel symmetry and drawer rules   |
-| `tokens.test.ts`     | contrast contract and scrollbar-gutter placement        |
+| File                  | What it holds                                           |
+| --------------------- | ------------------------------------------------------- |
+| `dimensions.test.ts`  | the dictionaries agree, and every offered value is real |
+| `studio.test.ts`      | the store, persistence, generation and file naming      |
+| `sceneStore.test.ts`  | the draw document, its history and persistence          |
+| `sceneStage.test.tsx` | placing and dragging scene elements with guides         |
+| `snapping.test.ts`    | alignment capture distances, targets and thresholds     |
+| `i18n.test.tsx`       | the provider, rendered rather than merely imported      |
+| `desktop.test.tsx`    | the shell bridge, native save and the window strip      |
+| `layout.test.tsx`     | wide/narrow branches, panel symmetry and drawer rules   |
+| `tokens.test.ts`      | contrast contract and scrollbar-gutter placement        |
 
 Three assertions are worth keeping an eye on, because each catches a way this app can quietly break:
 
@@ -104,8 +107,10 @@ The left sidebar answers, in order: _what is it called_, _what shape_, _what col
 | `ResourcePanel`  | Palette swatches and a custom colour list, typefaces, pictograms   |
 | `OptionPanel`    | Tri-state pins for the dimensions the active engine actually reads |
 | `InspectorPanel` | What was chosen, and how to export it                              |
+| `ScenePanel`     | Draw tools, import/new scene, layer list (Draw workspace)          |
+| `SceneInspector` | Canvas, palette, selected element and export (Draw workspace)      |
 
-Three details are worth knowing before changing them.
+A few details are worth knowing before changing them.
 
 **Resources fold away; their value stays in the heading.** Palette, typeface and pictogram hold 121
 items between them. Rendered at once they push the brand name out of the sidebar, so each group is a
@@ -126,6 +131,30 @@ screen pixels, and draws a dashed guide on each captured axis. The edit-time gui
 snapshot share one boundary: the snapshot is taken when the drag engages, so a click still records
 nothing. The toggle lives in the Edit section, and the store persists it beside the design because a
 reader who turned snapping off did so for a reason.
+
+### Draw workspace
+
+The titlebar's **Generate / Draw** switch swaps the panels and the stage, not the layout: both side
+panels stay 300px, the narrow breakpoint is unchanged, and the draw canvas uses the same sheet, zoom,
+backdrops and snapping as the generated stage.
+
+- **Tools are one-shot.** Select, rectangle, circle, ellipse, star, ring, text and icon. Placing a shape
+  returns to the pointer, because the next thing a reader wants is usually to position it.
+- **Import current logo** runs `sceneFromLogo` on the generated concept. It is a snapshot of paths, not
+  a live link; editing the scene cannot change the generator's output and vice versa.
+- **The scene is a document.** It holds ids, layer names, visibility, geometry, translation, rotation,
+  scale, opacity, fill and stroke. Colours may be palette roles, so changing the palette recolours the
+  drawing without breaking literal colours.
+- **Text and pictograms come from the brain.** A text run is compiled to outlines through `fitText` and
+  `textPath`; a pictogram is a brain key, not an uploaded file. No font is parsed in the browser.
+- **The same undo stack covers both workspaces.** The history entry stores the generated edits map and
+  the scene together. A drag is one step, and a snap that leaves the element where it was records none.
+- **Export** writes SVG, scene JSON, or both; the desktop shell routes SVG through its native Save
+  dialog. The scene and the active workspace persist with the design, and an invalid stored scene is
+  dropped rather than crashing the first render.
+
+The document schema and the MCP tools are in
+[docs/design/004-scene-document.md](../../docs/design/004-scene-document.md).
 
 ### Decisions worth knowing
 

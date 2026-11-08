@@ -12,6 +12,8 @@ curated JSON brain, and the same call always returns the same bytes.
 | Tool            | What it does                                                                                                                 |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `generate_logo` | Generate 1–6 concepts for a brand. Returns each concept's SVG (default) or a JSON summary. Can write files into a directory. |
+| `import_logo`   | Run the generator once and return that concept as an editable scene, with a PNG preview by default.                          |
+| `render_scene`  | Draw an explicit scene of shapes, text and pictograms. Returns SVG and a PNG preview by default.                             |
 | `list_options`  | The ids the generator accepts, one catalogue at a time: `engines`, `palettes`, `fonts`, `icons`, `moods`.                    |
 
 The brand name's own words are matched as well: `Northwind Coffee` reaches the coffee mood and a
@@ -38,13 +40,49 @@ when the two disagree.
 
 ## Resources
 
-Five JSON resources mirror `list_options`, for clients that read resources:
+Six JSON resources mirror the tools, for clients that read resources:
 
 - `sigilgen://options/engines`
 - `sigilgen://options/palettes`
 - `sigilgen://options/fonts`
 - `sigilgen://options/icons`
 - `sigilgen://options/moods`
+- `sigilgen://scene/schema` — the scene grammar, shared element fields and a worked example
+
+## Drawing a scene
+
+`render_scene` takes a complete `LogoScene` rather than a sequence of server-side edits: the call is
+stateless, reproducible, and cannot expire between messages. A scene is a square canvas of flat elements
+painted in order. Coordinates are user units with the origin at the top-left, and colours may be a hex
+literal, a CSS colour name, or a palette role (`primary`, `secondary`, `accent`, `highlight`,
+`background`). Roles need a `palette` id; text uses a brain font and is compiled to outlines.
+
+```json
+{
+  "size": 512,
+  "palette": "ink-monolith",
+  "font": "inter-bold",
+  "elements": [
+    { "type": "circle", "cx": 256, "cy": 232, "r": 132, "fill": "primary" },
+    { "type": "ring", "cx": 256, "cy": 232, "rx": 106, "ry": 106, "weight": 10, "fill": "accent" },
+    { "type": "text", "text": "NORTHWIND", "x": 56, "y": 392, "width": 400, "height": 52 }
+  ]
+}
+```
+
+`import_logo` is the bridge from the curated generator to that document: call it with the same
+arguments as `generate_logo`, receive the scene JSON and a preview, edit the scene, and send the result
+to `render_scene`. The `format` argument selects `scene`, `svg`, `png`, `both` (the default) or
+`summary`; `previewSize` controls the PNG and `outputDir` writes the SVG, the scene JSON and the PNG.
+
+A model cannot see SVG text, which is why the preview is a PNG image content block. A client that cannot
+display images still receives the SVG and the scene JSON. PNG needs the optional `sharp` dependency; SVG
+works without it.
+
+| Tool           | Arguments                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| `render_scene` | `scene` (required), `format` (`svg`, `png`, `both`, `summary`), `previewSize`, `outputDir`         |
+| `import_logo`  | the brand arguments from `generate_logo`, plus `format` (`scene`, `svg`, `png`, `both`, `summary`) |
 
 ## Install and run
 

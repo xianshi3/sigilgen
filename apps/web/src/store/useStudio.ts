@@ -1,11 +1,29 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { DesignDimension } from '@sigilgen/types'
+import type { DesignDimension, LogoResult } from '@sigilgen/types'
+import {
+  duplicateSceneElement,
+  normaliseScene,
+  sceneFromLogo,
+  type LogoScene,
+  type SceneElement,
+} from '@sigilgen/scene'
 import type { StudioConfig } from '../lib/generate'
 import { emptyEdit, type PartEdit } from '../lib/svgParts'
+import {
+  applyScenePatch,
+  blankScene,
+  nextSceneElementId,
+  resizeScene,
+  type SceneElementPatch,
+  type SceneTool,
+} from '../lib/sceneEdit'
 import { NARROW_QUERY } from '../lib/layout'
 import { contrastRatio } from '../lib/contrast'
 import { ALL_PALETTES } from '../lib/resources'
+
+/** The two workspaces: the deterministic generator, or a freeform scene. */
+export type StudioMode = 'generate' | 'draw'
 
 /** How the stage is backed, so a mark can be judged against light and dark grounds. */
 export type Backdrop = 'light' | 'dark' | 'board'
@@ -42,16 +60,18 @@ export function paperIsDark(background: string | null): boolean {
 export type ConceptEdits = Record<string, PartEdit[]>
 
 /**
- * One step of the edit history: the complete edits map as it was before a gesture.
+ * One step of the edit history: the complete document as it was before a gesture.
  *
- * The whole map is stored rather than a single part's delta, because a gesture can touch any part and
- * because undo has to restore the map as it was. Storing the map makes undo a swap.
+ * The whole edits map and the whole scene are stored rather than a single delta, because a gesture can
+ * touch either workspace and undo has to restore both. Storing references makes undo a swap and change
+ * detection a reference comparison; every action replaces the object it changes.
  *
- * Deliberately not the selection: which part is highlighted is not an edit, and undoing one should not
- * move the reader's attention anywhere.
+ * Deliberately not the selection: which part or element is highlighted is not an edit, and undoing one
+ * should not move the reader's attention anywhere.
  */
 interface HistoryEntry {
   edits: ConceptEdits
+  scene: LogoScene | null
 }
 
 /**
@@ -203,6 +223,27 @@ function sanitiseEdits(value: unknown): ConceptEdits {
   return out
 }
 
+/**
+ * Repairs a persisted scene.
+ *
+ * A drawing is reader work and should survive a reload, but a hand-edited document, an older schema or
+ * a colour role whose palette is gone must not stop the app opening. An invalid scene becomes absence;
+ * the draw workspace then offers a blank canvas instead of a broken one.
+ *
+ * @param value - The persisted scene value, of unknown shape.
+ * @returns A normalised scene, or `null`.
+ */
+function sanitiseScene(value: unknown): LogoScene | null {
+  if (value === null || value === undefined) {
+    return null
+  }
+  try {
+    return normaliseScene(value)
+  } catch {
+    return null
+  }
+}
+
 export interface StudioState extends StudioConfig {
   activeConcept: number
   backdrop: Backdrop
@@ -230,6 +271,15 @@ export interface StudioState extends StudioConfig {
   selectedPart: number | null
   past: HistoryEntry[]
   future: HistoryEntry[]
+
+  /** Which workspace is on screen. */
+  mode: StudioMode
+  /** The freeform drawing document, or `null` before one is created. */
+  scene: LogoScene | null
+  /** The selected scene element's id, or `null`. */
+  sceneSelection: string | null
+  /** The shape tool armed for the next canvas click. */
+  sceneTool: SceneTool
 
   setField: <K extends keyof StudioConfig>(key: K, value: StudioConfig[K]) => void
   setActiveConcept: (index: number) => void
@@ -273,6 +323,31 @@ export interface StudioState extends StudioConfig {
   redo: () => void
   /** Discards every edit to one concept, returning it to the generator's output. */
   resetEdits: (conceptSeed: string) => void
+
+  setMode: (mode: StudioMode) => void
+  /** Starts a blank scene, or replaces the current one. */
+  createScene: (paletteId: string) => void
+  /** Replaces the current scene with a generated concept, converted to editable paths. */
+  importScene: (logo: LogoResult, title: string) => void
+  /** Selects the palette roles resolve against. */
+  setScenePalette: (paletteId: string) => void
+  /** Sets the scene background, or clears it. */
+  setSceneBackground: (value: string | null) => void
+  /** Sets the square canvas size in user units. Coordinates are not rescaled. */
+  setSceneSize: (size: number) => void
+  /** Sets the default typeface for new text. */
+  setSceneFont: (fontId: string) => void
+  /** Sets the document title, used for file names. */
+  setSceneTitle: (title: string) => void
+  setSceneTool: (tool: SceneTool) => void
+  selectSceneElement: (id: string | null) => void
+  addSceneElement: (element: SceneElement) => void
+  /** Patches one element without touching history; wrap a gesture in {@link beginEdit}. */
+  updateSceneElement: (id: string, patch: SceneElementPatch) => void
+  removeSceneElement: (id: string) => void
+  duplicateSceneElementById: (id: string) => void
+  /** Moves an element one step through the paint order; `1` is towards the front. */
+  moveSceneElement: (id: string, direction: -1 | 1) => void
 }
 
 /**
@@ -347,6 +422,8 @@ type PersistedStudio = Pick<
   | 'preferences'
   | 'edits'
   | 'snap'
+  | 'mode'
+  | 'scene'
 >
 
 /**
@@ -378,6 +455,9 @@ function persisted(state: StudioState): PersistedStudio {
     // Snapping is a working preference, not transient interface state: a reader who turned it off did so
     // because it fought their placement, and turning it back on every launch would make them repeat it.
     snap: state.snap,
+    // A drawing is the reader's work, and the workspace they left it in is part of returning to it.
+    mode: state.mode,
+    scene: state.scene,
   }
 }
 
@@ -399,6 +479,11 @@ export const useStudio = create<StudioState>()(
       selectedPart: null,
       past: [],
       future: [],
+
+      mode: 'generate',
+      scene: null,
+      sceneSelection: null,
+      sceneTool: 'select',
 
       setField: (key, value) => {
         set({ [key]: value } as Partial<StudioState>)
@@ -491,11 +576,11 @@ export const useStudio = create<StudioState>()(
           // Nothing has changed since the last snapshot: pushing another would hand the reader an undo
           // step that reverts nothing, and an empty click is not a gesture.
           const top = state.past.at(-1)
-          if (top !== undefined && sameEdits(top.edits, state.edits)) {
+          if (top !== undefined && sameEdits(top.edits, state.edits) && top.scene === state.scene) {
             return state
           }
           return {
-            past: [...state.past, { edits: state.edits }].slice(-HISTORY_LIMIT),
+            past: [...state.past, { edits: state.edits, scene: state.scene }].slice(-HISTORY_LIMIT),
             // Any new gesture invalidates the redo branch: the reader has gone somewhere the stored
             // future no longer describes.
             future: [],
@@ -521,8 +606,11 @@ export const useStudio = create<StudioState>()(
           }
           return {
             edits: previous.edits,
+            scene: previous.scene,
             past: state.past.slice(0, -1),
-            future: [...state.future, { edits: state.edits }].slice(-HISTORY_LIMIT),
+            future: [...state.future, { edits: state.edits, scene: state.scene }].slice(
+              -HISTORY_LIMIT
+            ),
           }
         }),
 
@@ -534,8 +622,9 @@ export const useStudio = create<StudioState>()(
           }
           return {
             edits: next.edits,
+            scene: next.scene,
             future: state.future.slice(0, -1),
-            past: [...state.past, { edits: state.edits }].slice(-HISTORY_LIMIT),
+            past: [...state.past, { edits: state.edits, scene: state.scene }].slice(-HISTORY_LIMIT),
           }
         }),
 
@@ -546,10 +635,174 @@ export const useStudio = create<StudioState>()(
           return {
             edits: next,
             selectedPart: null,
-            past: [...state.past, { edits: state.edits }].slice(-HISTORY_LIMIT),
+            past: [...state.past, { edits: state.edits, scene: state.scene }].slice(-HISTORY_LIMIT),
             future: [],
           }
         }),
+
+      // --- Drawing ------------------------------------------------------------------------------
+      //
+      // A scene is a document, not a set of preferences, so the actions below replace the scene object
+      // rather than mutating it. That makes the history snapshot a reference copy and keeps the
+      // renderer's input immutable.
+
+      setMode: mode => set({ mode }),
+
+      createScene: paletteId => {
+        // The first blank canvas is not a gesture: entering the workspace creates it. Replacing an
+        // existing drawing is a gesture, and can be undone.
+        if (get().scene !== null) {
+          get().beginEdit()
+        }
+        set({
+          mode: 'draw',
+          scene: blankScene(paletteId),
+          sceneSelection: null,
+          sceneTool: 'select',
+        })
+      },
+
+      importScene: (logo, title) => {
+        if (get().scene !== null) {
+          get().beginEdit()
+        }
+        set({
+          mode: 'draw',
+          scene: sceneFromLogo(logo, title),
+          sceneSelection: null,
+          sceneTool: 'select',
+        })
+      },
+
+      setScenePalette: paletteId => {
+        const scene = get().scene
+        if (scene === null || scene.palette === paletteId) {
+          return
+        }
+        get().beginEdit()
+        set({ scene: { ...scene, palette: paletteId } })
+      },
+
+      // The background control is a native colour input, which fires on every step of a drag. The
+      // caller snapshots once on focus (the `ScenePaintField` boundary); snapshotting here would turn
+      // one pick into dozens of undo steps.
+      setSceneBackground: value => {
+        const scene = get().scene
+        if (scene === null || scene.background === value) {
+          return
+        }
+        set({ scene: { ...scene, background: value } })
+      },
+
+      setSceneSize: size => {
+        const scene = get().scene
+        if (scene === null || scene.size === size) {
+          return
+        }
+        get().beginEdit()
+        set({ scene: resizeScene(scene, size) })
+      },
+
+      setSceneFont: fontId => {
+        const scene = get().scene
+        if (scene === null || scene.font === fontId) {
+          return
+        }
+        get().beginEdit()
+        set({ scene: { ...scene, font: fontId } })
+      },
+
+      // The title is edited on every keystroke. The caller snapshots on focus; snapshotting here would
+      // turn one rename into a dozen undo steps.
+      setSceneTitle: title => {
+        const scene = get().scene
+        if (scene === null) {
+          return
+        }
+        set({ scene: { ...scene, title } })
+      },
+
+      setSceneTool: sceneTool => set({ sceneTool }),
+
+      selectSceneElement: sceneSelection => set({ sceneSelection }),
+
+      addSceneElement: element => {
+        const scene = get().scene
+        if (scene === null) {
+          return
+        }
+        get().beginEdit()
+        set({
+          scene: { ...scene, elements: [...scene.elements, element] },
+          sceneSelection: element.id,
+          sceneTool: 'select',
+        })
+      },
+
+      updateSceneElement: (id, patch) =>
+        set(state => {
+          if (state.scene === null) {
+            return state
+          }
+          return {
+            scene: {
+              ...state.scene,
+              elements: state.scene.elements.map(element =>
+                element.id === id ? applyScenePatch(element, patch) : element
+              ),
+            },
+          }
+        }),
+
+      removeSceneElement: id => {
+        const scene = get().scene
+        if (scene === null) {
+          return
+        }
+        get().beginEdit()
+        set(state => ({
+          scene: { ...scene, elements: scene.elements.filter(element => element.id !== id) },
+          sceneSelection: state.sceneSelection === id ? null : state.sceneSelection,
+        }))
+      },
+
+      duplicateSceneElementById: id => {
+        const scene = get().scene
+        if (scene === null) {
+          return
+        }
+        const source = scene.elements.find(element => element.id === id)
+        if (source === undefined) {
+          return
+        }
+        get().beginEdit()
+        const copy = duplicateSceneElement(source, nextSceneElementId(scene, source.type))
+        set({
+          scene: { ...scene, elements: [...scene.elements, copy] },
+          sceneSelection: copy.id,
+          sceneTool: 'select',
+        })
+      },
+
+      moveSceneElement: (id, direction) => {
+        const scene = get().scene
+        if (scene === null) {
+          return
+        }
+        const index = scene.elements.findIndex(element => element.id === id)
+        const target = index + direction
+        if (index === -1 || target < 0 || target >= scene.elements.length) {
+          return
+        }
+        get().beginEdit()
+        const elements = [...scene.elements]
+        const [element] = elements.splice(index, 1)
+        if (element === undefined) {
+          return
+        }
+        elements.splice(target, 0, element)
+        set({ scene: { ...scene, elements } })
+      },
     }),
     {
       name: 'sigilgen.studio',
@@ -560,7 +813,17 @@ export const useStudio = create<StudioState>()(
         const state = (
           typeof stored === 'object' && stored !== null ? stored : {}
         ) as Partial<StudioState>
-        return { ...current, ...state, edits: sanitiseEdits(state.edits) }
+        return {
+          ...current,
+          ...state,
+          mode: state.mode === 'draw' ? 'draw' : 'generate',
+          edits: sanitiseEdits(state.edits),
+          scene: sanitiseScene(state.scene),
+          // Selection and the armed tool are transient; a stale id from another session would point at
+          // nothing and an armed shape tool would make the first click create an accidental element.
+          sceneSelection: null,
+          sceneTool: 'select',
+        }
       },
       // A pair persisted before this rule existed can still be contradictory — a palette drawn for a pale
       // page and a dark backdrop — and it would come back on every reload. Correct it once on the way in,

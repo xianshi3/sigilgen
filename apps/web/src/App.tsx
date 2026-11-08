@@ -7,7 +7,10 @@ import { InputPanel } from './components/panels/InputPanel'
 import { InspectorPanel } from './components/panels/InspectorPanel'
 import { OptionPanel } from './components/panels/OptionPanel'
 import { ResourcePanel } from './components/panels/ResourcePanel'
+import { SceneInspector } from './components/panels/SceneInspector'
+import { ScenePanel } from './components/panels/ScenePanel'
 import { ConceptStrip } from './components/stage/ConceptStrip'
+import { SceneStage } from './components/stage/SceneStage'
 import { Stage } from './components/stage/Stage'
 import { StageBar } from './components/stage/StageBar'
 import { useI18n } from './i18n/I18nProvider'
@@ -80,12 +83,38 @@ export default function App() {
   const activeConcept = concepts[studio.activeConcept] ?? concepts[0]
   useDesktopCommands(activeConcept, name)
 
+  const mode = useStudio(state => state.mode)
+  const scene = useStudio(state => state.scene)
+  const createScene = useStudio(state => state.createScene)
+  const importScene = useStudio(state => state.importScene)
+
+  // A drawing workspace with no document is a dead end on first visit. Create one from the palette of the
+  // mark already on screen; the reader can replace it with the generated concept or start from empty.
+  useEffect(() => {
+    if (mode !== 'draw' || scene !== null) {
+      return
+    }
+    createScene(activeConcept?.palette.id ?? 'ink-monolith')
+  }, [mode, scene, activeConcept, createScene])
+
+  /** Replaces the drawing with the generated concept currently on screen. */
+  const importCurrent = (): void => {
+    if (activeConcept !== undefined) {
+      importScene(activeConcept, name.trim() || 'Untitled')
+    }
+  }
+
+  /** Starts a blank drawing, keeping the palette the current one uses. */
+  const newScene = (): void => {
+    createScene(scene?.palette ?? activeConcept?.palette.id ?? 'ink-monolith')
+  }
+
   // With `auto`, every concept draws its own palette, so the sheet follows the one on screen: the mark is
   // shown on the paper it was drawn for. A manual backdrop choice still wins until the next concept
   // arrives — otherwise the control could not be used to look at the mark anywhere.
   const activePalette = activeConcept?.palette
   useEffect(() => {
-    if (activePalette === undefined) {
+    if (mode === 'draw' || activePalette === undefined) {
       return
     }
     const state = useStudio.getState()
@@ -98,7 +127,7 @@ export default function App() {
     } else if (!dark && state.backdrop === 'dark') {
       state.setBackdrop('light')
     }
-  }, [activePalette])
+  }, [activePalette, mode])
   const waiting = name.trim() === ''
 
   useThemeEffect()
@@ -216,20 +245,27 @@ export default function App() {
                 ${narrow ? 'absolute top-2 bottom-2 left-2' : 'my-2 ml-2'}`}
               >
                 <div
+                  key={`left-${mode}`}
                   className={`h-full overflow-y-auto scroll-gutter ${narrow ? 'pt-14' : ''}`}
                   style={{ width: LEFT_WIDTH }}
                 >
                   {/* The panel owns its padding, so the four groups below it share one rhythm instead of
                     each inventing a gutter against its neighbour. */}
                   <div className="flex flex-col gap-10 px-gutter py-gutter">
-                    <InputPanel />
-                    <DesignPanel />
-                    <div className="hairline-t -mx-gutter px-gutter pt-6">
-                      <ResourcePanel />
-                    </div>
-                    <div className="hairline-t -mx-gutter px-gutter pt-6">
-                      <OptionPanel />
-                    </div>
+                    {mode === 'draw' ? (
+                      <ScenePanel onImport={importCurrent} onNew={newScene} />
+                    ) : (
+                      <>
+                        <InputPanel />
+                        <DesignPanel />
+                        <div className="hairline-t -mx-gutter px-gutter pt-6">
+                          <ResourcePanel />
+                        </div>
+                        <div className="hairline-t -mx-gutter px-gutter pt-6">
+                          <OptionPanel />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </motion.aside>
@@ -237,17 +273,23 @@ export default function App() {
           </AnimatePresence>
 
           <main className="relative flex min-w-0 flex-1 flex-col pt-16">
-            <Stage
-              concept={activeConcept}
-              errorKey={errorKey}
-              errorDetail={errorDetail}
-              index={studio.activeConcept}
-              total={concepts.length}
-            />
+            {mode === 'draw' ? (
+              <SceneStage />
+            ) : (
+              <Stage
+                concept={activeConcept}
+                errorKey={errorKey}
+                errorDetail={errorDetail}
+                index={studio.activeConcept}
+                total={concepts.length}
+              />
+            )}
             <StageBar />
-            <div className="hairline-t bg-[var(--stage)]">
-              <ConceptStrip concepts={concepts} />
-            </div>
+            {mode === 'draw' ? null : (
+              <div className="hairline-t bg-[var(--stage)]">
+                <ConceptStrip concepts={concepts} />
+              </div>
+            )}
 
             {/* The panel toggles belong to the stage, not to the window. Anchored to the window they sat on
               top of an open panel's left padding — floating above it in the stacking order, which is what
@@ -283,11 +325,16 @@ export default function App() {
                 ${narrow ? 'absolute top-2 bottom-2 right-2' : 'my-2 mr-2'}`}
               >
                 <div
+                  key={`right-${mode}`}
                   className={`h-full overflow-y-auto scroll-gutter ${narrow ? 'pt-14' : ''}`}
                   style={{ width: RIGHT_WIDTH }}
                 >
                   <div className="flex flex-col gap-10 px-gutter py-gutter">
-                    <InspectorPanel concept={activeConcept} />
+                    {mode === 'draw' ? (
+                      <SceneInspector />
+                    ) : (
+                      <InspectorPanel concept={activeConcept} />
+                    )}
                   </div>
                 </div>
               </motion.aside>

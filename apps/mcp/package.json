@@ -1,8 +1,8 @@
 {
   "name": "@sigilgen/mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Model Context Protocol server for Sigilgen — generate deterministic logos from any MCP client.",
+  "description": "Model Context Protocol server for Sigilgen — generate and draw deterministic logos from any MCP client.",
   "bin": {
     "sigilgen-mcp": "./dist/index.js"
   },

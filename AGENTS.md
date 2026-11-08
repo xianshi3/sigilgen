@@ -108,6 +108,17 @@ LogoConfig
   → LogoResult
 ```
 
+A **scene** is a separate document, not a tenth engine. It bypasses the router and the brain's mood
+rules, and goes straight from `LogoScene` to the same `SVGElement` and serializer boundary:
+
+```text
+LogoScene
+  → normaliseScene      validate, assign ids, default, clamp
+  → sceneToSvgElements  flat shapes, text compiled from font outlines, pictograms from the brain
+  → serialiseDocument   same allow-list and escaping as the generator
+  → SVG string
+```
+
 ### Hard Constraints
 
 These are the invariants the test suite enforces. Breaking one is a bug, not a trade-off.
@@ -167,6 +178,9 @@ These are enforced by `apps/web` tests, and they are about what a reader sees ra
   reader who turned it off did so deliberately.
 - **A snap that changes nothing is not an edit.** The undo snapshot is taken when the part first moves,
   not when the pointer first moves.
+- **Draw mode is a workspace, not a layout.** It swaps the panels and the stage content but keeps the
+  same 300px panel widths, derived breakpoint, sheet, zoom, backdrops and alignment guides. A scene is a
+  document (`src/scene.ts`), not a tenth engine; do not route it through the mood rules.
 
 ### Determinism Rules
 
@@ -178,21 +192,22 @@ These are enforced by `apps/web` tests, and they are about what a reader sees ra
 
 ## New Code Placement Rules
 
-| Change type           | Directory             |
-| --------------------- | --------------------- |
-| New rendering engine  | `src/engines/`        |
-| New decision resolver | `src/resolvers/`      |
-| New brain data        | `src/brain/`          |
-| Core pipeline stage   | `src/`                |
-| New test              | `tests/`              |
-| Studio component      | `apps/web/src/`       |
-| Studio test           | `apps/web/tests/`     |
-| MCP server code       | `apps/mcp/src/`       |
-| MCP server test       | `apps/mcp/tests/`     |
-| Desktop main/preload  | `apps/desktop/src/`   |
-| Desktop test          | `apps/desktop/tests/` |
-| Build-time tooling    | `scripts/`            |
-| Vendored font         | `assets/fonts/`       |
+| Change type             | Directory             |
+| ----------------------- | --------------------- |
+| New rendering engine    | `src/engines/`        |
+| Scene document/renderer | `src/scene.ts`        |
+| New decision resolver   | `src/resolvers/`      |
+| New brain data          | `src/brain/`          |
+| Core pipeline stage     | `src/`                |
+| New test                | `tests/`              |
+| Studio component        | `apps/web/src/`       |
+| Studio test             | `apps/web/tests/`     |
+| MCP server code         | `apps/mcp/src/`       |
+| MCP server test         | `apps/mcp/tests/`     |
+| Desktop main/preload    | `apps/desktop/src/`   |
+| Desktop test            | `apps/desktop/tests/` |
+| Build-time tooling      | `scripts/`            |
+| Vendored font           | `assets/fonts/`       |
 
 ## Testing Rules
 
@@ -218,6 +233,8 @@ Required test coverage:
 | Glyph data       | Every referenced glyph has valid path data           | yes      |
 | Brain integrity  | Every mood references existing palette/font/icon ids | yes      |
 | Input validation | Clamping and rejection of bad configs                | yes      |
+| Scene rendering  | Same scene → same SVG; flat, safe, palette roles     | yes      |
+| Scene editing    | Add/move/reorder/delete survive undo and reload      | yes      |
 
 ## Documentation Sync Points
 
@@ -227,6 +244,7 @@ Required test coverage:
 | Public API                   | JSDoc in `src/` **and** the API section of `README.md`   |
 | CLI flags                    | the CLI table in `README.md`                             |
 | Brain schema                 | `docs/design/` and the types in `src/types.ts`           |
+| Scene schema or renderer     | `docs/design/004-scene-document.md` and the scene types  |
 | Icon set or its licence      | `src/brain/icons.README.md`, `CHANGELOG.md`, `README.md` |
 | Architecture decisions       | a new ADR in `docs/architecture/decisions/`              |
 | Dependencies or toolchain    | this file                                                |

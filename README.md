@@ -124,12 +124,19 @@ npx sigilgen --name "Acme" --keywords "tech, minimal"
 ## Studio (browser app)
 
 `apps/web` is a bilingual browser interface for the same generator: type a name, pick a concept, hold
-the decisions you like still while the rest vary, and copy or download the SVG.
+the decisions you like still while the rest vary, and copy or download the SVG. It also has a **Draw**
+workspace: import the generated mark as editable paths, add rectangles, ellipses, stars, rings, text
+and pictograms, move them with alignment guides, and save the scene as JSON or SVG.
 
 ![The Sigilgen studio](docs/images/studio-v.jpg)
 
-<sub>Captured from the running app. The other two images on this page are generated from the
-generator itself by `pnpm run docs:images`; this one cannot be, because it is a picture of a UI.</sub>
+<sub>Captured from the running app. The generated diagrams on this page come from
+`pnpm run docs:images`; this pair cannot, because they are pictures of a UI.</sub>
+
+![The Sigilgen draw workspace](docs/images/draw-v.jpg)
+
+<sub>The Draw workspace: the generated mark imported as editable paths, a coffee-cup pictogram and a
+wordmark placed on the scene, layers on the left and the element inspector on the right.</sub>
 
 ```bash
 cd apps/web
@@ -258,9 +265,15 @@ Claude Desktop, Cursor, VS Code, an agent framework — can generate logos witho
 conversation. It is an adapter over the same generator: no second brain, no second routing table, and
 the same input still returns the same bytes.
 
-Two tools: `generate_logo` (1–6 concepts, SVG or a JSON summary, optionally written to disk) and
-`list_options` (engine ids, palettes, fonts, pictograms, moods). Five `sigilgen://options/*` resources
-mirror the catalogues for clients that read resources.
+Four tools: `generate_logo` (1–6 concepts, SVG or a JSON summary, optionally written to disk),
+`import_logo` (run the generator once and return the concept as an editable scene), `render_scene`
+(draw an explicit scene and return SVG and/or a PNG preview) and `list_options` (engine ids, palettes,
+fonts, pictograms, moods). Five `sigilgen://options/*` resources mirror the catalogues, and
+`sigilgen://scene/schema` documents the scene grammar with a worked example.
+
+The two drawing tools close the loop for a model: it can start from a curated concept, read the scene
+JSON, change a shape or colour, render again, and inspect the PNG before answering. Nothing calls an
+image model; the output is still flat vector geometry, and the same scene always returns the same bytes.
 
 ```jsonc
 // claude_desktop_config.json — after `pnpm build` at the repository root
@@ -305,6 +318,34 @@ for (const concept of generateLogos({ name: 'Vela', keywords: 'marine, travel', 
   console.log(concept.conceptNotes.join('\n'))
 }
 ```
+
+### `renderScene(scene): string`
+
+Draw an explicit scene rather than asking the generator to choose one. A scene is a square canvas of
+ordered flat elements — rectangles, circles, ellipses, polygons, stars, rings, paths, text runs and
+brain pictograms — with palette roles instead of hard-coded colours where possible.
+
+```ts
+import { renderScene } from 'sigilgen'
+
+const svg = renderScene({
+  size: 512,
+  palette: 'ink-monolith',
+  font: 'inter-bold',
+  elements: [
+    { type: 'ring', cx: 256, cy: 232, rx: 120, ry: 120, weight: 12, fill: 'accent' },
+    { type: 'text', text: 'NORTHWIND', x: 56, y: 400, width: 400, height: 48, fill: 'primary' },
+  ],
+})
+```
+
+`normaliseScene(input)` validates a document, assigns missing ids and clamps positions; `sceneFromLogo`
+turns a generated concept into the same document; `sceneElementToSvg`, `sceneElementBounds` and
+`sceneElementTransform` expose one element at a time for an editor. Text is compiled from the brain's
+glyph outlines, so a scene uses the same typefaces as the generator and never touches a font file.
+The same scene always serialises to the same bytes, and the flat-SVG contract still applies.
+
+The schema is documented in [docs/design/004-scene-document.md](docs/design/004-scene-document.md).
 
 ### Configuration
 
